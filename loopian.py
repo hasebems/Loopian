@@ -7,18 +7,18 @@
 import threading
 import lpngui
 import lpncmd as ps
-import stack as sqs
+import seqstack as sqs
 import midi
 
 class Loop:
     running = True
 
-def generate_ev(loop, fl, seq, pas):
+def generate_ev(loop, fl, seq, prs):
     while True:
         seq.periodic()
 #        if fl.auto_stop:   # check end of chain loading
 #            fl.auto_stop = False
-#            chain_load_auto_stop(seq, pas)
+#            chain_load_auto_stop(seq, prs)
         if not loop.running:
             if seq.during_play:
                 seq.stop()

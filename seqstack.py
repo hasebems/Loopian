@@ -167,7 +167,7 @@ class SeqStack:
     def change_beat(self, beat):    # beat: number of ticks of one measure
         self.stock_tick_for_onemsr = beat
 
-    def change_key(self, key, oct, text):
+    def change_key(self, key, oct, text):     # command thread
         self.key_text = text
         for i in range(nlib.MAX_PART_COUNT):
             #change_note(self.sqs.get_part(i), key, oct)
@@ -180,10 +180,10 @@ class SeqStack:
 
     def start(self):     # command thread
         self.play_for_periodic = True
-        if self.during_play is False:
-            return True
-        else:
+        if self.during_play:
             return False
+        else:
+            return True
 
     def stop(self):     # command thread
         self.stop_for_periodic = True
