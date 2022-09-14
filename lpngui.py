@@ -142,6 +142,7 @@ class LpnInputBox:
         self.parent = parent
         self.history_position = 0   # history function
         self.input_history = []     # history function
+        self.part_text = 'L1>'
 
     def _detect_cursor_location(self, right=False):
         txt_len = len(self.text)
@@ -159,7 +160,13 @@ class LpnInputBox:
     def activate(self):
         self.active = True
 
-    def key_ev_backspace(self):
+    def set_part_text(self, num):
+        if   num == 0: self.part_text = 'L1>'
+        elif num == 1: self.part_text = 'L2>'
+        elif num == 2: self.part_text = 'R1>'
+        elif num == 3: self.part_text = 'R2>'
+
+    def _key_ev_backspace(self):
         txt_len = len(self.text)
         if self.cursor_location == 0:
             pass
@@ -171,7 +178,7 @@ class LpnInputBox:
             self.cursor_location -= 1
         self.txt_surface = self.font.render(self.text, True, self.color)
 
-    def key_ev_return(self):
+    def _key_ev_return(self):
         print(self.text)    # debug
         if self.text == 'quit' or self.text == 'exit':
             return True
@@ -199,7 +206,7 @@ class LpnInputBox:
         if len(self.text) < self.cursor_location:
             self.cursor_location = len(self.text)
 
-    def key_ev_normal(self, event):
+    def _key_ev_normal(self, event):
         # insert one letter to text
         txt_list = list(self.text)
         txt_list.insert(self.cursor_location, event.unicode)
@@ -214,9 +221,9 @@ class LpnInputBox:
         if event.type == pg.KEYDOWN:
             #print(event.key)
             if event.key == pg.K_RETURN:
-                return self.key_ev_return()
+                return self._key_ev_return()
             elif event.key == pg.K_BACKSPACE:
-                self.key_ev_backspace()
+                self._key_ev_backspace()
             elif event.key == pg.K_LEFT:
                 self.cursor_left = True
                 self._detect_cursor_location()
@@ -238,7 +245,7 @@ class LpnInputBox:
             elif event.key == pg.K_TAB: pass
             elif event.key == pg.K_ESCAPE: pass  
             else:
-                self.key_ev_normal(event)
+                self._key_ev_normal(event)
 
         elif event.type == pg.KEYUP:
             if event.key == pg.K_LEFT:
@@ -273,7 +280,7 @@ class LpnInputBox:
              self.rect.y + self.TEXT_OFS_Y)
         )
         # Blit Prompt text.
-        screen.blit(self.prompt_font.render('L1>', True, self.COLOR_PROMPT),
+        screen.blit(self.prompt_font.render(self.part_text, True, self.COLOR_PROMPT),
             (self.rect.x + self.TEXT_OFS_X,
              self.rect.y + self.TEXT_OFS_Y)
         )
@@ -362,6 +369,9 @@ class LpnGui:
 
     def set_func_ptr(self, fptr):
         self.fptr = fptr
+
+    def change_part(self, part):
+        self.inputBox.set_part_text(part)
 
     def input_text(self, text, cmd=False):
         self.scroll_box.show_text(text, cmd)

@@ -29,7 +29,7 @@ class Parsing:
         self.fl = nfl
         self.md = md
         self.gui = gui
-        self.input_part = 1  # 1origin
+        self.input_part = 0
         self.prompt_str = self.get_prompt_string('0', self.input_part)
         self.back_color = 2
 #        self.fl.display_loadable_files(self.print_dialogue)
@@ -150,7 +150,7 @@ class Parsing:
                 for i in range(nlib.MAX_PART_COUNT):
                     change_oct_to_part(self.sqs.get_part(i), oct)
             else:
-                pt = self.sqs.get_part(self.input_part-1)
+                pt = self.sqs.get_part(self.input_part)
                 change_oct_to_part(pt, oct)
 
     def change_cc(self, cc_num, cc_list):
@@ -257,14 +257,6 @@ class Parsing:
                     self.print_dialogue("Phrase has started!")
                 else:
                     self.print_dialogue("Unable to start!")
-        elif input_text[0:4] == 'part':
-            tx = input_text[4:].replace(' ', '')
-            if tx.isdecimal():
-                part = int(tx)
-                if 0 < part <= nlib.MAX_PART_COUNT:
-                    self.print_dialogue("Changed current part to " + str(part) + ".")
-                    self.input_part = part
-                    self.prompt_str = self.get_prompt_string('0', part)
         elif input_text[0:5] == 'panic':
             for i in range(nlib.MAX_PART_COUNT):
                 self.sqs.get_part(i).change_cc(120, 0)
@@ -292,7 +284,7 @@ class Parsing:
 #                    if ptn_str is not None:
 #                        self.print_dialogue('['+str(i+1)+']'+'~~> '+ptn_str)
 #            else:
-#                ptn_str = self.get_complete_pattern_string(blk, self.input_part-1)
+#                ptn_str = self.get_complete_pattern_string(blk, self.input_part)
 #                if ptn_str is not None: self.print_dialogue('~~> '+ptn_str)
 #        elif input_text[0:4] == 'save':
 #            file = input_text[4:].replace(' ', '')
@@ -308,15 +300,15 @@ class Parsing:
 #            self.print_dialogue("what?")
 
     def letterI(self, input_text):
-        if input_text[0:5] == 'input':
-            tx = input_text[5:].replace(' ', '')
-            if tx.isdecimal():
-                part = int(tx)
-                if 0 < part <= nlib.MAX_PART_COUNT:
-                    self.print_dialogue("Changed current part to " + str(part) + ".")
-                    self.input_part = part
-                    self.prompt_str = self.get_prompt_string('0', part)
-        else:
+#        if input_text[0:5] == 'input':
+#            tx = input_text[5:].replace(' ', '')
+#            if tx.isdecimal():
+#                part = int(tx)
+#                if 0 < part <= nlib.MAX_PART_COUNT:
+#                    self.print_dialogue("Changed current part to " + str(part) + ".")
+#                    self.input_part = part
+#                    self.prompt_str = self.get_prompt_string('0', part)
+#        else:
             self.print_dialogue("what?")
 
     def letterC(self, input_text):
@@ -342,6 +334,17 @@ class Parsing:
         else:
             self.print_dialogue("what?")
 
+    def letterR(self, input_text):
+        if input_text[0:5] == 'right':
+            tx = input_text[5:].replace(' ', '')
+            if tx.isdecimal():
+                part = int(tx)
+                if part == 1 or part == 2:
+                    self.print_dialogue("Changed current part to right " + str(part) + ".")
+                    self.input_part = part + 1
+                    self.gui.change_part(part + 1)
+                    #self.prompt_str = self.get_prompt_string('0', part)
+
     def letterQm(self, input_text):
         self.print_dialogue("what?")
 
@@ -355,6 +358,7 @@ class Parsing:
 
     def letterL(self, input_text):
         if input_text[0:4] == "load":
+            self.print_dialogue("what?")
 #            file = input_text[4:].replace(' ', '')
 #            success, prompt = self.fl.load_file(file)
 #            if success:
@@ -368,37 +372,47 @@ class Parsing:
 #                    self.prompt_mode = Prompt.NOTHING
 #                    self.prompt_str = ''
 #                    self.sqs.stop()
-#        else:
-            self.print_dialogue("what?")
+
+        elif input_text[0:4] == 'left':
+            tx = input_text[4:].replace(' ', '')
+            if tx.isdecimal():
+                part = int(tx)
+                if part == 1 or part == 2:
+                    self.print_dialogue("Changed current part to left " + str(part) + ".")
+                    self.input_part = part - 1
+                    self.gui.change_part(part - 1)
+                    #self.prompt_str = self.get_prompt_string('0', part)
 
     def letter_bracket(self, input_text):
         dx = dscrpt.Description()
         description = dx.complement_bracket(input_text)
         if description != None:
-            dx.set_dscrpt_to_seq2(self.input_part-1, self.sqs, description)
+            dx.set_dscrpt_to_seq2(self.input_part, self.sqs, description)
             self.print_dialogue("set Phrase!")
         else:
             self.print_dialogue("what?")
 
     def letter_brace(self, input_text):
-        dx = dscrpt.Description()
-        description, dialogue = dx.complement_brace(input_text)
-        if description != None:
-            dx.set_dscrpt_to_seq2(self.input_part-1, self.sqs, description)
-            self.print_dialogue(dialogue)
-        else:
-            self.print_dialogue("what?")
+#        dx = dscrpt.Description()
+#        description, dialogue = dx.complement_brace(input_text)
+#        if description != None:
+#            dx.set_dscrpt_to_seq2(self.input_part, self.sqs, description)
+#            self.print_dialogue(dialogue)
+#        else:
+#            self.print_dialogue("what?")
+        pass
 
-    def return_to_normal(self):
-        self.prompt_mode = Prompt.NORMAL
-        self.prompt_str = self.get_prompt_string('0', self.input_part)
+#    def return_to_normal(self):
+#        self.prompt_mode = Prompt.NORMAL
+#        self.prompt_str = self.get_prompt_string('0', self.input_part)
 
     def during_load(self, input_text):
 #        if self.fl.load_pattern(input_text, self.sqs):
 #            self.print_dialogue("description loaded!")
 #        else:
 #            self.print_dialogue("what?")
-        self.return_to_normal()
+#        self.return_to_normal()
+        pass
 
     def start_parsing(self, input_text):
         first_letter = input_text[0:1]
@@ -420,6 +434,8 @@ class Parsing:
             self.letterL(input_text)
         elif first_letter == 'p':
             self.letterP(input_text)
+        elif first_letter == 'r':
+            self.letterR(input_text)
         elif first_letter == 's':
             self.letterS(input_text)
         elif first_letter == 'm':

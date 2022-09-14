@@ -18,7 +18,7 @@ loopian は、Live Coding などで使うために開発している、テキス
 -------------------
 
 - phrase : 階名にて指定する単パートの音群
-- construct/construction : phrase に Chord 情報などを適用して、大楽節を作り出す
+- composition : phrase に Chord 情報などを適用して、大楽節を作り出す
 - loop : loopian は基本的に、phrase の繰り返しを延々と演奏する。この繰り返しのこと。
 - part : 同じリズムを持った phrase
 
@@ -44,8 +44,6 @@ loopian は、Live Coding などで使うために開発している、テキス
 - マルチパートで MIDI受信するアプリを同時に起動する。以下のアプリで動作確認済。
     - Logic : Mac で MIDI 演奏するための DAW
         - なお Garage Band では同時に複数チャンネルのMIDI Inを入れることが出来ない
-    - Super Collider
-    - namiheySynth
 
 
 再生コントロール
@@ -100,15 +98,18 @@ Phrase 追加
     - 未定
 
 
-Construction 指定
+Composition 指定
 ----------------------------
 
-- {*chord*} : Construction の書式
-    - *chord*: アルペジオのコード、カンマで区切って時系列で表現可能
+- {*chord*} : Composition の書式
+    - *chord*: コードを小節ごとにカンマで区切って時系列で記述
+    - {I,,IV,V} : １小節ごとに I -> I -> IV -> V と和音が変わる
+        - 複数小節を同じコードにしたい場合、カンマのみ記述
     - {} : 全データ削除
 
 - Detail of description
     - コード名
+        - O : original phrase
         - I : d=m=s（Iの和音)
             - ローマ数字: I, II, III, IV, V, VI, VII
         - I# : di=mi=si (数字の後に # を付けると半音高いコードになる。b は半音）
@@ -124,8 +125,7 @@ Construction 指定
 入力環境コマンド
 ----------------
 
-- 'input 1' 'part 1' : part 1への入力切り替え（1〜5)
-- 'show [all]' : 現在の入力パートのフレーズ/パターンを一行で表示（allで全パートを5行で表示）（未実装）
+- 'right 1' 'left 1' : 右手２パート、左手２パートの４パートを指定可能
 - 'midi 1' : MIDI PORT 1 を選択
 - 'panic' : 今鳴っている音を消音する
 
