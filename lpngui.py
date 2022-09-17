@@ -401,10 +401,14 @@ class LpnGui:
         msr, beat, tick, count = seq.get_tick()
         self.beatBox.set_text(str(msr+1) + ' : ' + str(beat+1) + ' : ' + str(tick))
         self.keyBox.set_text('key: ' + seq.key_text)
-        self.rptBox.set_text( 'R1: ' + str(seq.sqobjs[2].lp_elapsed_msr) + '/' + str(seq.sqobjs[2].loop_measure))
-        self.r2ptBox.set_text('R2: ' + str(seq.sqobjs[3].lp_elapsed_msr) + '/' + str(seq.sqobjs[3].loop_measure))
-        self.lptBox.set_text( 'L1: ' + str(seq.sqobjs[0].lp_elapsed_msr) + '/' + str(seq.sqobjs[0].loop_measure))
-        self.l2ptBox.set_text('L2: ' + str(seq.sqobjs[1].lp_elapsed_msr) + '/' + str(seq.sqobjs[1].loop_measure))
+        a,b = seq.sqobjs[2].get_loop_info()
+        self.rptBox.set_text( 'R1: ' + str(a) + '/' + str(b))
+        a,b = seq.sqobjs[3].get_loop_info()
+        self.r2ptBox.set_text('R2: ' + str(a) + '/' + str(b))
+        a,b = seq.sqobjs[0].get_loop_info()
+        self.lptBox.set_text( 'L1: ' + str(a) + '/' + str(b))
+        a,b = seq.sqobjs[1].get_loop_info()
+        self.l2ptBox.set_text('L2: ' + str(a) + '/' + str(b))
 
     def _draw(self):
         self.screen.fill((0,0,0))

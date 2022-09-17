@@ -127,7 +127,10 @@ class Part(sqp.ElapseIF):
     #def fine(self):
     #    self.stop()
 
-    ## CUI thread内でコール
+    ## GUI thread内でコール
+    def get_loop_info(self):
+        return self.lp_elapsed_msr, self.loop_measure
+
     def change_keynote(self, nt):
         self.keynote = nt
         self.state_reserve = True
