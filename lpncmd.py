@@ -5,7 +5,6 @@
 #   from September 10 2022 by M.Hasebe
 #
 import lpnlib as nlib
-import namidscrpt as dscrpt
 
 T_WATER = '\033[96m'
 T_PINK = '\033[95m'
@@ -30,15 +29,9 @@ class Parsing:
         self.md = md
         self.gui = gui
         self.input_part = 0
-        self.prompt_str = self.get_prompt_string('0', self.input_part)
         self.back_color = 2
 #        self.fl.display_loadable_files(self.print_dialogue)
         gui.set_func_ptr(self.start_parsing)
-
-    @staticmethod
-    def get_prompt_string(blk, part):
-        # return T_WATER + '[' + str(blk) + '][' + str(part) + ']~~> ' + T_END
-        return '[' + blk + '][' + str(part) + ']~~> '
 
     def print_dialogue(self, rpy):
         print(T_PINK + rpy + T_END)
@@ -296,20 +289,11 @@ class Parsing:
 #                        self.fl.save_pattern(ptn_str)
 #                self.fl.close_save_file()
 #                self.print_dialogue('Saved!')
-#        else:
-#            self.print_dialogue("what?")
+        else:
+            self.print_dialogue("what?")
 
     def letterI(self, input_text):
-#        if input_text[0:5] == 'input':
-#            tx = input_text[5:].replace(' ', '')
-#            if tx.isdecimal():
-#                part = int(tx)
-#                if 0 < part <= nlib.MAX_PART_COUNT:
-#                    self.print_dialogue("Changed current part to " + str(part) + ".")
-#                    self.input_part = part
-#                    self.prompt_str = self.get_prompt_string('0', part)
-#        else:
-            self.print_dialogue("what?")
+        self.print_dialogue("what?")
 
     def letterC(self, input_text):
         if input_text[0:6] == 'copyto':
@@ -343,7 +327,6 @@ class Parsing:
                     self.print_dialogue("Changed current part to right " + str(part) + ".")
                     self.input_part = part + 1
                     self.gui.change_part(part + 1)
-                    #self.prompt_str = self.get_prompt_string('0', part)
 
     def letterQm(self, input_text):
         self.print_dialogue("what?")
@@ -381,7 +364,6 @@ class Parsing:
                     self.print_dialogue("Changed current part to left " + str(part) + ".")
                     self.input_part = part - 1
                     self.gui.change_part(part - 1)
-                    #self.prompt_str = self.get_prompt_string('0', part)
 
     @staticmethod
     def complement_bracket(input_text):
@@ -424,16 +406,11 @@ class Parsing:
     def letter_brace(self, input_text):
         pass
 
-#    def return_to_normal(self):
-#        self.prompt_mode = Prompt.NORMAL
-#        self.prompt_str = self.get_prompt_string('0', self.input_part)
-
     def during_load(self, input_text):
 #        if self.fl.load_pattern(input_text, self.sqs):
 #            self.print_dialogue("description loaded!")
 #        else:
 #            self.print_dialogue("what?")
-#        self.return_to_normal()
         pass
 
     def start_parsing(self, input_text):
