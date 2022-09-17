@@ -84,14 +84,13 @@ class Note(ElapseIF):
         self.off_tick = 0
 
     def _note_on(self):
-        self.md.send_midi_note(self.midi_ch, self.note_num, self.velocity)
-        pass
+        self.md.send_midi_note(0, self.note_num, self.velocity)
 
     def _note_off(self):
         self.destroy = True
         self.during_noteon = False
         # midi note off
-        self.md.send_midi_note(self.midi_ch, self.note_num, 0)
+        self.md.send_midi_note(0, self.note_num, 0)
 
     def periodic(self,msr,tick):
         if not self.during_noteon:

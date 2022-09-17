@@ -146,10 +146,10 @@ class Part(sqp.ElapseIF):
     def change_cc(self, cc_num, val):
         if val >= 0 and val < 128:
             self.volume = val
-            self.md.send_control(self.part_num, cc_num, val)
+            self.md.send_control(0, cc_num, val)
 
     def change_pgn(self, pgn):
-        self.md.send_program(self.part_num, pgn)
+        self.md.send_program(0, pgn)
 
     def add_seq_description(self, data):
         self.seq_type = data[0]
