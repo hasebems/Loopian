@@ -28,11 +28,12 @@ def main():
     lp = Loop()
     gui = lpngui.LpnGui(lp)
     md = midi.Midi()
-    seq = sqs.SeqStack(None,md)
+    seq = sqs.SeqStack(None, md)
     prs = ps.Parsing(seq, None, md, gui)
     ev_job = threading.Thread(target=generate_ev, args=(lp, None, seq, prs))
     ev_job.start()
     prs.midi_setting(prs.CONFIRM_MIDI_OUT_ID)
+    md.send_control(0, 11, 127) # dummy send
 
     gui.loop(seq)
     ev_job.join()
