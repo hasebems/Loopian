@@ -337,6 +337,10 @@ class LpnGui:
     COLUMN2_X = 250
     COLUMN3_X = 470
     COLUMN4_X = 690
+    COLUMN29_X = 460
+    COLUMN39_X = 680
+    COLUMN35_X = 570
+    COLUMN45_X = 790
     LAMP_INTERVAL = 40
     PART_INTERVAL = 40
 
@@ -360,8 +364,11 @@ class LpnGui:
         self.beatBox = LpnGuiText(self.COLUMN4_X, self.LINE2_Y)
         self.keyBox =  LpnGuiText(self.COLUMN1_X, self.LINE3_Y)
         self.xxxBox =  LpnGuiText(self.COLUMN2_X, self.LINE3_Y)
-        self.yyyBox =  LpnGuiText(self.COLUMN3_X, self.LINE3_Y)
-        self.zzzBox =  LpnGuiText(self.COLUMN4_X, self.LINE3_Y)
+        self.rptBox =  LpnGuiText(self.COLUMN29_X, self.LINE3_Y, 90)
+        self.r2ptBox =  LpnGuiText(self.COLUMN35_X, self.LINE3_Y, 90)
+        self.lptBox =  LpnGuiText(self.COLUMN39_X, self.LINE3_Y, 90)
+        self.l2ptBox =  LpnGuiText(self.COLUMN45_X, self.LINE3_Y, 90)
+
 
         # Title
         font = pg.font.SysFont(FONTS[136], 32)
@@ -394,6 +401,10 @@ class LpnGui:
         msr, beat, tick, count = seq.get_tick()
         self.beatBox.set_text(str(msr+1) + ' : ' + str(beat+1) + ' : ' + str(tick))
         self.keyBox.set_text('key: ' + seq.key_text)
+        self.rptBox.set_text( 'R1: ' + str(seq.sqobjs[2].lp_elapsed_msr) + '/' + str(seq.sqobjs[2].loop_measure))
+        self.r2ptBox.set_text('R2: ' + str(seq.sqobjs[3].lp_elapsed_msr) + '/' + str(seq.sqobjs[3].loop_measure))
+        self.lptBox.set_text( 'L1: ' + str(seq.sqobjs[0].lp_elapsed_msr) + '/' + str(seq.sqobjs[0].loop_measure))
+        self.l2ptBox.set_text('L2: ' + str(seq.sqobjs[1].lp_elapsed_msr) + '/' + str(seq.sqobjs[1].loop_measure))
 
     def _draw(self):
         self.screen.fill((0,0,0))
@@ -406,8 +417,11 @@ class LpnGui:
         self.beatBox.draw(self.screen)
         self.keyBox.draw(self.screen)
         self.xxxBox.draw(self.screen)
-        self.yyyBox.draw(self.screen)
-        self.zzzBox.draw(self.screen)
+        self.rptBox.draw(self.screen)
+        self.r2ptBox.draw(self.screen)
+        self.lptBox.draw(self.screen)
+        self.l2ptBox.draw(self.screen)
+
 
     def loop(self, seq):
         clock = pg.time.Clock()

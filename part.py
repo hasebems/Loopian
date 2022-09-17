@@ -19,6 +19,7 @@ class Part(sqp.ElapseIF):
         self.seq_type = None
         self.description = [None for _ in range(3)]
         self.loop_measure = 0   # whole_tick と同時生成
+        self.lp_elapsed_msr = 0    # loop 内の経過小節数
         self.whole_tick = 0     # loop_measure と同時生成
         self.state_reserve = False
         self.elm = None     # 再生用の要素が入ったオブジェクト
@@ -74,6 +75,7 @@ class Part(sqp.ElapseIF):
                 # 新たに Loop Obj.を生成
                 self._generate_loop(msr)
             self.first_measure_num = msr    # 計測開始の更新
+            self.lp_elapsed_msr = 1
 
         elapsed_msr = msr - self.first_measure_num
 ##        if self.fl.chain_loading_state:
@@ -101,10 +103,13 @@ class Part(sqp.ElapseIF):
                 # 現在の Loop Obj が終了していない時
                 pass
 
-        elif self.elm != None and \
-            self.loop_measure != 0 and elapsed_msr%self.loop_measure == 0:
-            # 同じ Loop.Obj を生成する
-            self._generate_loop(msr)
+        elif self.elm != None:
+            if self.loop_measure != 0 and elapsed_msr%self.loop_measure == 0:
+                # 同じ Loop.Obj を生成する
+                self._generate_loop(msr)
+                self.lp_elapsed_msr = 1
+            else:
+                self.lp_elapsed_msr += 1
 
         else:
             # Loop 途中で何も起きないとき
