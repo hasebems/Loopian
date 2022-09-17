@@ -2,6 +2,7 @@
 
 ####
 #   ElapseIF Obj. の Interface
+#   <Elapse> とは、再生用コマンドや、音楽の時間を扱う IF を持ったオブジェクト
 class ElapseIF:
 
     def __init__(self, obj, md, type):

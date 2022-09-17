@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import time
 import lpnlib as nlib
-import part as sqp
+import elapse_part as sqp
 
 ####
 # Tempo 生成の考え方

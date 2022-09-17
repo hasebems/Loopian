@@ -7,7 +7,7 @@
 import threading
 import lpngui
 import lpncmd as ps
-import seqstack as sqs
+import elapse_stack as sqs
 import midi
 
 class Loop:
