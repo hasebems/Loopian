@@ -383,23 +383,45 @@ class Parsing:
                     self.gui.change_part(part - 1)
                     #self.prompt_str = self.get_prompt_string('0', part)
 
+    @staticmethod
+    def complement_bracket(input_text):
+        # [] のセットを抜き出し、中身を note_info に入れる
+        note_info = []
+        tx = input_text
+        while True:
+            num = tx.find(']')
+            if num == -1:
+                break
+            note_info.append(tx[1:num])
+            tx = tx[num + 1:].strip()
+            if len(tx) == 0:
+                break
+            if tx[0:1] != '[':
+                break
+
+        # [] の数が 1,2 の時は中身を補填
+        bracket_num = len(note_info)
+        if bracket_num == 1:
+            note_info.append('1')  # set default value
+            note_info.append('100')
+        elif bracket_num == 2:
+            note_info.append('100')  # set default velocity value
+        elif bracket_num == 0 or bracket_num > 3:
+            # [] の数が 1〜3 以外ならエラー
+            return None
+
+        note_info.insert(0, 'phrase')
+        return note_info      
+
     def letter_bracket(self, input_text):
-        dx = dscrpt.Description()
-        description = dx.complement_bracket(input_text)
+        description = self.complement_bracket(input_text)
         if description != None:
-            dx.set_dscrpt_to_seq2(self.input_part, self.sqs, description)
+            self.sqs.get_part(self.input_part).add_seq_description(description)
             self.print_dialogue("set Phrase!")
         else:
             self.print_dialogue("what?")
 
     def letter_brace(self, input_text):
-#        dx = dscrpt.Description()
-#        description, dialogue = dx.complement_brace(input_text)
-#        if description != None:
-#            dx.set_dscrpt_to_seq2(self.input_part, self.sqs, description)
-#            self.print_dialogue(dialogue)
-#        else:
-#            self.print_dialogue("what?")
         pass
 
 #    def return_to_normal(self):

@@ -2,7 +2,7 @@
 import lpnlib as nlib
 import namiphrase as nph
 import elapse as sqp
-import namiseqphr as phrlp
+import seqphrase as phrlp
 
 ####
 #   起動時から存在し、決して destroy されない ElapseIF Obj.
