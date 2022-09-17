@@ -2,7 +2,6 @@
 import lpnlib as nlib
 import namiphrase as nph
 import elapse as sqp
-import namiseqptn as ptnlp
 import namiseqphr as phrlp
 
 ####
@@ -33,27 +32,12 @@ class Part(sqp.ElapseIF):
             self.loop_measure = self.whole_tick//tick_for_onemsr + \
                 (0 if self.whole_tick%tick_for_onemsr == 0 else 1)
             return True
-        elif self.seq_type == 'random':
-            self.elm = ptnlp.PatternGenerator(True,self.description)
-            if self.elm != None:
-                self.loop_measure = self.elm.max_measure_num
-                self.whole_tick = self.loop_measure*tick_for_onemsr
-                return True
-        elif self.seq_type == 'arp':
-            self.elm = ptnlp.PatternGenerator(False,self.description)
-            if self.elm != None:
-                self.loop_measure = self.elm.max_measure_num
-                self.whole_tick = self.loop_measure*tick_for_onemsr
-                return True
         return False
 
     def _generate_loop(self,msr):
         if self.seq_type == 'phrase':
             self.loop_obj = phrlp.PhraseLoop(self.parent, self.md, msr, self.elm,  \
                 self.keynote, self.part_num, self.whole_tick)
-        elif self.seq_type == 'random' or self.seq_type == 'arp':
-            self.loop_obj = ptnlp.PatternLoop(self.parent, self.md, msr, self.elm,  \
-                self.keynote, self.part_num)
         self.parent.add_obj(self.loop_obj)
 
     def _set_chain_loading(self, msr, elapsed_msr):
