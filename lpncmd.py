@@ -22,7 +22,7 @@ class Prompt:
 class Parsing:
     #   入力した文字列の解析
     #   一行単位で入力されるたびに生成される
-    def __init__(self, sqs, nfl, md, gui):
+    def __init__(self, sqs, nfl, md, gui, dt):
         self.prompt_mode = Prompt.NORMAL
         self.sqs = sqs
         self.fl = nfl
@@ -30,6 +30,7 @@ class Parsing:
         self.gui = gui
         self.input_part = 0
         self.back_color = 2
+        self.gendt = dt
 #        self.fl.display_loadable_files(self.print_dialogue)
         gui.set_func_ptr(self.start_parsing)
 
@@ -258,7 +259,7 @@ class Parsing:
 
     def letterS(self, input_text):
         if input_text[0:5] == 'start':
-            well_done = self.sqs.play()
+            well_done = self.sqs.start()
             if well_done:
                 self.print_dialogue("Phrase has started!")
             else:
@@ -365,40 +366,9 @@ class Parsing:
                     self.input_part = part - 1
                     self.gui.change_part(part - 1)
 
-    @staticmethod
-    def complement_bracket(input_text):
-        # [] のセットを抜き出し、中身を note_info に入れる
-        note_info = []
-        tx = input_text
-        while True:
-            num = tx.find(']')
-            if num == -1:
-                break
-            note_info.append(tx[1:num])
-            tx = tx[num + 1:].strip()
-            if len(tx) == 0:
-                break
-            if tx[0:1] != '[':
-                break
-
-        # [] の数が 1,2 の時は中身を補填
-        bracket_num = len(note_info)
-        if bracket_num == 1:
-            note_info.append('1')  # set default value
-            note_info.append('100')
-        elif bracket_num == 2:
-            note_info.append('100')  # set default velocity value
-        elif bracket_num == 0 or bracket_num > 3:
-            # [] の数が 1〜3 以外ならエラー
-            return None
-
-        note_info.insert(0, 'phrase')
-        return note_info      
-
     def letter_bracket(self, input_text):
-        description = self.complement_bracket(input_text)
-        if description != None:
-            self.sqs.get_part(self.input_part).add_seq_description(description)
+        success = self.gendt.set_raw(self.input_part, input_text)
+        if success:
             self.print_dialogue("set Phrase!")
         else:
             self.print_dialogue("what?")

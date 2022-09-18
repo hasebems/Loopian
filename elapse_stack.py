@@ -13,7 +13,10 @@ class SeqStack:
     #   開始時に生成され、periodic() がコマンド入力とは別スレッドで、定期的に呼ばれる。
     #   そのため、change_tempo, play, stop 受信時はフラグのみを立て、periodic()
     #   で実処理を行う。
-    def __init__(self, fl, md):
+    def __init__(self, fl, md, gendt):
+        self.md = md
+        self.gendt = gendt
+
         self.origin_time = 0        # start 時の絶対時間
         self.bpm_start_time = 0     # tempo/beat が変わった時点の絶対時間、tick 計測の開始時間
         self.bpm_start_tick = 0     # tempo が変わった時点の tick, beat が変わったとき0clear
@@ -33,11 +36,11 @@ class SeqStack:
         self.stop_for_periodic = False
         self.fine_for_periodic = False
 
-        self.md = md
         self.sqobjs = []
         for i in range(nlib.MAX_PART_COUNT):
             obj = sqp.Part(self,md,fl,i)
             self.sqobjs.append(obj)
+            self.gendt.set_part_ptr(obj,i)
 
     def add_obj(self, obj):
         self.sqobjs.append(obj)
