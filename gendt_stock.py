@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 import lpnlib as nlib
-import namiphrase as nph
+import gendt_phrase as nph
 
 #### 入力テキストデータの変換処理を集約するクラス
 class PartDataStock:
@@ -13,24 +13,6 @@ class PartDataStock:
 
         self.ptr = None
         self.whole_tick = 0
-
-    def set_raw(self, text):
-        # 1. raw
-        self.raw = text
-
-        # 2.complement data
-        cmpl = self._complement_bracket(text)
-        if cmpl != None:
-            self.complement = cmpl
-            self.ptr.update_phrase()
-        else:
-            return False
-
-        # 3.generated data
-        pg = nph.PhraseGenerator(self.complement, self.ptr.keynote)
-        self.whole_tick, self.generated = pg.convert_to_MIDI_like_format()
-
-        return True
 
     @staticmethod
     def _complement_bracket(input_text):
@@ -62,6 +44,26 @@ class PartDataStock:
         #note_info.insert(0, 'phrase')
         return note_info
 
+    def set_raw(self, text):
+        # 1. raw
+        self.raw = text
+
+        # 2.complement data
+        cmpl = self._complement_bracket(text)
+        if cmpl != None:
+            self.complement = cmpl
+            self.ptr.update_phrase()
+        else:
+            return False
+
+        # 3.generated data
+        pg = nph.PhraseGenerator(self.complement, self.ptr.keynote)
+        self.whole_tick, self.generated = pg.convert_to_MIDI_like_format()
+
+        return True
+
+    def get_final(self):
+        return self.whole_tick, self.generated
 
 
 class SeqDataStock:
@@ -77,18 +79,6 @@ class SeqDataStock:
         if self.part_data[part].ptr == None: return False
         return self.part_data[part].set_raw(text)
 
-    def set_complement(self, part):
-        if part >= nlib.MAX_PART_COUNT: return False
-        return True
-
-    def set_generated(self, part):
-        if part >= nlib.MAX_PART_COUNT: return False
-        return True
-
-    def get_generated(self, part):
-        if part >= nlib.MAX_PART_COUNT: return 0,None
-        return self.part_data[part].whole_tick, self.part_data[part].generated
-
     def get_final(self, part):
         if part >= nlib.MAX_PART_COUNT: return 0,None
-        return self.part_data[part].whole_tick, self.part_data[part].generated
+        return self.part_data[part].get_final()
