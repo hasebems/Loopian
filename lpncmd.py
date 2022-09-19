@@ -205,11 +205,13 @@ class Parsing:
             self.print_dialogue("Octave has changed!")
         elif command == 'beat':
             beat_list = tx[1].strip().split()
+            self.gendt.set_generated()
             self.change_beat(beat_list[0])
         elif command == 'bpm':
             bpmnumlist = tx[1].strip().split()
             if bpmnumlist[0].isdecimal():
                 self.sqs.change_tempo(int(bpmnumlist[0]))
+                self.gendt.set_generated()
                 self.print_dialogue("BPM has changed!")
         elif command == 'balance' or command == 'volume':
             bl_list = tx[1].strip().split(',')

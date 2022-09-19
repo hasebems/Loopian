@@ -15,8 +15,11 @@ class PartDataStock:
 
         self.seq = seq
         self.ptr = objs
-        self.whole_tick = 0
         self.ptr.set_gendt_part(self)
+
+        self.whole_tick = 0
+        self.base_note = 0
+        self.note_cnt = 0
 
     @staticmethod
     def _fill_omitted_note_data(note_data):
@@ -276,22 +279,30 @@ class PartDataStock:
         self.raw = text
 
         # 2.complement data
-        cmpl, base_note, note_cnt = self._complement_data(text)   # リスト [3] = [note[],dur[],exp]
+        cmpl, self.base_note, self.note_cnt = self._complement_data(text)   # リスト [3] = [note[],dur[],exp]
         print('complement:',cmpl)
         if cmpl != None:
             self.complement = cmpl
-            self.ptr.update_phrase()
         else:
             return False
 
         # 3.generated data
-        self.whole_tick, self.generated = self.convert_to_MIDI_like_format(base_note, note_cnt)
+        self.set_generated()
+
+        return True
+
+
+    def set_generated(self):
+        if self.complement == None: return
+
+        # 3.generated data
+        self.whole_tick, self.generated = self.convert_to_MIDI_like_format(self.base_note, self.note_cnt)
         print('generated1:',self.generated)
         ### Add Filters
         self.generated = efb.BeatFilter().filtering(self.generated, self.seq.bpm, self.seq.tick_for_onemsr)
         print('generated2:',self.generated)
+        self.ptr.update_phrase()
 
-        return True
 
     def get_final(self):
         # 4. randomized data
@@ -314,3 +325,6 @@ class SeqDataStock:
         if self.part_data[part].ptr == None: return False
         return self.part_data[part].set_raw(text)
 
+    def set_generated(self):
+        for part in self.part_data:
+            part.set_generated()
