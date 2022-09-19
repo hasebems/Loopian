@@ -10,8 +10,8 @@ class BeatFilter(ef.ExpfilterIF):
         if bpm < 70:
             return inputs
 
+        # とりあえず、純粋な四拍子、三拍子は救うことにする
         outputs = []
-        if bpm > 180: bpm = 180
         base_bpm = (bpm-70)//10
         if tick_for_onemsr == 1920:
             for dt in inputs:
