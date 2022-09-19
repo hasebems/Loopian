@@ -364,10 +364,10 @@ class LpnGui:
         self.beatBox = LpnGuiText(self.COLUMN4_X, self.LINE2_Y)
         self.keyBox =  LpnGuiText(self.COLUMN1_X, self.LINE3_Y)
         self.xxxBox =  LpnGuiText(self.COLUMN2_X, self.LINE3_Y)
-        self.rptBox =  LpnGuiText(self.COLUMN29_X, self.LINE3_Y, 90)
-        self.r2ptBox =  LpnGuiText(self.COLUMN35_X, self.LINE3_Y, 90)
-        self.lptBox =  LpnGuiText(self.COLUMN39_X, self.LINE3_Y, 90)
-        self.l2ptBox =  LpnGuiText(self.COLUMN45_X, self.LINE3_Y, 90)
+        self.lptBox =  LpnGuiText(self.COLUMN29_X, self.LINE3_Y, 90)
+        self.l2ptBox =  LpnGuiText(self.COLUMN35_X, self.LINE3_Y, 90)
+        self.rptBox =  LpnGuiText(self.COLUMN39_X, self.LINE3_Y, 90)
+        self.r2ptBox =  LpnGuiText(self.COLUMN45_X, self.LINE3_Y, 90)
 
 
         # Title
@@ -397,18 +397,18 @@ class LpnGui:
         self.scroll_box.update()
         self.timeBox.set_text(datetime.datetime.now().strftime("%H:%M:%S"))
         self.dateBox.set_text(str(datetime.date.today()))
-        self.bpmBox.set_text('bpm: ' + str(seq.tempo))
+        self.bpmBox.set_text('bpm: ' + str(seq.bpm))
         msr, beat, tick, count = seq.get_tick()
         self.beatBox.set_text(str(msr+1) + ' : ' + str(beat+1) + ' : ' + str(tick))
         self.keyBox.set_text('key: ' + seq.key_text)
-        a,b = seq.sqobjs[2].get_loop_info()
-        self.rptBox.set_text( 'R1: ' + str(a) + '/' + str(b))
-        a,b = seq.sqobjs[3].get_loop_info()
-        self.r2ptBox.set_text('R2: ' + str(a) + '/' + str(b))
         a,b = seq.sqobjs[0].get_loop_info()
         self.lptBox.set_text( 'L1: ' + str(a) + '/' + str(b))
         a,b = seq.sqobjs[1].get_loop_info()
         self.l2ptBox.set_text('L2: ' + str(a) + '/' + str(b))
+        a,b = seq.sqobjs[2].get_loop_info()
+        self.rptBox.set_text( 'R1: ' + str(a) + '/' + str(b))
+        a,b = seq.sqobjs[3].get_loop_info()
+        self.r2ptBox.set_text('R2: ' + str(a) + '/' + str(b))
 
     def _draw(self):
         self.screen.fill((0,0,0))
