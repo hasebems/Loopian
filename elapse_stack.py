@@ -13,9 +13,8 @@ class SeqStack:
     #   開始時に生成され、periodic() がコマンド入力とは別スレッドで、定期的に呼ばれる。
     #   そのため、change_tempo, play, stop 受信時はフラグのみを立て、periodic()
     #   で実処理を行う。
-    def __init__(self, fl, md, gendt):
+    def __init__(self, md):
         self.md = md
-        self.gendt = gendt
 
         self.origin_time = 0        # start 時の絶対時間
         self.bpm_start_time = 0     # tempo/beat が変わった時点の絶対時間、tick 計測の開始時間
@@ -25,7 +24,7 @@ class SeqStack:
         self.crnt_measure = -1      # start からの小節数（最初の小節からイベントを出すため、-1初期化)
         self.crnt_tick_inmsr = 0    # 現在の小節内の tick 数
 
-        self.tempo = 120
+        self.bpm = 120
         self.beat = [4,4]
         self.tick_for_onemsr = nlib.DEFAULT_TICK_FOR_ONE_MEASURE # 1920
         self.stock_tick_for_onemsr = [nlib.DEFAULT_TICK_FOR_ONE_MEASURE,4,4]
@@ -38,9 +37,8 @@ class SeqStack:
 
         self.sqobjs = []
         for i in range(nlib.MAX_PART_COUNT):
-            obj = sqp.Part(self,md,fl,i)
+            obj = sqp.Part(self,md,i)
             self.sqobjs.append(obj)
-            self.gendt.set_part_ptr(obj,i)
 
     def add_obj(self, obj):
         self.sqobjs.append(obj)
@@ -78,7 +76,7 @@ class SeqStack:
 
     def _calc_current_tick(self, crnt_time):
         diff_time = crnt_time - self.bpm_start_time
-        one_tick = 60/(480*self.tempo)
+        one_tick = 60/(480*self.bpm)
         return diff_time/one_tick + self.bpm_start_tick
 
     def _play(self):
@@ -165,7 +163,7 @@ class SeqStack:
         current_time = time.time()
         self.bpm_start_tick = self._calc_current_tick(current_time)
         self.bpm_start_time = current_time  # Get current time
-        self.tempo = tempo
+        self.bpm = tempo
 
     def change_beat(self, beat):    # beat: number of ticks of one measure
         self.stock_tick_for_onemsr = beat

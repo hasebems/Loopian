@@ -27,10 +27,10 @@ def generate_ev(loop, fl, seq, prs):
 
 def main():
     lp = Loop()
-    gendt = stk.SeqDataStock()
-    gui = lpngui.LpnGui(lp)
     md = midi.Midi()
-    seq = sqs.SeqStack(None, md, gendt)
+    seq = sqs.SeqStack(md)
+    gendt = stk.SeqDataStock(seq)
+    gui = lpngui.LpnGui(lp)
     prs = ps.Parsing(seq, None, md, gui, gendt)
     ev_job = threading.Thread(target=generate_ev, args=(lp, None, seq, prs))
     ev_job.start()

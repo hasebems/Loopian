@@ -7,12 +7,11 @@ import elapse_phrase as phrlp
 #   起動時から存在し、決して destroy されない ElapseIF Obj.
 class Part(sqp.ElapseIF):
 
-    def __init__(self, obj, md, fl, num):
+    def __init__(self, obj, md, num):
         super().__init__(obj, md, 'Part')
         self.part_num = num
         self.first_measure_num = 0 # 新しい Phrase/Pattern が始まった絶対小節数
 
-        self.fl = fl
         self.loop_obj = None
         self.keynote = nlib.DEFAULT_NOTE_NUMBER
         self.description = [None for _ in range(3)]
@@ -20,10 +19,14 @@ class Part(sqp.ElapseIF):
         self.lp_elapsed_msr = 0    # loop 内の経過小節数
         self.whole_tick = 0     # loop_measure と同時生成
         self.state_reserve = False
+        self.gendt_part = None
+
+    def set_gendt_part(self, gendt):
+        self.gendt_part = gendt
 
     def _generate_loop(self,msr):
         tick_for_onemsr = self.parent.get_tick_for_onemsr()
-        self.whole_tick, elm = self.parent.gendt.get_final(self.part_num)
+        self.whole_tick, elm = self.gendt_part.get_final()
 
         # その時の beat 情報で、whle_tick を loop_measure に換算
         self.loop_measure = self.whole_tick//tick_for_onemsr + \
