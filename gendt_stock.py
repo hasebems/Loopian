@@ -2,18 +2,21 @@
 import re
 import math
 import lpnlib as nlib
+import expfilter_beat as efb
 
 #### 入力テキストデータの変換処理を集約するクラス
 class PartDataStock:
 
-    def __init__(self):
+    def __init__(self, objs, seq):
         self.raw = None
         self.complement = None
         self.generated = None
-        self.random = None
+        self.randomized = None
 
-        self.ptr = None
+        self.seq = seq
+        self.ptr = objs
         self.whole_tick = 0
+        self.ptr.set_gendt_part(self)
 
     @staticmethod
     def _fill_omitted_note_data(note_data):
@@ -274,6 +277,7 @@ class PartDataStock:
 
         # 2.complement data
         cmpl, base_note, note_cnt = self._complement_data(text)   # リスト [3] = [note[],dur[],exp]
+        print('complement:',cmpl)
         if cmpl != None:
             self.complement = cmpl
             self.ptr.update_phrase()
@@ -282,27 +286,31 @@ class PartDataStock:
 
         # 3.generated data
         self.whole_tick, self.generated = self.convert_to_MIDI_like_format(base_note, note_cnt)
-        print(self.generated)
+        print('generated1:',self.generated)
+        ### Add Filters
+        self.generated = efb.BeatFilter().filtering(self.generated, self.seq.bpm, self.seq.tick_for_onemsr)
+        print('generated2:',self.generated)
 
         return True
 
     def get_final(self):
-        return self.whole_tick, self.generated
+        # 4. randomized data
+        self.randomized = self.generated # not yet
+
+        return self.whole_tick, self.randomized
 
 
 class SeqDataStock:
 
-    def __init__(self):
-        self.part_data = [PartDataStock() for _ in range(nlib.MAX_PART_COUNT)]
-
-    def set_part_ptr(self, ptr, num):
-        self.part_data[num].ptr = ptr
+    def __init__(self, seq):
+        self.part_data = [] #[PartDataStock() for _ in range(nlib.MAX_PART_COUNT)]
+        self.seq = seq
+        for i in range(nlib.MAX_PART_COUNT):
+            pdt = PartDataStock(seq.sqobjs[i], seq)
+            self.part_data.append(pdt)
 
     def set_raw(self, part, text):
         if part >= nlib.MAX_PART_COUNT: return False
         if self.part_data[part].ptr == None: return False
         return self.part_data[part].set_raw(text)
 
-    def get_final(self, part):
-        if part >= nlib.MAX_PART_COUNT: return 0,None
-        return self.part_data[part].get_final()
