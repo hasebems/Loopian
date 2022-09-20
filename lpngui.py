@@ -142,7 +142,7 @@ class LpnInputBox:
         self.parent = parent
         self.history_position = 0   # history function
         self.input_history = []     # history function
-        self.part_text = 'L1>'
+        self.part_text = '??>'
 
     def _detect_cursor_location(self, right=False):
         txt_len = len(self.text)
@@ -358,6 +358,7 @@ class LpnGui:
         self.scroll_box = LpnScroll(self.COLUMN1_X, self.SURFACE_Y_SZ-330, self.SURFACE_X_SZ-60, 250)
         self.inputBox = LpnInputBox(self, self.COLUMN1_X, self.SURFACE_Y_SZ-60, self.SURFACE_X_SZ-60)
         self.inputBox.activate()
+        self.inputBox.set_part_text(cmd.input_part)
 
         self.dateBox = LpnGuiText(self.COLUMN1_X, self.LINE2_Y)
         self.timeBox = LpnGuiText(self.COLUMN2_X, self.LINE2_Y)
