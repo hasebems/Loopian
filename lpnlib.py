@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import datetime
+import random
 
 REST = 1000
 NONE = 1000
@@ -57,32 +58,32 @@ CHORD_SCALE = {  # ±2オクターブ分
 
 
 def convert_exp2vel(exp_text):
-    vel = 100
-    if not exp_text.isdecimal():
-        if exp_text == 'ff':
-            vel = 127
-        elif exp_text == 'f':
-            vel = 114
-        elif exp_text == 'mf':
-            vel = 100
-        elif exp_text == 'mp':
-            vel = 84
-        elif exp_text == 'p':
-            vel = 64
-        elif exp_text == 'pp':
-            vel = 48
-        elif exp_text == 'ppp':
-            vel = 24
-        elif exp_text == 'pppp':
-            vel = 12
-        elif exp_text == 'ppppp':
-            vel = 1
+    if exp_text == 'ff':
+        vel = 127
+    elif exp_text == 'f':
+        vel = 114
+    elif exp_text == 'mf':
+        vel = 100
+    elif exp_text == 'mp':
+        vel = 84
+    elif exp_text == 'p':
+        vel = 64
+    elif exp_text == 'pp':
+        vel = 48
+    elif exp_text == 'ppp':
+        vel = 24
+    elif exp_text == 'pppp':
+        vel = 12
+    elif exp_text == 'ppppp':
+        vel = 1
     else:
-        vel = int(exp_text)
-        if vel > 127:
-            vel = 127
+        vel = 100
     return vel
 
+
+def gauss_rnd10():
+    rnd = random.gauss(0,1)
+    return rnd*3
 
 def convert_doremi(doremi_str):
     # 最初に +/-/++/-- がある場合、オクターブ(+12/-12/+24/-24)とみなす
