@@ -307,7 +307,12 @@ class PartDataStock:
 
     def get_final(self):
         # 4. randomized data
-        self.randomized = self.generated # not yet
+        self.randomized = []
+        for dt in self.generated:
+            dt[2] += int(nlib.gauss_rnd10())
+            if dt[2] > 127: dt[2] = 127
+            elif dt[2] < 1: dt[2] = 1
+            self.randomized.append(dt)
 
         return self.whole_tick, self.randomized
 
