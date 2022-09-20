@@ -22,17 +22,17 @@ class Prompt:
 class Parsing:
     #   入力した文字列の解析
     #   一行単位で入力されるたびに生成される
-    def __init__(self, sqs, nfl, md, gui, dt):
+    def __init__(self, sqs, md, dt):
         self.prompt_mode = Prompt.NORMAL
         self.sqs = sqs
-        self.fl = nfl
         self.md = md
-        self.gui = gui
-        self.input_part = 0
+        self.gui = None
+        self.input_part = 2
         self.back_color = 2
         self.gendt = dt
-#        self.fl.display_loadable_files(self.print_dialogue)
-        gui.set_func_ptr(self.start_parsing)
+
+    def set_gui(self, gui):
+        self.gui = gui
 
     def print_dialogue(self, rpy):
         print(T_PINK + rpy + T_END)
