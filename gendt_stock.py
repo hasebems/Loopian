@@ -215,10 +215,10 @@ class PartDataStock:
         # [] の数が 1,2 の時は中身を補填
         bracket_num = len(note_info)
         if bracket_num == 1:
-            note_info.append('1')  # set default value
-            note_info.append('raw')
+            note_info.append('1')   # set default value
+            note_info.append('raw') # set default exp. value
         elif bracket_num == 2:
-            note_info.append('raw')  # set default velocity value
+            note_info.append('raw') # set default exp. value
         elif bracket_num == 0 or bracket_num > 3:
             # [] の数が 1〜3 以外ならエラー
             return None
@@ -228,6 +228,7 @@ class PartDataStock:
         complement.append(dt)
         dur_text, base_note = PartDataStock._change_basic_note_dur(note_info[1])
         complement.append(PartDataStock._fill_omitted_dur_data(dur_text, num))
+        complement.append(note_info[2])
 
         return complement, base_note, num
 
@@ -266,8 +267,8 @@ class PartDataStock:
         while read_ptr < note_cnt:
             notes = self._cnv_note_to_pitch(self.complement[0][read_ptr])
             dur = self._cnv_duration(self.complement[1][read_ptr])
-            #vel = nlib.convert_exp2vel(vel_flow[read_ptr])
-            self._add_note(generated, tick, notes, dur, base_note)
+            vel = nlib.convert_exp2vel(self.complement[2])
+            self._add_note(generated, tick, notes, dur, base_note, vel)
             tick += int(dur * nlib.DEFAULT_TICK_FOR_ONE_MEASURE / base_note)
             read_ptr += 1  # out from repeat
 
