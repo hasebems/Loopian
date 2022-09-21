@@ -317,17 +317,31 @@ class PartDataStock:
         return self.whole_tick, self.randomized
 
 
+class DamperPartStock:
+
+    def __init__(self, objs, seq):
+        self.seq = seq
+        self.ptr = objs
+        self.ptr.set_gendt_part(self)
+        self.ptr.update_phrase()    # always
+
+    def get_final(self):
+        return 1920, [[40,128+64,127,1870]]
+
 class SeqDataStock:
 
     def __init__(self, seq):
         self.part_data = [] #[PartDataStock() for _ in range(nlib.MAX_PART_COUNT)]
         self.seq = seq
-        for i in range(nlib.MAX_PART_COUNT):
+        for i in range(nlib.MAX_PART_COUNT-1):
             pdt = PartDataStock(seq.sqobjs[i], seq)
             self.part_data.append(pdt)
 
+        # Pedal Part
+        self.part_data.append(DamperPartStock(seq.sqobjs[nlib.MAX_PART_COUNT-1], seq))
+
     def set_raw(self, part, text):
-        if part >= nlib.MAX_PART_COUNT: return False
+        if part >= nlib.MAX_PART_COUNT-1: return False
         if self.part_data[part].ptr == None: return False
         return self.part_data[part].set_raw(text)
 

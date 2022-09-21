@@ -46,9 +46,11 @@ class Loop(ElapseIF):
         self.destroy = False
         self.tick_for_one_measure = self.parent.get_tick_for_onemsr()
 
-    def _set_note(self,ev): # ev: [midi ch, note, velocity, duration]
-        obj = Note(self.parent, self.md, ev)
-        self.parent.add_obj(obj)
+    def _set_note(self,ev): # ev: [midi ch, note/cc, velocity/value, duration]
+        if ev[1] == 128+64:
+            self.parent.add_obj(Damper(self.parent, self.md, ev))
+        elif ev[1] < 128:
+            self.parent.add_obj(Note(self.parent, self.md, ev))
 
     def msrtop(self,msr):
         pass
@@ -114,3 +116,50 @@ class Note(ElapseIF):
     def stop(self):
         if self.during_noteon:
             self._note_off()
+
+####
+#   ペダルの ElapseIF Obj.
+#   Pedal On時に生成され、MIDI を出力した後、Pedal Offを生成して destroy される
+class Damper(ElapseIF):
+
+    def __init__(self, obj, md, ev):
+        super().__init__(obj, md, 'Pedal')
+        self.midi_ch = ev[0]
+        self.cc_num = ev[1]
+        self.value = ev[2]
+        self.duration = ev[3]
+        self.during_pedal = False
+        self.destroy = False
+        self.off_msr = 0
+        self.off_tick = 0
+
+    def _pedal_on(self):
+        self.md.send_control(0, 64, self.value)
+
+    def _pedal_off(self):
+        self.destroy = True
+        self.during_pedal = False
+        # midi note off
+        self.md.send_control(0, 64, 0)
+
+    def periodic(self,msr,tick):
+        if not self.during_pedal:
+            self.during_pedal = True
+            tk = self.parent.get_tick_for_onemsr()
+            self.off_msr = msr
+            self.off_tick = tick + self.duration
+            while self.off_tick > tk:
+                self.off_tick -= tk
+                self.off_msr += 1
+            # midi control change on
+            self._pedal_on()
+        else:
+            if msr == self.off_msr and tick > self.off_tick:
+                self._pedal_off()
+
+    def destroy_me(self):
+        return self.destroy
+
+    def stop(self):
+        if self.during_pedal:
+            self._pedal_off()
