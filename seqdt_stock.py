@@ -254,7 +254,7 @@ class PartDataStock:
         for note in notes:
             if note != nlib.REST:
                 real_dur = math.floor(duration * nlib.DEFAULT_TICK_FOR_ONE_MEASURE / base_note) # add line
-                generated.append([tick, note, velocity, real_dur])                         # add real_dur
+                generated.append(['note', tick, real_dur, note, velocity])                      # add real_dur
 
 
     def convert_to_MIDI_like_format(self, base_note, note_cnt):
@@ -309,9 +309,9 @@ class PartDataStock:
         # 4. randomized data
         self.randomized = []
         for dt in self.generated:
-            dt[2] += int(nlib.gauss_rnd10())
-            if dt[2] > 127: dt[2] = 127
-            elif dt[2] < 1: dt[2] = 1
+            dt[nlib.VEL] += int(nlib.gauss_rnd10())
+            if dt[nlib.VEL] > 127: dt[nlib.VEL] = 127
+            elif dt[nlib.VEL] < 1: dt[nlib.VEL] = 1
             self.randomized.append(dt)
 
         return self.whole_tick, self.randomized
@@ -326,7 +326,7 @@ class DamperPartStock:
         self.ptr.update_phrase()    # always
 
     def get_final(self):
-        return 1920, [[40,128+64,60,1870]]
+        return 1920, [['damper',40,1870,127]]
 
 class SeqDataStock:
 

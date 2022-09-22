@@ -32,13 +32,9 @@ class PhraseLoop(sqp.Loop):
             if max_ev <= trace:
                 next_tick = nlib.END_OF_DATA   # means sequence finished
                 break
-            next_tick = self.phr[trace][0]
+            next_tick = self.phr[trace][nlib.TICK]
             if next_tick < tick:
-                note = self.phr[trace][1]
-                vel = self.phr[trace][2]
-                dur = self.phr[trace][3]
-                #self.midi_handler(nt, vel)
-                self._set_note([self.midich,note,vel,dur])
+                self._set_note(self.phr[trace])
             else:
                 break
             trace += 1

@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
+import lpnlib as nlib
 
 ####
 #   ElapseIF Obj. の Interface
 #   <Elapse> とは、再生用コマンドや、音楽の時間を扱う IF を持ったオブジェクト
 class ElapseIF:
 
-    def __init__(self, obj, md, type):
+    def __init__(self, obj, md, type='None'):
         self.parent = obj
         self.md = md
         self.type = type
@@ -46,10 +47,10 @@ class Loop(ElapseIF):
         self.destroy = False
         self.tick_for_one_measure = self.parent.get_tick_for_onemsr()
 
-    def _set_note(self,ev): # ev: [midi ch, note/cc, velocity/value, duration]
-        if ev[1] == 128+64:
+    def _set_note(self,ev): 
+        if ev[nlib.TYPE] == 'damper':# ev: ['damper', tick, value, duration]
             self.parent.add_obj(Damper(self.parent, self.md, ev))
-        elif ev[1] < 128:
+        elif ev[nlib.TYPE] == 'note':# ev: ['note', tick, note, velocity, duration]
             self.parent.add_obj(Note(self.parent, self.md, ev))
 
     def msrtop(self,msr):
@@ -77,17 +78,17 @@ class Note(ElapseIF):
 
     def __init__(self, obj, md, ev):
         super().__init__(obj, md, 'Note')
-        self.midi_ch = ev[0]
-        self.note_num = ev[1]
-        self.velocity = ev[2]
-        self.duration = ev[3]
+        self.midi_ch = 0
+        self.note_num = ev[nlib.NOTE]
+        self.velocity = ev[nlib.VEL]
+        self.duration = ev[nlib.DUR]
         self.during_noteon = False
         self.destroy = False
         self.off_msr = 0
         self.off_tick = 0
 
     def _note_on(self):
-        self.md.send_midi_note(0, self.note_num, self.velocity)
+        self.md.send_midi_note(self.midi_ch, self.note_num, self.velocity)
 
     def _note_off(self):
         self.destroy = True
@@ -123,18 +124,18 @@ class Note(ElapseIF):
 class Damper(ElapseIF):
 
     def __init__(self, obj, md, ev):
-        super().__init__(obj, md, 'Pedal')
-        self.midi_ch = ev[0]
-        self.cc_num = ev[1]
-        self.value = ev[2]
-        self.duration = ev[3]
+        super().__init__(obj, md, 'Damper')
+        self.midi_ch = 0
+        self.cc_num = 64
+        self.value = ev[nlib.VAL]
+        self.duration = ev[nlib.DUR]
         self.during_pedal = False
         self.destroy = False
         self.off_msr = 0
         self.off_tick = 0
 
     def _pedal_on(self):
-        self.md.send_control(0, 64, self.value)
+        self.md.send_control(self.midi_ch, self.cc_num, self.value)
 
     def _pedal_off(self):
         self.destroy = True

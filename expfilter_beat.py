@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import expfilter as ef
+import lpnlib as nlib
 
 class BeatFilter(ef.ExpfilterIF):
 
@@ -18,26 +19,26 @@ class BeatFilter(ef.ExpfilterIF):
         base_bpm = (bpm-self.MIN_VEL)*self.EFFECT/100
         if tick_for_onemsr == 1920:
             for dt in inputs:
-                tm = (dt[0] % 1920)/480
+                tm = (dt[nlib.TICK] % 1920)/480
                 if tm == 0.0:
-                    dt[2] += int(base_bpm)
+                    dt[nlib.VEL] += int(base_bpm)   # strong
                 #elif tm == 1.0 or tm == 3.0:
                 #    pass
                 elif tm == 2.0:
-                    dt[2] += int(base_bpm/4)
+                    dt[nlib.VEL] += int(base_bpm/4) # middle
                 else:
-                    dt[2] -= int(base_bpm/4)
+                    dt[nlib.VEL] -= int(base_bpm/4) # weak
                 outputs.append(dt)
         elif tick_for_onemsr == 1440:
             for dt in inputs:
-                tm = (dt[0] % 1440)/480
+                tm = (dt[nlib.TICK] % 1440)/480
                 if tm == 0.0:
-                    dt[2] += int(base_bpm)
+                    dt[nlib.VEL] += int(base_bpm)   # strong
                 elif tm == 1.0:
-                    dt[2] += int(base_bpm/4)
+                    dt[nlib.VEL] += int(base_bpm/4) # middle
                 #elif tm == 2.0:
                 #    pass
                 else:
-                    dt[2] -= int(base_bpm/4)
+                    dt[nlib.VEL] -= int(base_bpm/4) # weak
                 outputs.append(dt)
         return outputs

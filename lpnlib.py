@@ -12,8 +12,17 @@ MAX_PART_COUNT = 5
 DEFAULT_BPM = 100
 DEFAULT_NOTE_NUMBER = 60
 
-ROOT_NAME = ('I','II','III','IV','V','VI','VII')
+# seq data index
+TYPE = 0
+TICK = 1
+DUR = 2
+# for 'note'
+NOTE = 3
+VEL = 4
+# for 'damper'
+VAL = 3
 
+ROOT_NAME = ('I','II','III','IV','V','VI','VII')
 CHORD_SCALE = {  # ±2オクターブ分
     'all': [-24, -23, -22, -21, -20, -19, -18, -17, -16, -15, -14, -13, -12, -11, -10, -9, -8, -7, -6, -5, -4, -3, -2,
             -1,
