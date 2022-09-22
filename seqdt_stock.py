@@ -326,7 +326,7 @@ class DamperPartStock:
         self.ptr.update_phrase()    # always
 
     def get_final(self):
-        return 1920, [[40,128+64,127,1870]]
+        return 1920, [[40,128+64,60,1870]]
 
 class SeqDataStock:
 
@@ -337,7 +337,7 @@ class SeqDataStock:
             pdt = PartDataStock(seq.sqobjs[i], seq)
             self.part_data.append(pdt)
 
-        # Pedal Part
+        # Damper Pedal Part
         self.part_data.append(DamperPartStock(seq.sqobjs[nlib.MAX_PART_COUNT-1], seq))
 
     def set_raw(self, part, text):

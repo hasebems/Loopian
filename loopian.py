@@ -6,7 +6,7 @@
 #
 import threading
 import lpngui
-import gendt_stock as stk
+import seqdt_stock as stk
 import lpncmd as ps
 import elapse_stack as sqs
 import midi
