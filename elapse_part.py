@@ -31,8 +31,12 @@ class Part(sqp.ElapseIF):
         self.loop_measure = self.whole_tick//tick_for_onemsr + \
             (0 if self.whole_tick%tick_for_onemsr == 0 else 1)
 
-        self.loop_obj = phrlp.PhraseLoop(self.sqs, self.md, msr, elm,  \
-            self.keynote, self.whole_tick)
+        if self.part_num != nlib.COMPOSITION_PART:
+            self.loop_obj = phrlp.PhraseLoop(self.sqs, self.md, msr, elm,  \
+                self.keynote, self.whole_tick)
+        else:
+            self.loop_obj = phrlp.CompositionLoop(self.sqs, self.md, msr, elm,  \
+                self.keynote, self.whole_tick)
         self.sqs.add_obj(self.loop_obj)
 
     ## Seqplay thread内でコール

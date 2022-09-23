@@ -215,3 +215,28 @@ class TextParse:
 
         return complement, base_note, num
 
+
+    def complement_brace(input_text):
+        # {} のセットを抜き出し、中身を note_info に入れる
+        note_info = []
+        tx = input_text
+        while True:
+            num = tx.find('}')
+            if num == -1:
+                break
+            note_info.append(tx[1:num])
+            tx = tx[num + 1:].strip()
+            if len(tx) == 0:
+                break
+            if tx[0:1] != '{':
+                break
+
+        if len(note_info) != 0:
+            if ',' in note_info[0]:
+                chord_flow_next = note_info[0].strip().split(',') # chord
+            else:
+                chord_flow_next = note_info
+        else:
+            # if no ':', set 'all" pattern
+            chord_flow_next = []
+        return chord_flow_next

@@ -122,6 +122,49 @@ class DamperPartStock:
     def get_final(self):
         return 1920, [['damper',40,1870,127]]
 
+
+class CompositionPartStock:
+
+    def __init__(self, objs, seq):
+        self.seq = seq
+        self.ptr = objs
+        self.ptr.set_seqdt_part(self)
+
+        self.raw = []
+        self.complement = []
+        self.generated = []
+
+        self.whole_tick = 0
+
+    def set_raw(self, text):
+        # 1. raw
+        self.raw = text
+
+        # 2.complement data
+        cmpl = tx.TextParse.complement_brace(text)
+        if cmpl != None:
+            self.complement = cmpl
+        else:
+            return False
+        self.ptr.update_phrase()
+
+        # 3. generated data
+        self.set_generated()
+        return True
+
+
+    def set_generated(self):
+        # 3. generated
+        self.generated = []
+        self.whole_tick = 0
+        for cd in self.complement:
+            self.generated.append(['chord', self.whole_tick, cd])
+            self.whole_tick += 1920
+
+    def get_final(self):
+        return self.whole_tick, self.generated
+
+
 class SeqDataStock:
 
     def __init__(self, seq):
@@ -135,7 +178,7 @@ class SeqDataStock:
         self.part_data.append(DamperPartStock(seq.sqobjs[nlib.DAMPER_PEDAL_PART], seq))
 
         # Composition Part
-        self.part_data.append(PartDataStock(seq.sqobjs[nlib.COMPOSITION_PART], seq))
+        self.part_data.append(CompositionPartStock(seq.sqobjs[nlib.COMPOSITION_PART], seq))
 
     def set_raw(self, part, text):
         if part >= nlib.MAX_PART_COUNT: return False

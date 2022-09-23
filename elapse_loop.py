@@ -95,6 +95,7 @@ class CompositionLoop(sqp.Loop):
             next_tick = self.cmp[trace][nlib.TICK]
             if next_tick < tick:
                 self.chord = self.cmp[trace]
+                print('chord:',self.chord)
             else:
                 break
             trace += 1
