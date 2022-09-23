@@ -15,7 +15,7 @@ class PartDataStock:
 
         self.seq = seq
         self.ptr = objs
-        self.ptr.set_gendt_part(self)
+        self.ptr.set_seqdt_part(self)
 
         self.whole_tick = 0
         self.base_note = 0
@@ -322,7 +322,7 @@ class DamperPartStock:
     def __init__(self, objs, seq):
         self.seq = seq
         self.ptr = objs
-        self.ptr.set_gendt_part(self)
+        self.ptr.set_seqdt_part(self)
         self.ptr.update_phrase()    # always
 
     def get_final(self):

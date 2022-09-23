@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import lpnlib as nlib
 import elapse as sqp
-import elapse_phrase as phrlp
+import elapse_loop as phrlp
 
 ####
 #   起動時から存在し、決して destroy されない ElapseIF Obj.
@@ -14,19 +14,18 @@ class Part(sqp.ElapseIF):
 
         self.loop_obj = None
         self.keynote = nlib.DEFAULT_NOTE_NUMBER
-        self.description = [None for _ in range(3)]
         self.loop_measure = 0   # whole_tick と同時生成
         self.lp_elapsed_msr = 0    # loop 内の経過小節数
         self.whole_tick = 0     # loop_measure と同時生成
         self.state_reserve = False
-        self.gendt_part = None
+        self.seqdt_part = None
 
-    def set_gendt_part(self, gendt):
-        self.gendt_part = gendt
+    def set_seqdt_part(self, gendt):
+        self.seqdt_part = gendt
 
     def _generate_loop(self,msr):
         tick_for_onemsr = self.sqs.get_tick_for_onemsr()
-        self.whole_tick, elm = self.gendt_part.get_final()
+        self.whole_tick, elm = self.seqdt_part.get_final()
 
         # その時の beat 情報で、whle_tick を loop_measure に換算
         self.loop_measure = self.whole_tick//tick_for_onemsr + \
@@ -35,27 +34,6 @@ class Part(sqp.ElapseIF):
         self.loop_obj = phrlp.PhraseLoop(self.sqs, self.md, msr, elm,  \
             self.keynote, self.part_num, self.whole_tick)
         self.sqs.add_obj(self.loop_obj)
-
-##    def _set_chain_loading(self, msr, elapsed_msr):
-##        if msr == 0:
-##            noteinfo = self.fl.read_first_chain_loading(self.part_num)
-##            self.description = noteinfo
-##            return True
-##        else:
-            # 次回が overlap 対象か？
-##            ol = self.fl.get_overlap(self.part_num)
-            # あるいは、ひとつ前のデータに中身が無ければ
-            # 1小節前になったか？ overlap の場合２小節前になったか？
-##            condition = \
-##                (self.loop_measure == 0) or \
-##                ((self.loop_measure == elapsed_msr) and not ol) or \
-##                ((self.loop_measure-1 == elapsed_msr) and ol)
-##            if condition:
-                # wait_for_looptop 期間中に次の Description をセットする
-##                noteinfo = self.fl.read_next_chain_loading(self.part_num)
-##                self.description = noteinfo
-##                return True
-##            return False
 
     ## Seqplay thread内でコール
     def start(self):
@@ -70,12 +48,6 @@ class Part(sqp.ElapseIF):
             self.lp_elapsed_msr = 1
 
         elapsed_msr = msr - self.first_measure_num
-##        if self.fl.chain_loading_state:
-            # Chain Loading
-##            if self._set_chain_loading(msr, elapsed_msr):
-##                new_loop(msr)
-
-##        elif self.state_reserve:
         if self.state_reserve:
             self.state_reserve = False
             # 前小節にて phrase/pattern 指定された時

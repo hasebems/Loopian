@@ -32,7 +32,7 @@ class ElapseIF:
 
 
 ####
-#   １行分の Phrase/Pattern を生成するための ElapseIF Obj.
+#   １行分の Phrase/Composition を生成するための ElapseIF Obj.
 #   １周期が終わったら、destroy され、また新しいオブジェクトが Part によって作られる
 #   Loop 内のデータに基づき、Note Obj. を生成する
 class Loop(ElapseIF):
@@ -88,14 +88,12 @@ class Note(ElapseIF):
         self.off_tick = 0
 
     def _note_on(self):
-        #self.md.send_midi_note(self.midi_ch, self.note_num, self.velocity)
         self.md.set_fifo(self.sqs.get_time(), ['note', self.midi_ch, self.note_num, self.velocity])
 
     def _note_off(self):
         self.destroy = True
         self.during_noteon = False
         # midi note off
-        #self.md.send_midi_note(0, self.note_num, 0)
         self.md.set_fifo(self.sqs.get_time(), ['note', self.midi_ch, self.note_num, 0])
 
     def periodic(self,msr,tick):
@@ -137,14 +135,12 @@ class Damper(ElapseIF):
         self.off_tick = 0
 
     def _pedal_on(self):
-        #self.md.send_control(self.midi_ch, self.cc_num, self.value)
         self.md.set_fifo(self.sqs.get_time(), ['damper', self.midi_ch, self.cc_num, self.value])
 
     def _pedal_off(self):
         self.destroy = True
         self.during_pedal = False
         # midi damper pedal off
-        #self.md.send_control(0, 64, 0)
         self.md.set_fifo(self.sqs.get_time(), ['damper', self.midi_ch, self.cc_num, 0])
 
     def periodic(self,msr,tick):
