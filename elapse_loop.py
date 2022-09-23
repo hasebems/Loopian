@@ -71,7 +71,7 @@ class CompositionLoop(sqp.Loop):
 
         self.play_counter = 0
         self.next_tick = 0
-        self.chord = 'thru'
+        self.chord = ['chord',0,'thru']
 
         # for super's member
         self.whole_tick = wt

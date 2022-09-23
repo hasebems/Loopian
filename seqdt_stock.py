@@ -132,7 +132,7 @@ class CompositionPartStock:
 
         self.raw = []
         self.complement = []
-        self.generated = []
+        self.generated = ['chord',0,'thru']
 
         self.whole_tick = 0
 
