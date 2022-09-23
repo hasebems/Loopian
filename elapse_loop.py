@@ -1,8 +1,51 @@
 # -*- coding: utf-8 -*-
 import lpnlib as nlib
-import elapse as sqp
+import elapse as ep
+import elapse_note as epn
 
-class PhraseLoop(sqp.Loop):
+####
+#   １行分の Phrase/Composition を生成するための ElapseIF Obj.
+#   １周期が終わったら、destroy され、また新しいオブジェクトが Part によって作られる
+#   Loop 内のデータに基づき、Note Obj. を生成する
+class Loop(ep.ElapseIF):
+
+    # example
+    LOOP_LENGTH = 3
+
+    def __init__(self, obj, md, type, msr):
+        super().__init__(obj, md, type)
+        self.first_measure_num = msr
+        self.whole_tick = 0
+        self.destroy = False
+        self.tick_for_one_measure = self.sqs.get_tick_for_onemsr()
+
+    def _set_note(self,ev): 
+        if ev[nlib.TYPE] == 'damper':# ev: ['damper', duration, tick, value]
+            self.sqs.add_obj(epn.Damper(self.sqs, self.md, ev))
+        elif ev[nlib.TYPE] == 'note':# ev: ['note', tick, duration, note, velocity]
+            self.sqs.add_obj(epn.Note(self.sqs, self.md, ev))
+
+    def msrtop(self,msr):
+        pass
+
+    def periodic(self,msr,tick):
+        elapsed_tick = (msr - self.first_measure_num)*self.tick_for_one_measure + tick
+        if elapsed_tick >= self.whole_tick:
+            self.destroy = True
+            return
+
+    def destroy_me(self):
+        return self.destroy
+
+    def stop(self):
+        self.destroy = True
+
+    def fine(self):
+        self.destroy = True
+
+
+
+class PhraseLoop(Loop):
 
     def __init__(self, obj, md, msr, phr, key, wt):
         super().__init__(obj, md, 'PhrLoop', msr)
@@ -55,14 +98,9 @@ class PhraseLoop(sqp.Loop):
                 self.destroy = True
             self.next_tick = nt
 
-    def destroy_me(self):
-        return self.destroy
-
-    def stop(self):
-        self.destroy = True
 
 
-class CompositionLoop(sqp.Loop):
+class CompositionLoop(Loop):
 
     def __init__(self, obj, md, msr, cmp, key, wt):
         super().__init__(obj, md, 'ComLoop', msr)
@@ -116,9 +154,3 @@ class CompositionLoop(sqp.Loop):
             if nt == nlib.END_OF_DATA:
                 self.destroy = True
             self.next_tick = nt
-
-    def destroy_me(self):
-        return self.destroy
-
-    def stop(self):
-        self.destroy = True
