@@ -4,10 +4,9 @@ import elapse as sqp
 
 class PhraseLoop(sqp.Loop):
 
-    def __init__(self, obj, md, msr, phr, key, pn, wt):
+    def __init__(self, obj, md, msr, phr, key, wt):
         super().__init__(obj, md, 'PhrLoop', msr)
         self.phr = phr
-        self.part_number = pn
         self.keynote = key
 
         self.play_counter = 0
@@ -65,10 +64,9 @@ class PhraseLoop(sqp.Loop):
 
 class CompositionLoop(sqp.Loop):
 
-    def __init__(self, obj, md, msr, cmp, key, pn, wt):
+    def __init__(self, obj, md, msr, cmp, key, wt):
         super().__init__(obj, md, 'ComLoop', msr)
         self.cmp = cmp
-        self.part_number = pn
         self.keynote = key
 
         self.play_counter = 0

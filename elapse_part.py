@@ -32,7 +32,7 @@ class Part(sqp.ElapseIF):
             (0 if self.whole_tick%tick_for_onemsr == 0 else 1)
 
         self.loop_obj = phrlp.PhraseLoop(self.sqs, self.md, msr, elm,  \
-            self.keynote, self.part_num, self.whole_tick)
+            self.keynote, self.whole_tick)
         self.sqs.add_obj(self.loop_obj)
 
     ## Seqplay thread内でコール
