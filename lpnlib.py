@@ -8,9 +8,13 @@ DEFAULT_TICK_FOR_ONE_MEASURE = 1920  # 480 * 4
 END_OF_DATA = -1
 
 MIDI_OUTPUT_PORT_NAME = 'IAC Driver WebMIDI'
-MAX_PART_COUNT = 5
 DEFAULT_BPM = 100
 DEFAULT_NOTE_NUMBER = 60
+
+MAX_NORMAL_PART = 4
+DAMPER_PEDAL_PART = MAX_NORMAL_PART
+COMPOSITION_PART = MAX_NORMAL_PART+1
+MAX_PART_COUNT = MAX_NORMAL_PART+2
 
 # seq data index
 TYPE = 0
@@ -24,7 +28,7 @@ VAL = 3
 
 ROOT_NAME = ('I','II','III','IV','V','VI','VII')
 CHORD_SCALE = {  # ±2オクターブ分
-    'all': [-24, -23, -22, -21, -20, -19, -18, -17, -16, -15, -14, -13, -12, -11, -10, -9, -8, -7, -6, -5, -4, -3, -2,
+    'thru': [-24, -23, -22, -21, -20, -19, -18, -17, -16, -15, -14, -13, -12, -11, -10, -9, -8, -7, -6, -5, -4, -3, -2,
             -1,
             0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24],
     '_': [-24, -20, -17, -12, -8, -5, 0, 4, 7, 12, 16, 19, 24],

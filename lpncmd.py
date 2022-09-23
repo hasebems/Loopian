@@ -141,15 +141,15 @@ class Parsing:
         else:
             oct = generate_oct_number(text)
             if all:
-                for i in range(nlib.MAX_PART_COUNT):
+                for i in range(nlib.MAX_NORMAL_PART):
                     change_oct_to_part(self.sqs.get_part(i), oct)
             else:
                 pt = self.sqs.get_part(self.input_part)
                 change_oct_to_part(pt, oct)
 
     def change_cc(self, cc_num, cc_list):
-        if len(cc_list) > nlib.MAX_PART_COUNT:
-            del cc_list[nlib.MAX_PART_COUNT:]
+        if len(cc_list) > nlib.MAX_NORMAL_PART:
+            del cc_list[nlib.MAX_NORMAL_PART:]
         for i, vol in enumerate(cc_list):
             self.sqs.get_part(i).change_cc(cc_num, int(vol))
 
@@ -254,7 +254,7 @@ class Parsing:
                 else:
                     self.print_dialogue("Unable to start!")
         elif input_text[0:5] == 'panic':
-            for i in range(nlib.MAX_PART_COUNT):
+            for i in range(nlib.MAX_NORMAL_PART):
                 self.sqs.get_part(i).change_cc(120, 0)
         else:
             self.print_dialogue("what?")
@@ -303,7 +303,7 @@ class Parsing:
             tx = input_text[7:].replace(' ', '')
             if tx.isdecimal():
                 part = int(tx)
-                if 0 < part <= nlib.MAX_PART_COUNT:
+                if 0 < part <= nlib.MAX_NORMAL_PART:
 #                    self.sq.blk().copy_phrase(part - 1)
                     self.print_dialogue("Phrase copied to part" + tx + ".")
         elif input_text[0:5] == 'color':
