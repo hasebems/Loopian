@@ -23,6 +23,7 @@ class SeqStack:
         self.elapsed_time = 0       # start からの経過時間
         self.crnt_measure = -1      # start からの小節数（最初の小節からイベントを出すため、-1初期化)
         self.crnt_tick_inmsr = 0    # 現在の小節内の tick 数
+        self.current_time = 0       # 現在の時刻
 
         self.bpm = 120
         self.beat = [4,4]
@@ -43,6 +44,9 @@ class SeqStack:
     def add_obj(self, obj):
         self.sqobjs.append(obj)
         #print(len(self.sqobjs))
+
+    def get_time(self):
+        return self.current_time
 
     def get_sqobj_count(self, type):
         count = 0
@@ -120,9 +124,9 @@ class SeqStack:
             return
 
         ## detect tick and measure
-        current_time = time.time()
-        tick_beat_starts = self._calc_current_tick(current_time)
-        self.elapsed_time = current_time - self.origin_time
+        self.current_time = time.time()
+        tick_beat_starts = self._calc_current_tick(self.current_time)
+        self.elapsed_time = self.current_time - self.origin_time
         former_msr = self.crnt_measure
         self.crnt_measure = tick_beat_starts//self.tick_for_onemsr + self.beat_start_msr
         self.crnt_tick_inmsr = tick_beat_starts%self.tick_for_onemsr
@@ -133,7 +137,7 @@ class SeqStack:
             if self.stock_tick_for_onemsr[0] is not self.tick_for_onemsr:
                 # change beat event があった
                 self.beat_start_msr = self.crnt_measure
-                self.bpm_start_time = current_time
+                self.bpm_start_time = self.current_time
                 self.bpm_start_tick = 0
                 self.tick_for_onemsr = self.stock_tick_for_onemsr[0]
                 self.beat = self.stock_tick_for_onemsr[1:3]

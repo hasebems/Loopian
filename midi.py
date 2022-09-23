@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import pygame.midi as pmd
+import time
 
 class Midi:
     def __init__(self):
@@ -8,6 +9,7 @@ class Midi:
         self.midi_port = None
         self.scan_midi_all_port()
         self.set_midi_port(0)
+        self.fifo = []
 
     def scan_midi_all_port(self):
         self.all_ports = []
@@ -49,3 +51,20 @@ class Midi:
     def send_program(self, ch, pgn):
         if ch < 16 and pgn < 128:
             self.midi_port.set_instrument(pgn, channel=ch)
+
+    def set_fifo(self, sqtime, ev):
+        sqtime += 0.05   # 50msec
+        self.fifo.append([sqtime, ev])
+
+    def periodic(self):
+        crnt_time = time.time()
+        while True:
+            if len(self.fifo) == 0: break
+            if self.fifo[0][0] > crnt_time: break
+
+            md = self.fifo[0][1]
+            if md[0] == 'note':
+                self.send_midi_note(md[1],md[2],md[3])
+            elif md[0] == 'damper':
+                self.send_control(md[1],md[2],md[3])
+            del self.fifo[0]

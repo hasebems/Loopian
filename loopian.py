@@ -14,6 +14,12 @@ import midi
 class Loop:
     running = True
 
+def midi_periodic(loop, midi):
+    while True:
+        midi.periodic()
+        if not loop.running:
+            break
+
 def generate_ev(loop, fl, seq, prs):
     while True:
         seq.periodic()
@@ -32,12 +38,17 @@ def main():
     gendt = stk.SeqDataStock(seq)
     prs = ps.Parsing(seq, md, gendt)
     gui = lpngui.LpnGui(lp, prs)
+
+    md_job = threading.Thread(target=midi_periodic, args=(lp, md))
+    md_job.start()
     ev_job = threading.Thread(target=generate_ev, args=(lp, None, seq, prs))
     ev_job.start()
-    prs.midi_setting(prs.CONFIRM_MIDI_OUT_ID)
 
+    prs.midi_setting(prs.CONFIRM_MIDI_OUT_ID)
     gui.loop(seq)
+
     ev_job.join()
+    md_job.join()
 
 if __name__ == '__main__':
     main()

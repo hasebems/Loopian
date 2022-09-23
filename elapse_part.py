@@ -25,16 +25,16 @@ class Part(sqp.ElapseIF):
         self.gendt_part = gendt
 
     def _generate_loop(self,msr):
-        tick_for_onemsr = self.parent.get_tick_for_onemsr()
+        tick_for_onemsr = self.sqs.get_tick_for_onemsr()
         self.whole_tick, elm = self.gendt_part.get_final()
 
         # その時の beat 情報で、whle_tick を loop_measure に換算
         self.loop_measure = self.whole_tick//tick_for_onemsr + \
             (0 if self.whole_tick%tick_for_onemsr == 0 else 1)
 
-        self.loop_obj = phrlp.PhraseLoop(self.parent, self.md, msr, elm,  \
+        self.loop_obj = phrlp.PhraseLoop(self.sqs, self.md, msr, elm,  \
             self.keynote, self.part_num, self.whole_tick)
-        self.parent.add_obj(self.loop_obj)
+        self.sqs.add_obj(self.loop_obj)
 
 ##    def _set_chain_loading(self, msr, elapsed_msr):
 ##        if msr == 0:
@@ -60,6 +60,7 @@ class Part(sqp.ElapseIF):
     ## Seqplay thread内でコール
     def start(self):
         self.first_measure_num = 0
+        self.md.send_control(0,7,100)  # dummy send
 
     def msrtop(self,msr):
         def new_loop(msr):
@@ -125,14 +126,6 @@ class Part(sqp.ElapseIF):
     def change_keynote(self, nt):
         self.keynote = nt
         self.state_reserve = True
-
-    def change_cc(self, cc_num, val):
-        if val >= 0 and val < 128:
-            self.volume = val
-            self.md.send_control(0, cc_num, val)
-
-    def change_pgn(self, pgn):
-        self.md.send_program(0, pgn)
 
     def update_phrase(self):
         self.state_reserve = True

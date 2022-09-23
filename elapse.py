@@ -7,7 +7,7 @@ import lpnlib as nlib
 class ElapseIF:
 
     def __init__(self, obj, md, type='None'):
-        self.parent = obj
+        self.sqs = obj
         self.md = md
         self.type = type
 
@@ -45,13 +45,13 @@ class Loop(ElapseIF):
         self.first_measure_num = msr
         self.whole_tick = 0
         self.destroy = False
-        self.tick_for_one_measure = self.parent.get_tick_for_onemsr()
+        self.tick_for_one_measure = self.sqs.get_tick_for_onemsr()
 
     def _set_note(self,ev): 
-        if ev[nlib.TYPE] == 'damper':# ev: ['damper', tick, value, duration]
-            self.parent.add_obj(Damper(self.parent, self.md, ev))
-        elif ev[nlib.TYPE] == 'note':# ev: ['note', tick, note, velocity, duration]
-            self.parent.add_obj(Note(self.parent, self.md, ev))
+        if ev[nlib.TYPE] == 'damper':# ev: ['damper', duration, tick, value]
+            self.sqs.add_obj(Damper(self.sqs, self.md, ev))
+        elif ev[nlib.TYPE] == 'note':# ev: ['note', tick, duration, note, velocity]
+            self.sqs.add_obj(Note(self.sqs, self.md, ev))
 
     def msrtop(self,msr):
         pass
@@ -88,18 +88,20 @@ class Note(ElapseIF):
         self.off_tick = 0
 
     def _note_on(self):
-        self.md.send_midi_note(self.midi_ch, self.note_num, self.velocity)
+        #self.md.send_midi_note(self.midi_ch, self.note_num, self.velocity)
+        self.md.set_fifo(self.sqs.get_time(), ['note', self.midi_ch, self.note_num, self.velocity])
 
     def _note_off(self):
         self.destroy = True
         self.during_noteon = False
         # midi note off
-        self.md.send_midi_note(0, self.note_num, 0)
+        #self.md.send_midi_note(0, self.note_num, 0)
+        self.md.set_fifo(self.sqs.get_time(), ['note', self.midi_ch, self.note_num, 0])
 
     def periodic(self,msr,tick):
         if not self.during_noteon:
             self.during_noteon = True
-            tk = self.parent.get_tick_for_onemsr()
+            tk = self.sqs.get_tick_for_onemsr()
             self.off_msr = msr
             self.off_tick = tick + self.duration
             while self.off_tick > tk:
@@ -135,18 +137,20 @@ class Damper(ElapseIF):
         self.off_tick = 0
 
     def _pedal_on(self):
-        self.md.send_control(self.midi_ch, self.cc_num, self.value)
+        #self.md.send_control(self.midi_ch, self.cc_num, self.value)
+        self.md.set_fifo(self.sqs.get_time(), ['damper', self.midi_ch, self.cc_num, self.value])
 
     def _pedal_off(self):
         self.destroy = True
         self.during_pedal = False
-        # midi note off
-        self.md.send_control(0, 64, 0)
+        # midi damper pedal off
+        #self.md.send_control(0, 64, 0)
+        self.md.set_fifo(self.sqs.get_time(), ['damper', self.midi_ch, self.cc_num, 0])
 
     def periodic(self,msr,tick):
         if not self.during_pedal:
             self.during_pedal = True
-            tk = self.parent.get_tick_for_onemsr()
+            tk = self.sqs.get_tick_for_onemsr()
             self.off_msr = msr
             self.off_tick = tick + self.duration
             while self.off_tick > tk:
