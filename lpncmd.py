@@ -27,7 +27,7 @@ class Parsing:
         self.sqs = sqs
         self.md = md
         self.gui = None
-        self.input_part = 2
+        self.input_part = nlib.FIRST_NORMAL_PART + 2
         self.back_color = 2
         self.gendt = dt
 
@@ -119,11 +119,11 @@ class Parsing:
             for i, letter in enumerate(text):
                 if i < nlib.MAX_NORMAL_PART:
                     oct = generate_oct_number(letter)
-                    self.sqs.get_part(i).change_oct(oct, True)
+                    self.sqs.get_part(i+nlib.FIRST_NORMAL_PART).change_oct(oct, True)
         else:
             oct = generate_oct_number(text)
             if all:
-                for i in range(nlib.MAX_NORMAL_PART):
+                for i in range(nlib.FIRST_NORMAL_PART, nlib.MAX_NORMAL_PART):
                     self.sqs.get_part(i).change_oct(oct, True)
             else:
                 self.sqs.get_part(self.input_part).change_oct(oct, True)
@@ -133,7 +133,7 @@ class Parsing:
         if len(cc_list) > nlib.MAX_NORMAL_PART:
             del cc_list[nlib.MAX_NORMAL_PART:]
         for i, vol in enumerate(cc_list):
-            self.sqs.get_part(i).change_cc(cc_num, int(vol))
+            self.sqs.get_part(i+nlib.FIRST_NORMAL_PART).change_cc(cc_num, int(vol))
 
     CONFIRM_MIDI_OUT_ID = -1
 
@@ -214,14 +214,6 @@ class Parsing:
                     continue
             self.change_cc(10, cc_list)
             self.print_dialogue("Pan has changed!")
-##        elif command == 'pgn':
-##            bl_list = tx[1].strip().split(',')
-##            for i, var in enumerate(bl_list):
-##                if var.isdecimal():
-##                    num = int(var)
-##                    if num > 0 and num <= 128:
-##                        self.sqs.get_part(i).change_pgn(num-1)
-##            self.print_dialogue("Program number has changed!")
 
     def letterB(self, input_text):
         self.print_dialogue("what?")
@@ -236,7 +228,7 @@ class Parsing:
                 else:
                     self.print_dialogue("Unable to start!")
         elif input_text[0:5] == 'panic':
-            for i in range(nlib.MAX_NORMAL_PART):
+            for i in range(nlib.FIRST_NORMAL_PART, nlib.MAX_NORMAL_PART):
                 self.sqs.get_part(i).change_cc(120, 0)
         else:
             self.print_dialogue("what?")
@@ -310,7 +302,7 @@ class Parsing:
                 part = int(tx)
                 if part == 1 or part == 2:
                     self.print_dialogue("Changed current part to right " + str(part) + ".")
-                    self.input_part = part + 1
+                    self.input_part = nlib.FIRST_NORMAL_PART + part + 1
                     self.gui.change_part(part + 1)
 
     def letterQm(self, input_text):
@@ -347,18 +339,18 @@ class Parsing:
                 part = int(tx)
                 if part == 1 or part == 2:
                     self.print_dialogue("Changed current part to left " + str(part) + ".")
-                    self.input_part = part - 1
+                    self.input_part = nlib.FIRST_NORMAL_PART + part - 1
                     self.gui.change_part(part - 1)
 
     def letter_bracket(self, input_text):
-        success = self.gendt.set_raw(self.input_part, input_text)
+        success = self.gendt.set_raw_normal(self.input_part, input_text)
         if success:
             self.print_dialogue("set Phrase!")
         else:
             self.print_dialogue("what?")
 
     def letter_brace(self, input_text):
-        success = self.gendt.set_raw_for_composition(input_text)
+        success = self.gendt.set_raw_composition(input_text)
         if success:
             self.print_dialogue("set Composition!")
         else:
