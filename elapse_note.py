@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 import elapse as ep
 import lpnlib as nlib
-import lpntxt as tx
 
-####
+#------------------------------------------------------------------------------
 #   一音符の ElapseIF Obj.
 #   Note On時に生成され、MIDI を出力した後、Note Offを生成して destroy される
 class Note(ep.ElapseIF):
@@ -69,7 +68,8 @@ class Note(ep.ElapseIF):
         if self.during_noteon:
             self._note_off()
 
-####
+
+#------------------------------------------------------------------------------
 #   ペダルの ElapseIF Obj.
 #   Pedal On時に生成され、MIDI を出力した後、Pedal Offを生成して destroy される
 class Damper(ep.ElapseIF):

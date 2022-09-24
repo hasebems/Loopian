@@ -3,7 +3,7 @@ import lpnlib as nlib
 import elapse as sqp
 import elapse_loop as phrlp
 
-####
+#------------------------------------------------------------------------------
 #   起動時から存在し、決して destroy されない ElapseIF Obj.
 class Part(sqp.ElapseIF):
 

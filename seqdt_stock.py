@@ -4,8 +4,9 @@ import lpnlib as nlib
 import expfilter_beat as efb
 import lpntxt as tx
 
-#### 入力テキストデータの変換処理を集約するクラス
-class PartDataStock:
+#------------------------------------------------------------------------------
+#   Phrase の入力テキストの変換
+class PhraseDataStock:
 
     def __init__(self, objs, seq):
         self.raw = None
@@ -53,8 +54,8 @@ class PartDataStock:
         read_ptr = 0
         cmpl = []
         while read_ptr < note_cnt:
-            notes = PartDataStock._cnv_note_to_pitch(self.ptr.keynote, self.complement[0][read_ptr])
-            dur = PartDataStock._cnv_duration(self.complement[1][read_ptr])
+            notes = PhraseDataStock._cnv_note_to_pitch(self.ptr.keynote, self.complement[0][read_ptr])
+            dur = PhraseDataStock._cnv_duration(self.complement[1][read_ptr])
             vel = nlib.convert_exp2vel(self.complement[2])
             self._add_note(cmpl, tick, notes, dur, base_note, vel)
             tick += int(dur * nlib.DEFAULT_TICK_FOR_ONE_MEASURE / base_note)
@@ -124,7 +125,8 @@ class DamperPartStock:
     def get_final(self):
         return 1920, [['damper',40,1870,127]]
 
-
+#------------------------------------------------------------------------------
+#   Composition の入力テキストの変換
 class CompositionPartStock:
 
     def __init__(self, objs, seq):
@@ -166,14 +168,15 @@ class CompositionPartStock:
     def get_final(self):
         return self.whole_tick, self.generated
 
-
+#------------------------------------------------------------------------------
+#   入力テキストデータの変換処理を集約するクラス
 class SeqDataAllStock:
 
     def __init__(self, seq):
         self.part_data = []
         self.seq = seq
         for i in range(nlib.MAX_NORMAL_PART):
-            pdt = PartDataStock(seq.get_part(i), seq)
+            pdt = PhraseDataStock(seq.get_part(i), seq)
             self.part_data.append(pdt)
 
         # Damper Pedal Part

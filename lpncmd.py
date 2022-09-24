@@ -245,27 +245,6 @@ class Parsing:
             self.print_dialogue("Stopped!")
         elif input_text[0:3] == 'set':
             self.parse_set_command(input_text[3:])
-        elif input_text[0:4] == 'show':
-            option = input_text[4:].replace(' ', '')
-#            blk = self.sq.blk()
-#            if option == 'all':
-#                for i in range(nlib.MAX_PART_COUNT):
-#                    ptn_str = self.get_complete_pattern_string(blk, i)
-#                    if ptn_str is not None:
-#                        self.print_dialogue('['+str(i+1)+']'+'~~> '+ptn_str)
-#            else:
-#                ptn_str = self.get_complete_pattern_string(blk, self.input_part)
-#                if ptn_str is not None: self.print_dialogue('~~> '+ptn_str)
-#        elif input_text[0:4] == 'save':
-#            file = input_text[4:].replace(' ', '')
-#            if self.fl.prepare_save_file(file):
-#                blk = self.sq.blk()
-#                for i in range(nlib.MAX_PART_COUNT):
-#                    ptn_str = self.get_complete_pattern_string(blk, i)
-#                    if ptn_str is not None:
-#                        self.fl.save_pattern(ptn_str)
-#                self.fl.close_save_file()
-#                self.print_dialogue('Saved!')
         else:
             self.print_dialogue("what?")
 
@@ -319,19 +298,6 @@ class Parsing:
     def letterL(self, input_text):
         if input_text[0:4] == "load":
             self.print_dialogue("what?")
-#            file = input_text[4:].replace(' ', '')
-#            success, prompt = self.fl.load_file(file)
-#            if success:
-#                if prompt:
-#                    # normal load
-#                    self.prompt_mode = Prompt.LOAD
-#                    self.prompt_str = '[load]~~> '
-#                else:
-                    # chain loading
-#                    self.print_dialogue("Completed chain loading!")
-#                    self.prompt_mode = Prompt.NOTHING
-#                    self.prompt_str = ''
-#                    self.sqs.stop()
 
         elif input_text[0:4] == 'left':
             tx = input_text[4:].replace(' ', '')
@@ -356,18 +322,9 @@ class Parsing:
         else:
             self.print_dialogue("what?")
 
-    def during_load(self, input_text):
-#        if self.fl.load_pattern(input_text, self.sqs):
-#            self.print_dialogue("description loaded!")
-#        else:
-#            self.print_dialogue("what?")
-        pass
-
     def start_parsing(self, input_text):
         first_letter = input_text[0:1]
-        if self.prompt_mode == Prompt.LOAD:
-            self.during_load(input_text)
-        elif first_letter == '[':
+        if first_letter == '[':
             self.letter_bracket(input_text)
         elif first_letter == '{':
             self.letter_brace(input_text)

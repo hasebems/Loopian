@@ -1,4 +1,7 @@
+<!--
 ![loopian_logo](doc/loopian_logo.gif)
+-->
+<img src="doc/loopian_logo.gif" width="50%">
 
 loopian Alpha-version
 =================================
@@ -30,6 +33,7 @@ loopian は、Live Coding などで使うために開発している、テキス
 
 - 起動
     - 'python loopian.py'  : 通常の python スクリプトと同じ
+    - './loopian.sh'       : shell script として
 - 入力
     - 'L1> ' : prompt
         - L1> は Left 1 の入力状態であることを示す

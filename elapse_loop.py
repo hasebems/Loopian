@@ -4,7 +4,7 @@ import elapse as ep
 import elapse_note as epn
 import lpntxt as tx
 
-####
+#------------------------------------------------------------------------------
 #   １行分の Phrase/Composition を生成するための ElapseIF Obj.
 #   １周期が終わったら、destroy され、また新しいオブジェクトが Part によって作られる
 #   Loop 内のデータに基づき、Note Obj. を生成する
@@ -39,7 +39,7 @@ class Loop(ep.ElapseIF):
         self.destroy = True
 
 
-
+#------------------------------------------------------------------------------
 class PhraseLoop(Loop):
 
     def __init__(self, obj, md, msr, phr, key, wt):
@@ -98,7 +98,7 @@ class PhraseLoop(Loop):
             self.next_tick = nt
 
 
-
+#------------------------------------------------------------------------------
 class CompositionLoop(Loop):
 
     def __init__(self, obj, md, msr, cmp, key, wt):
@@ -150,7 +150,6 @@ class CompositionLoop(Loop):
             next_tick = self.cmp[trace][nlib.TICK]
             if next_tick < tick:
                 self.chord = self.cmp[trace]
-                print('chord: ',self.chord)
                 self._prepare_note_translation()
             else:
                 break
