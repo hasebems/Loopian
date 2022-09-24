@@ -7,6 +7,7 @@
 import pygame as pg
 from pygame.locals import *     # 定数を読み込む
 import datetime
+import lpnlib as nlib
 
 ###  print(pg.font.get_fonts()) 
 FONTS = ['didot', 'notosansbuhid', 'hiraginosans', 'hiraginosansgb', # 0-
@@ -365,7 +366,7 @@ class LpnGui:
         self.bpmBox =  LpnGuiText(self.COLUMN3_X, self.LINE2_Y)
         self.beatBox = LpnGuiText(self.COLUMN4_X, self.LINE2_Y)
         self.keyBox =  LpnGuiText(self.COLUMN1_X, self.LINE3_Y)
-        self.xxxBox =  LpnGuiText(self.COLUMN2_X, self.LINE3_Y)
+        self.chdBox =  LpnGuiText(self.COLUMN2_X, self.LINE3_Y)
         self.lptBox =  LpnGuiText(self.COLUMN29_X, self.LINE3_Y, 90)
         self.l2ptBox =  LpnGuiText(self.COLUMN35_X, self.LINE3_Y, 90)
         self.rptBox =  LpnGuiText(self.COLUMN39_X, self.LINE3_Y, 90)
@@ -400,6 +401,11 @@ class LpnGui:
         msr, beat, tick, count = seq.get_tick()
         self.beatBox.set_text(str(msr+1) + ' : ' + str(beat+1) + ' : ' + str(tick))
         self.keyBox.set_text('key: ' + seq.key_text)
+        chord_name = ''
+        cmp_part = seq.get_part(nlib.COMPOSITION_PART)
+        if cmp_part != None and cmp_part.loop_obj != None:
+            chord_name = cmp_part.loop_obj.get_chord()
+        self.chdBox.set_text('chord: ' + chord_name)
         a,b = seq.sqobjs[0].get_loop_info()
         self.lptBox.set_text( 'L1: ' + str(a) + '/' + str(b))
         a,b = seq.sqobjs[1].get_loop_info()
@@ -419,7 +425,7 @@ class LpnGui:
         self.bpmBox.draw(self.screen)
         self.beatBox.draw(self.screen)
         self.keyBox.draw(self.screen)
-        self.xxxBox.draw(self.screen)
+        self.chdBox.draw(self.screen)
         self.rptBox.draw(self.screen)
         self.r2ptBox.draw(self.screen)
         self.lptBox.draw(self.screen)

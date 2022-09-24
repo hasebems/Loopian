@@ -180,43 +180,6 @@ class TextParse:
         return dur_flow
 
 
-    def detect_chord_scale(chord):
-        root = 0
-        letter = chord[0]
-        dtbl = nlib.CHORD_SCALE['diatonic']
-        if letter == 'I' or letter == 'V':
-            root_cnt = 0
-            root_str = ''
-            while letter == 'I' or letter == 'V':
-                root_str += letter
-                root_cnt += 1
-                if len(chord) > root_cnt:
-                    letter = chord[root_cnt]
-                else:
-                    break
-            # #/b のチェック
-            if letter == '#':
-                root += 1
-                root_cnt += 1
-            elif letter == 'b':
-                root -= 1
-                root_cnt += 1
-            # ローマ数字の文字列から root を求める
-            try:
-                ofs = nlib.ROOT_NAME.index(root_str)
-                root += dtbl[len(dtbl)//2+ofs]
-            except ValueError as error:
-                root = 0
-            
-            if len(chord) > root_cnt:
-                chord = '_' + chord[root_cnt:]
-            else:
-                chord = '_'
-
-        chord_scale_tbl = nlib.CHORD_SCALE.get(chord, dtbl)
-        return root, chord_scale_tbl
-
-
     def _complement_data(input_text):
         # [] のセットを抜き出し、中身を note_info に入れる
         note_info = []
@@ -277,3 +240,40 @@ class TextParse:
             # if no ':', set 'all" pattern
             chord_flow_next = []
         return chord_flow_next
+
+
+    def detect_chord_scale(chord):
+        root = 0
+        letter = chord[0]
+        dtbl = nlib.CHORD_SCALE['diatonic']
+        if letter == 'I' or letter == 'V':
+            root_cnt = 0
+            root_str = ''
+            while letter == 'I' or letter == 'V':
+                root_str += letter
+                root_cnt += 1
+                if len(chord) > root_cnt:
+                    letter = chord[root_cnt]
+                else:
+                    break
+            # #/b のチェック
+            if letter == '#':
+                root += 1
+                root_cnt += 1
+            elif letter == 'b':
+                root -= 1
+                root_cnt += 1
+            # ローマ数字の文字列から root を求める
+            try:
+                ofs = nlib.ROOT_NAME.index(root_str)
+                root += dtbl[len(dtbl)//2+ofs]
+            except ValueError as error:
+                root = 0
+            
+            if len(chord) > root_cnt:
+                chord = '_' + chord[root_cnt:]
+            else:
+                chord = '_'
+
+        chord_scale_tbl = nlib.CHORD_SCALE.get(chord, dtbl)
+        return root, chord_scale_tbl
