@@ -94,6 +94,8 @@ class PartDataStock:
 
 
     def get_final(self):
+        if self.generated == None: return 0,[]
+
         # 4. randomized data
         self.randomized = []
         for dt in self.generated:
