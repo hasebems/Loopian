@@ -20,12 +20,6 @@ class Loop(ep.ElapseIF):
         self.destroy = False
         self.tick_for_one_measure = self.sqs.get_tick_for_onemsr()
 
-    def _set_note(self,ev): 
-        if ev[nlib.TYPE] == 'damper':# ev: ['damper', duration, tick, value]
-            self.sqs.add_obj(epn.Damper(self.sqs, self.md, ev))
-        elif ev[nlib.TYPE] == 'note':# ev: ['note', tick, duration, note, velocity]
-            self.sqs.add_obj(epn.Note(self.sqs, self.md, ev))
-
     def msrtop(self,msr):
         pass
 
@@ -77,7 +71,11 @@ class PhraseLoop(Loop):
                 break
             next_tick = self.phr[trace][nlib.TICK]
             if next_tick < tick:
-                self._set_note(self.phr[trace])
+                ev = self.phr[trace]
+                if ev[nlib.TYPE] == 'damper':# ev: ['damper', duration, tick, value]
+                    self.sqs.add_obj(epn.Damper(self.sqs, self.md, ev))
+                elif ev[nlib.TYPE] == 'note':# ev: ['note', tick, duration, note, velocity]
+                    self.sqs.add_obj(epn.Note(self.sqs, self.md, ev, self.keynote))
             else:
                 break
             trace += 1
