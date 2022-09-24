@@ -1,3 +1,5 @@
+![loopian_logo](doc/loopian_logo.gif)
+
 loopian Alpha-version
 =================================
 
@@ -19,8 +21,8 @@ loopian は、Live Coding などで使うために開発している、テキス
 
 - phrase : 階名にて指定する単パートの音群
 - composition : phrase に Chord 情報などを適用して、大楽節を作り出す
-- loop : loopian は基本的に、phrase の繰り返しを延々と演奏する。この繰り返しのこと。
-- part : 同じリズムを持った phrase
+- loop : loopian は基本的に、phrase/composition の繰り返しを延々と演奏する。この繰り返しのこと。
+- part : phrase は独立した４つの Loop 再生が可能である。その４つを part と呼び、各 part は left 1(L1)/left 2(L2)/right 1(R1)/right 2(R2) という名前で示される。
 
 
 起動と終了
@@ -61,10 +63,10 @@ Phrase 追加
     - *note*: 階名
     - *duration*: 音価
     - *musical expression*: 音楽表現
-    - [*duration*] と [*velocity*] は省略可能
-        - 階名と音価と音量の全体の数が合わないとき、階名の内容で数を合わせる。
-        - 音価と音量は、足りない時は最後の数値がそのまま連続し、多い時は途中で打ち切られる。
-        - 音価を省略した場合全て四分音符とみなし、音量を省略した場合100(mf)とみなす。
+    - [*duration*] と [*musical expression*] は省略可能
+        - 階名と音価の全体の数が合わないとき、階名の内容で数を合わせる。
+        - 音価は、足りない時は最後の数値がそのまま連続し、多い時は途中で打ち切られる。
+        - 音価を省略した場合全て四分音符とみなす。
     - [] : 全データ削除
 
 - 階名表現
@@ -91,11 +93,9 @@ Phrase 追加
     - [<2,1>:12] : とすると、この後もずっと 2,1 の長さを繰り返す
         - <2,1>*2 のように階名と同じように繰り返し回数の指定ができる
         - 繰り返し記号の終わりが音価表現全体の最後の場合、このパターン全体を回数制限なく繰り返すが、最後でないと回数指定分しか繰り返さない。
-    - [:8(80%)] 音価指定の後に (nn%) とすると、実際の発音時間がそのパーセントの短さになる
-        - (stacc.) と書くと 50% になる
 
-- 音量表現
-    - 未定
+- 音楽表現
+    - f,mf,mp,p,pp: 音量
 
 
 Composition 指定
@@ -119,7 +119,7 @@ Composition 指定
         - IIIm7-5 : m=s=ta=r (m7-5: minor7th -5th)
         - diatonic : d=r=m=f=s=l=t (Diatonic Scale)
         - lydian : d=r=m=fi=s=l=t (Lydian Scale)
-        - all : 全ての音
+        - thru : 全ての音
 
 
 入力環境コマンド
@@ -148,5 +148,4 @@ Composition 指定
 - 'set balance=7,7,4,4,4' : 5つのパートの音量バランスを変更できる(数値は 0-10, default:7)
     - 'balance' 以外に 'volume' も可
 - 'set pan=L10,C,R10,R5,L3' : 5つのパートのパンを変更できる(値は L10-C-R10, default:C)
-- 'set pgn=1,2,3,4,5' : 5つのパートの Program Number を変更できる（値は 1-128, default:1)
 - 再生中でも設定可能。再生中の場合、次のループから反映される
