@@ -367,10 +367,9 @@ class LpnGui:
         self.beatBox = LpnGuiText(self.COLUMN4_X, self.LINE2_Y)
         self.keyBox =  LpnGuiText(self.COLUMN1_X, self.LINE3_Y)
         self.chdBox =  LpnGuiText(self.COLUMN2_X, self.LINE3_Y)
-        self.lptBox =  LpnGuiText(self.COLUMN29_X, self.LINE3_Y, 90)
-        self.l2ptBox =  LpnGuiText(self.COLUMN35_X, self.LINE3_Y, 90)
-        self.rptBox =  LpnGuiText(self.COLUMN39_X, self.LINE3_Y, 90)
-        self.r2ptBox =  LpnGuiText(self.COLUMN45_X, self.LINE3_Y, 90)
+
+        XP = [self.COLUMN29_X,self.COLUMN35_X,self.COLUMN39_X,self.COLUMN45_X]
+        self.partBox = [LpnGuiText(XP[i],self.LINE3_Y,90) for i in range(nlib.MAX_NORMAL_PART)]
 
         # Title
         font = pg.font.SysFont(FONTS[136], 32)
@@ -406,14 +405,12 @@ class LpnGui:
         if cmp_part != None and cmp_part.loop_obj != None:
             chord_name = cmp_part.loop_obj.get_chord()
         self.chdBox.set_text('chord: ' + chord_name)
-        a,b = seq.sqobjs[0].get_loop_info()
-        self.lptBox.set_text( 'L1: ' + str(a) + '/' + str(b))
-        a,b = seq.sqobjs[1].get_loop_info()
-        self.l2ptBox.set_text('L2: ' + str(a) + '/' + str(b))
-        a,b = seq.sqobjs[2].get_loop_info()
-        self.rptBox.set_text( 'R1: ' + str(a) + '/' + str(b))
-        a,b = seq.sqobjs[3].get_loop_info()
-        self.r2ptBox.set_text('R2: ' + str(a) + '/' + str(b))
+
+        PART_TXT = ['L1: ','L2: ','R1: ','R2: ']
+        for i in range(nlib.MAX_NORMAL_PART):
+            a,b = seq.get_part(i).get_loop_info()
+            self.partBox[i].set_text(PART_TXT[i] + str(a) + '/' + str(b))
+
 
     def _draw(self):
         self.screen.fill((0,0,0))
@@ -426,10 +423,7 @@ class LpnGui:
         self.beatBox.draw(self.screen)
         self.keyBox.draw(self.screen)
         self.chdBox.draw(self.screen)
-        self.rptBox.draw(self.screen)
-        self.r2ptBox.draw(self.screen)
-        self.lptBox.draw(self.screen)
-        self.l2ptBox.draw(self.screen)
+        for i in range(nlib.MAX_NORMAL_PART): self.partBox[i].draw(self.screen)
 
 
     def loop(self, seq):
