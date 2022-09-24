@@ -27,8 +27,14 @@ class Note(ep.ElapseIF):
             nt = self.note_num
             proper_nt = 0
             i = 0
-            while proper_nt < nt and len(tbl) > i:
+            while  len(tbl) > i:
+                former_nt = proper_nt
                 proper_nt = tbl[i]+root+nlib.DEFAULT_NOTE_NUMBER
+                if proper_nt >= nt and i > 0:
+                    # which is closer, below proper or above proper
+                    if nt-former_nt < proper_nt-nt:
+                        proper_nt = former_nt
+                    break
                 i += 1
             self.note_num = proper_nt
         num = self.note_num + self.key - nlib.DEFAULT_NOTE_NUMBER
