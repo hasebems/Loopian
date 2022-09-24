@@ -358,7 +358,7 @@ class Parsing:
             self.print_dialogue("what?")
 
     def letter_brace(self, input_text):
-        success = self.gendt.set_raw(nlib.COMPOSITION_PART, input_text)
+        success = self.gendt.set_raw_for_composition(input_text)
         if success:
             self.print_dialogue("set Composition!")
         else:

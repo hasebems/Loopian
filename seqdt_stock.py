@@ -173,20 +173,26 @@ class SeqDataAllStock:
         self.part_data = []
         self.seq = seq
         for i in range(nlib.MAX_NORMAL_PART):
-            pdt = PartDataStock(seq.sqobjs[i], seq)
+            pdt = PartDataStock(seq.get_part(i), seq)
             self.part_data.append(pdt)
 
         # Damper Pedal Part
-        self.part_data.append(DamperPartStock(seq.sqobjs[nlib.DAMPER_PEDAL_PART], seq))
+        self.damper_part = DamperPartStock(seq.get_part(nlib.DAMPER_PEDAL_PART), seq)
 
         # Composition Part
-        self.part_data.append(CompositionPartStock(seq.sqobjs[nlib.COMPOSITION_PART], seq))
+        self.composition_part = CompositionPartStock(seq.get_part(nlib.COMPOSITION_PART), seq)
+
 
     def set_raw(self, part, text):
-        if part >= nlib.MAX_PART_COUNT: return False
+        if part >= nlib.MAX_NORMAL_PART: return False
         if self.part_data[part].ptr == None: return False
         return self.part_data[part].set_raw(text)
 
+    def set_raw_for_composition(self, text):
+        self.composition_part.set_raw(text)
+
     def set_generated(self):
+        self.composition_part.set_generated()
+        self.damper_part.set_generated()
         for part in self.part_data:
             part.set_generated()
