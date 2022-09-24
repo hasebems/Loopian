@@ -2,8 +2,9 @@
 import time
 import lpnlib as nlib
 import elapse_part as sqp
+import copy
 
-####
+#------------------------------------------------------------------------------
 # Tempo 生成の考え方
 #   1. Tempo 変化時の絶対時間とその時点の tick を記録
 #   2. 次に Tempo が変わるまで、その時間との差から、現在の tick を算出する
@@ -152,11 +153,13 @@ class SeqStack:
                 return
 
             ## new measure
-            for sqobj in self.sqobjs:
+            sqobjs_copy = copy.copy(self.sqobjs)
+            for sqobj in sqobjs_copy:
                 sqobj.msrtop(self.crnt_measure)
 
         ## play seqplay_object
-        for sqobj in self.sqobjs:
+        sqobjs_copy = copy.copy(self.sqobjs)
+        for sqobj in sqobjs_copy:
             sqobj.periodic(self.crnt_measure, self.crnt_tick_inmsr)
 
         ## remove ended obj
