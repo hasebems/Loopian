@@ -35,7 +35,7 @@ def main():
     lp = Loop()
     md = midi.Midi()
     seq = sqs.SeqStack(md)
-    gendt = stk.SeqDataStock(seq)
+    gendt = stk.SeqDataAllStock(seq)
     prs = ps.Parsing(seq, md, gendt)
     gui = lpngui.LpnGui(lp, prs)
 

@@ -165,7 +165,7 @@ class CompositionPartStock:
         return self.whole_tick, self.generated
 
 
-class SeqDataStock:
+class SeqDataAllStock:
 
     def __init__(self, seq):
         self.part_data = []
