@@ -8,12 +8,13 @@ import lpntxt as tx
 #   Note On時に生成され、MIDI を出力した後、Note Offを生成して destroy される
 class Note(ep.ElapseIF):
 
-    def __init__(self, obj, md, ev):
+    def __init__(self, obj, md, ev, key):
         super().__init__(obj, md, 'Note')
         self.midi_ch = 0
         self.note_num = ev[nlib.NOTE]
         self.velocity = ev[nlib.VEL]
         self.duration = ev[nlib.DUR]
+        self.key = key
         self.during_noteon = False
         self.destroy = False
         self.off_msr = 0
@@ -27,9 +28,11 @@ class Note(ep.ElapseIF):
             proper_nt = 0
             i = 0
             while proper_nt < nt and len(tbl) > i:
-                proper_nt = tbl[i]+root+60
+                proper_nt = tbl[i]+root+nlib.DEFAULT_NOTE_NUMBER
                 i += 1
             self.note_num = proper_nt
+        num = self.note_num + self.key - nlib.DEFAULT_NOTE_NUMBER
+        self.note_num = nlib.note_limit(num, 0, 127)
         self.md.set_fifo(self.sqs.get_time(), ['note', self.midi_ch, self.note_num, self.velocity])
 
     def _note_off(self):

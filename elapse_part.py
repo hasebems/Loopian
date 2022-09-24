@@ -99,8 +99,21 @@ class Part(sqp.ElapseIF):
     def get_loop_info(self):
         return self.lp_elapsed_msr, self.loop_measure
 
-    def change_keynote(self, nt):
-        self.keynote = nt
+    def change_key(self, key):  # 0-11: C4(midi:60)-B4
+        self.keynote = nlib.note_limit(key+nlib.DEFAULT_NOTE_NUMBER, 0, 127)
+        self.state_reserve = True
+
+    def change_oct(self, oct, relative):
+        # relative=False,oct=4: center(C4=60)
+        # relative=True, oct=0: center(C4=60)
+        if oct == nlib.NO_NOTE:
+            newoct = 5
+        elif relative:
+            newoct = self.keynote // 12 + oct
+        else:
+            newoct = oct + 1
+        key = newoct * 12 + self.keynote % 12
+        self.keynote = nlib.note_limit(key, 0, 127)
         self.state_reserve = True
 
     def update_phrase(self):

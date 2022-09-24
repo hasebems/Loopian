@@ -3,7 +3,7 @@ import datetime
 import random
 
 REST = 1000
-NONE = 1000
+NO_NOTE = 1001
 DEFAULT_TICK_FOR_ONE_MEASURE = 1920  # 480 * 4
 END_OF_DATA = -1
 

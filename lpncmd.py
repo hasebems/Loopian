@@ -66,16 +66,9 @@ class Parsing:
             else:
                 self.print_dialogue("what?")
 
-    def change_key(self, key_text, all):
-#        def change_note(ptx, keyx, octx):
-#            if octx == nlib.NONE:
-#                octx = ptx.keynote // 12
-#            keyx += octx * 12
-#            keyx = nlib.note_limit(keyx, 0, 127)
-#            ptx.change_keynote(keyx)
-
+    def change_key(self, key_text):
         key = 0
-        oct = nlib.NONE
+        oct = nlib.NO_NOTE
         first_letter = key_text[0]
         if first_letter == 'C':
             key += 0
@@ -104,22 +97,10 @@ class Parsing:
                 if len(key_text) > 2:
                     octave_letter = key_text[2:]
             if octave_letter.isdecimal():
-                oct = int(octave_letter) + 1
-        self.sqs.change_key(key, oct, key_text)
-#        if all:
-#            for i in range(nlib.MAX_PART_COUNT):
-#                change_note(self.sqs.get_part(i), key, oct)
-#        else:
-#            pt = self.sqs.get_part(self.input_part-1)
-#            change_note(pt, key, oct)
+                oct = int(octave_letter)
+        self.sqs.change_key_oct(key, oct, key_text)
 
     def change_oct(self, text, all):
-        def change_oct_to_part(ptx, octx):
-            newoct = ptx.keynote // 12 + octx
-            key = newoct * 12 + ptx.keynote % 12
-            key = nlib.note_limit(key, 0, 127)
-            ptx.change_keynote(key)
-
         def generate_oct_number(text):
             octave_letter = text
             pm = 1
@@ -136,16 +117,17 @@ class Parsing:
 
         if type(text) == list:
             for i, letter in enumerate(text):
-                oct = generate_oct_number(letter)
-                change_oct_to_part(self.sqs.get_part(i), oct)
+                if i < nlib.MAX_NORMAL_PART:
+                    oct = generate_oct_number(letter)
+                    self.sqs.get_part(i).change_oct(oct, True)
         else:
             oct = generate_oct_number(text)
             if all:
                 for i in range(nlib.MAX_NORMAL_PART):
-                    change_oct_to_part(self.sqs.get_part(i), oct)
+                    self.sqs.get_part(i).change_oct(oct, True)
             else:
-                pt = self.sqs.get_part(self.input_part)
-                change_oct_to_part(pt, oct)
+                self.sqs.get_part(self.input_part).change_oct(oct, True)
+
 
     def change_cc(self, cc_num, cc_list):
         if len(cc_list) > nlib.MAX_NORMAL_PART:
@@ -193,7 +175,7 @@ class Parsing:
             pass
         elif command == 'key':
             key_list = tx[1].strip().split()
-            self.change_key(key_list[0], 'all' in prm_text)
+            self.change_key(key_list[0])
             self.print_dialogue("Key has changed!")
         elif command == 'oct':
             if ',' in tx[1]:
