@@ -27,7 +27,7 @@ class Parsing:
         self.sqs = sqs
         self.md = md
         self.gui = None
-        self.input_part = nlib.FIRST_NORMAL_PART + 2
+        self.input_part = 2 # Normal Part
         self.back_color = 2
         self.gendt = dt
 
@@ -126,7 +126,7 @@ class Parsing:
                 for i in range(nlib.FIRST_NORMAL_PART, nlib.MAX_NORMAL_PART):
                     self.sqs.get_part(i).change_oct(oct, True)
             else:
-                self.sqs.get_part(self.input_part).change_oct(oct, True)
+                self.sqs.get_part(self.input_part+nlib.FIRST_NORMAL_PART).change_oct(oct, True)
 
 
     def change_cc(self, cc_num, cc_list):
@@ -302,8 +302,8 @@ class Parsing:
                 part = int(tx)
                 if part == 1 or part == 2:
                     self.print_dialogue("Changed current part to right " + str(part) + ".")
-                    self.input_part = nlib.FIRST_NORMAL_PART + part + 1
-                    self.gui.change_part(part + 1)
+                    self.input_part = part + 1
+                    self.gui.change_part(self.input_part)
 
     def letterQm(self, input_text):
         self.print_dialogue("what?")
@@ -339,8 +339,8 @@ class Parsing:
                 part = int(tx)
                 if part == 1 or part == 2:
                     self.print_dialogue("Changed current part to left " + str(part) + ".")
-                    self.input_part = nlib.FIRST_NORMAL_PART + part - 1
-                    self.gui.change_part(part - 1)
+                    self.input_part = part - 1
+                    self.gui.change_part(self.input_part)
 
     def letter_bracket(self, input_text):
         success = self.gendt.set_raw_normal(self.input_part, input_text)
