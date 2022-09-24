@@ -20,19 +20,16 @@ class Note(ep.ElapseIF):
         self.off_tick = 0
 
     def _note_on(self):
-        #print('nt:',self.sqs.sqobjs[5].loop_obj.chord)
-        cmp_part = self.sqs.get_part(5)
+        cmp_part = self.sqs.get_part(nlib.COMPOSITION_PART)
         if cmp_part != None and cmp_part.loop_obj != None:
-            chord_name = cmp_part.loop_obj.chord[2]
-            if chord_name != '':
-                root, tbl = tx.TextParse.detect_chord_scale(chord_name)
-                nt = self.note_num
-                proper_nt = 0
-                i = 0
-                while proper_nt < nt and len(tbl) > i:
-                    proper_nt = tbl[i]+root+60
-                    i += 1
-                self.note_num = proper_nt
+            root, tbl = cmp_part.loop_obj.get_translation_tbl()
+            nt = self.note_num
+            proper_nt = 0
+            i = 0
+            while proper_nt < nt and len(tbl) > i:
+                proper_nt = tbl[i]+root+60
+                i += 1
+            self.note_num = proper_nt
         self.md.set_fifo(self.sqs.get_time(), ['note', self.midi_ch, self.note_num, self.velocity])
 
     def _note_off(self):

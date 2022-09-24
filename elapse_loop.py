@@ -2,6 +2,7 @@
 import lpnlib as nlib
 import elapse as ep
 import elapse_note as epn
+import lpntxt as tx
 
 ####
 #   １行分の Phrase/Composition を生成するための ElapseIF Obj.
@@ -110,14 +111,32 @@ class CompositionLoop(Loop):
         self.play_counter = 0
         self.next_tick = 0
         self.chord = ['chord',0,'thru']
+        self.root = 0
+        self.translation_tbl = nlib.CHORD_SCALE['thru']
 
         # for super's member
         self.whole_tick = wt
+
+    def get_chord(self):
+        return self.chord[2]
+
+    def get_translation_tbl(self):
+        return self.root, self.translation_tbl
+
+    def _prepare_note_translation(self):
+        chord_name = self.get_chord()
+        if chord_name != '':
+            self.root, self.translation_tbl = tx.TextParse.detect_chord_scale(chord_name)
+
+    def _reset_note_tranlation(self):
+        self.root = 0
+        self.translation_tbl = nlib.CHORD_SCALE['thru']
 
     def _generate_event(self, tick):
         max_ev = len(self.cmp)
         if max_ev == 0:
             # データを持っていない
+            self._reset_note_tranlation()
             return nlib.END_OF_DATA
 
         if tick == 0:
@@ -133,7 +152,8 @@ class CompositionLoop(Loop):
             next_tick = self.cmp[trace][nlib.TICK]
             if next_tick < tick:
                 self.chord = self.cmp[trace]
-                print('chord:',self.chord)
+                print('chord: ',self.chord)
+                self._prepare_note_translation()
             else:
                 break
             trace += 1
