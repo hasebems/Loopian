@@ -19,22 +19,40 @@ class Note(ep.ElapseIF):
         self.off_msr = 0
         self.off_tick = 0
 
+    def _find_adjust_oct(self, nt, root, tbl):
+        # find out 'adjust octave'
+        adjust = 0
+        proper_nt = tbl[0]+root
+        if nt < proper_nt:
+            while True:
+                adjust -= 1
+                proper_nt = tbl[0]+root+adjust*12
+                if nt >= proper_nt: break
+        else:
+            while proper_nt <= nt:
+                adjust += 1
+                proper_nt = tbl[0]+root+adjust*12
+            adjust -= 1
+        return adjust
+
     def _note_on(self):
         cmp_part = self.sqs.get_part(nlib.COMPOSITION_PART)
         if cmp_part != None and cmp_part.loop_obj != None:
             root, tbl = cmp_part.loop_obj.get_translation_tbl()
+            root += nlib.DEFAULT_NOTE_NUMBER
             nt = self.note_num
-            proper_nt = 0
-            i = 0
-            while  len(tbl) > i:
-                former_nt = proper_nt
-                proper_nt = tbl[i]+root+nlib.DEFAULT_NOTE_NUMBER
-                if proper_nt >= nt and i > 0:
-                    # which is closer, below proper or above proper
+            adjust = self._find_adjust_oct(nt, root, tbl)
+            former_nt = 0
+            for ntx in tbl:
+                proper_nt = ntx+root+adjust*12
+                if proper_nt == nt:
+                    break
+                elif proper_nt > nt:
                     if nt-former_nt < proper_nt-nt:
+                        # which is closer, below proper or above proper
                         proper_nt = former_nt
                     break
-                i += 1
+                former_nt = proper_nt
             self.note_num = proper_nt
         num = self.note_num + self.key - nlib.DEFAULT_NOTE_NUMBER
         self.note_num = nlib.note_limit(num, 0, 127)

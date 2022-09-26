@@ -266,7 +266,7 @@ class TextParse:
             # ローマ数字の文字列から root を求める
             try:
                 ofs = nlib.ROOT_NAME.index(root_str)
-                root += dtbl[len(dtbl)//2+ofs]
+                root += dtbl[ofs]
             except ValueError as error:
                 root = 0
             
