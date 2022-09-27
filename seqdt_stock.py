@@ -12,6 +12,7 @@ class PhraseDataStock:
         self.raw = None
         self.complement = None
         self.generated = None
+        self.analysed = None        # no convert process
         self.randomized = None
 
         self.seq = seq
@@ -64,14 +65,41 @@ class PhraseDataStock:
         return tick, cmpl
 
 
+    def _analyse_plain_data(self):
+        # make beat analysis data: [note count, tick, all note num]
+        beat_analysis = []
+        crnt_tick = 0
+        note_cnt = 0
+        note_all = []
+        for note in self.generated: # ['note', tick, dur, note, vel]
+            if note[1] == crnt_tick:
+                note_cnt += 1
+                note_all.append(note[3])
+            else:
+                beat_analysis.append([note_cnt, crnt_tick, note_all])
+                crnt_tick = note[1]
+                note_cnt = 1
+                note_all = [note[3]]
+        if note_cnt > 0:
+            beat_analysis.append([note_cnt, crnt_tick, note_all])
+        print('analysed:', beat_analysis)
+        return beat_analysis
+
+
     def set_generated(self):
         if self.complement == None: return
 
         # 3.generated data
         self.whole_tick, self.generated = self.convert_to_internal_format(self.base_note, self.note_cnt)
         print('generated1:',self.generated)
+
+        # 4.analysed data
+        self.analysed = self._analyse_plain_data()
+
         ### Add Filters
         self.generated = efb.BeatFilter().filtering(self.generated, self.seq.bpm, self.seq.tick_for_onemsr)
+        ### 
+
         print('generated2:',self.generated)
         self.ptr.update_phrase()
 
