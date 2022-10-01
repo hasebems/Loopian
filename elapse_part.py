@@ -25,14 +25,14 @@ class Part(sqp.ElapseIF):
 
     def _generate_loop(self,msr):
         tick_for_onemsr = self.sqs.get_tick_for_onemsr()
-        self.whole_tick, elm = self.seqdt_part.get_final()
+        self.whole_tick, elm, ana = self.seqdt_part.get_final()
 
         # その時の beat 情報で、whle_tick を loop_measure に換算
         self.loop_measure = self.whole_tick//tick_for_onemsr + \
             (0 if self.whole_tick%tick_for_onemsr == 0 else 1)
 
         if self.part_num != nlib.COMPOSITION_PART:
-            self.loop_obj = phrlp.PhraseLoop(self.sqs, self.md, msr, elm,  \
+            self.loop_obj = phrlp.PhraseLoop(self.sqs, self.md, msr, elm, ana,  \
                 self.keynote, self.whole_tick)
         else:
             self.loop_obj = phrlp.CompositionLoop(self.sqs, self.md, msr, elm,  \

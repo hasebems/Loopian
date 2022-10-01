@@ -26,6 +26,9 @@ NOTE = 3
 VEL = 4
 # for 'damper'
 VAL = 3
+# for analised
+ARP_NTCNT = 0
+ARP_DT = 4
 
 ROOT_NAME = ('I','II','III','IV','V','VI','VII')
 CHORD_SCALE = {  # ±2オクターブ分

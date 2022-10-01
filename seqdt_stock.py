@@ -66,42 +66,45 @@ class PhraseDataStock:
 
 
     def _analyse_plain_data(self):
-        # make beat analysis data: [note count, tick, all note num]
+        # make beat analysis data: 
+        #       [   note count,           : in same tick
+        #           tick, 
+        #           dur, 
+        #           [ all note num ]      : general purpose
+        #           [True/False(one to one), note diff]  : for arpeggio
+        #       ]
         beat_analysis = []
         crnt_tick = 0
+        crnt_dur = 0
         note_cnt = 0
         note_all = []
         for note in self.generated: # ['note', tick, dur, note, vel]
-            if note[1] == crnt_tick:
+            if note[nlib.TICK] == crnt_tick:
                 note_cnt += 1
                 note_all.append(note[3])
             else:
-                beat_analysis.append([note_cnt, crnt_tick, note_all])
-                crnt_tick = note[1]
+                beat_analysis.append([note_cnt, crnt_tick, crnt_dur, note_all])
+                crnt_tick = note[nlib.TICK]
+                crnt_dur = note[nlib.DUR]
                 note_cnt = 1
                 note_all = [note[3]]
-        if note_cnt > 0:
-            beat_analysis.append([note_cnt, crnt_tick, note_all])
+        if note_cnt > 0: # add last one
+            beat_analysis.append([note_cnt, crnt_tick, crnt_dur, note_all])
+        # for arpeggio
+        last_cnt = 0
+        last_note = -1
+        for ana in beat_analysis:
+            crnt_note = -1
+            if ana[nlib.ARP_NTCNT] == 1: crnt_note = ana[nlib.NOTE][0]
+            if last_note >= 0 and last_cnt == 1 and ana[nlib.ARP_NTCNT] == 1:
+                ana.append([True, crnt_note-last_note])
+            else:
+                ana.append([False, 0])
+            last_cnt = ana[nlib.ARP_NTCNT]
+            last_note = crnt_note
+
         print('analysed:', beat_analysis)
         return beat_analysis
-
-
-    def set_generated(self):
-        if self.complement == None: return
-
-        # 3.generated data
-        self.whole_tick, self.generated = self.convert_to_internal_format(self.base_note, self.note_cnt)
-        print('generated1:',self.generated)
-
-        # 4.analysed data
-        self.analysed = self._analyse_plain_data()
-
-        ### Add Filters
-        self.generated = efb.BeatFilter().filtering(self.generated, self.seq.bpm, self.seq.tick_for_onemsr)
-        ### 
-
-        print('generated2:',self.generated)
-        self.ptr.update_phrase()
 
 
     def set_raw(self, text):
@@ -116,16 +119,33 @@ class PhraseDataStock:
         else:
             return False
 
-        # 3.generated data
-        self.set_generated()
+        # 3.recombined data
+        self.set_recombined()
 
         return True
+
+    def set_recombined(self):
+        # 3.recombined data
+        self.whole_tick, self.generated = self.convert_to_internal_format(self.base_note, self.note_cnt)
+        print('recombined:',self.generated)
+
+        # 4.analysed data
+        self.analysed = self._analyse_plain_data()
+
+        # 5.humanized data
+        ### Add Filters
+        self.generated = efb.BeatFilter().filtering(self.generated, self.seq.bpm, self.seq.tick_for_onemsr)
+        ### 
+
+        print('humanized:',self.generated)
+        self.ptr.update_phrase()
 
 
     def get_final(self):
         if self.generated == None: return 0,[]
 
-        # 4. randomized data
+        # 6. randomized data
+        ## temporary method
         self.randomized = []
         for dt in self.generated:
             dt[nlib.VEL] += int(nlib.gauss_rnd10())
@@ -133,7 +153,7 @@ class PhraseDataStock:
             elif dt[nlib.VEL] < 1: dt[nlib.VEL] = 1
             self.randomized.append(dt)
 
-        return self.whole_tick, self.randomized
+        return self.whole_tick, self.randomized, self.analysed
 
 
 class DamperPartStock:
@@ -145,13 +165,13 @@ class DamperPartStock:
         self.ptr.update_phrase()    # always
 
     def set_raw(self, text):
-        pass
+        return True
 
-    def set_generated(self):
+    def set_recombined(self):
         pass
 
     def get_final(self):
-        return 1920, [['damper',40,1870,127]]
+        return 1920, [['damper',40,1870,127]], None
 
 #------------------------------------------------------------------------------
 #   Composition の入力テキストの変換
@@ -180,13 +200,13 @@ class CompositionPartStock:
             return False
         self.ptr.update_phrase()
 
-        # 3. generated data
-        self.set_generated()
+        # 3. recombined data
+        self.set_recombined()
         return True
 
 
-    def set_generated(self):
-        # 3. generated
+    def set_recombined(self):
+        # 3. recombined
         self.generated = []
         self.whole_tick = 0
         for cd in self.complement:
@@ -194,7 +214,7 @@ class CompositionPartStock:
             self.whole_tick += 1920
 
     def get_final(self):
-        return self.whole_tick, self.generated
+        return self.whole_tick, self.generated, None
 
 #------------------------------------------------------------------------------
 #   入力テキストデータの変換処理を集約するクラス
@@ -221,8 +241,8 @@ class SeqDataAllStock:
     def set_raw_composition(self, text):
         return self.composition_part.set_raw(text)
 
-    def set_generated(self):
-        self.composition_part.set_generated()
-        self.damper_part.set_generated()
+    def set_recombined(self):
+        self.composition_part.set_recombined()
+        self.damper_part.set_recombined()
         for part in self.part_data:
-            part.set_generated()
+            part.set_recombined()
