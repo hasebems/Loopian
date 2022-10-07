@@ -3,6 +3,7 @@ import math
 import lpnlib as nlib
 import expfilter_beat as efb
 import lpntxt as tx
+import copy
 
 #------------------------------------------------------------------------------
 #   Phrase の入力テキストの変換
@@ -148,10 +149,12 @@ class PhraseDataStock:
         ## temporary method
         self.randomized = []
         for dt in self.generated:
-            dt[nlib.VEL] += int(nlib.gauss_rnd10())
-            if dt[nlib.VEL] > 127: dt[nlib.VEL] = 127
-            elif dt[nlib.VEL] < 1: dt[nlib.VEL] = 1
-            self.randomized.append(dt)
+            dtx = copy.deepcopy(dt)
+            vel = dt[nlib.VEL] + int(nlib.gauss_rnd10())
+            if vel > 127: vel = 127
+            elif vel < 1: vel = 1
+            dtx[nlib.VEL] = vel
+            self.randomized.append(dtx)
 
         return self.whole_tick, self.randomized, self.analysed
 
