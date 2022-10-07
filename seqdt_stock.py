@@ -143,7 +143,7 @@ class PhraseDataStock:
 
 
     def get_final(self):
-        if self.generated == None: return 0,[]
+        if self.generated == None: return 0,None,None
 
         # 6. randomized data
         ## temporary method
@@ -227,7 +227,7 @@ class SeqDataAllStock:
         self.part_data = []
         self.seq = seq
         for i in range(nlib.MAX_NORMAL_PART):
-            pdt = PhraseDataStock(seq.get_part(i), seq)
+            pdt = PhraseDataStock(seq.get_part(i+nlib.FIRST_NORMAL_PART), seq)
             self.part_data.append(pdt)
 
         # Damper Pedal Part
