@@ -49,7 +49,7 @@ class PhraseDataStock:
 
 
     def convert_to_internal_format(self, base_note, note_cnt):
-        if self.complement[0] is None or len(self.complement[0]) == 0:
+        if self.complement is None or len(self.complement[0]) == 0:
             return 0, []
 
         tick = 0
