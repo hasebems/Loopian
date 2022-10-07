@@ -137,7 +137,6 @@ class PhraseLoop(Loop):
                 self.last_note = self._translate_note_arp(root, tbl, arp_diff)
             else:
                 self.last_note = self._translate_note_com(root, tbl, ev[nlib.NOTE])
-            print(self.last_note, arp_diff, ev[nlib.NOTE]) #@@@@@@@@@@@@
             crntev[nlib.NOTE] = self.last_note
         self.sqs.add_obj(epn.Note(self.sqs, self.md, crntev, self.keynote))
 
