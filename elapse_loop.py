@@ -52,48 +52,94 @@ class PhraseLoop(Loop):
         self.play_counter = 0
         self.next_tick = 0
         self.last_anaone = None
+        self.last_note = nlib.NO_NOTE
 
         # for super's member
         self.whole_tick = wt
 
-    def _judge_arpeggio_diff(self, dt_tick, nt):
+    def _identify_arpeggio_diff(self, dt_tick, nt):
         for anaone in self.ana:
             if anaone[nlib.TICK] == dt_tick and nt in anaone[nlib.NOTE]:
-                old_anaone = self.last_anaone
-                self.last_anaone = anaone
-                if old_anaone is not None and \
-                    (anaone[nlib.ARP_DT][0] and old_anaone[nlib.ARP_DT][0]):
+                if anaone[nlib.ARP_DT][0]:
                     return anaone[nlib.ARP_DT][1]
         return nlib.NO_NOTE
 
 
-    def _translate_note(self, nt):
+    def _translate_note_arp(self, root, tbl, arp_diff):
+        arp_nt = self.last_note + arp_diff
+        nty = nlib.DEFAULT_NOTE_NUMBER
+        if arp_diff == 0:
+            return arp_nt
+        elif arp_diff > 0:
+            ntx = self.last_note + 1
+            ntx = nlib.search_scale_nt_just_above(root, tbl, ntx)
+            if ntx >= arp_nt:
+                return ntx
+            while nty < 128:
+                nty = ntx + 1
+                nty = nlib.search_scale_nt_just_above(root, tbl, nty)
+                if nty >= arp_nt:
+                    if nty-arp_nt >= arp_nt-ntx:
+                        nty = ntx
+                    break
+                ntx = nty
+            return nty
+        else:
+            ntx = self.last_note - 1
+            ntx = nlib.search_scale_nt_just_below(root, tbl, ntx)
+            if ntx <= arp_nt:
+                return ntx
+            while nty >= 0:
+                nty = ntx - 1
+                nty = nlib.search_scale_nt_just_below(root, tbl, nty)
+                if nty <= arp_nt:
+                    if arp_nt-nty >= ntx-arp_nt:
+                        nty = ntx
+                    break
+                ntx = nty
+            return nty
+
+
+    def _translate_note_com(self, root, tbl, nt):
         proper_nt = nt
-        cmp_part = self.sqs.get_part(nlib.COMPOSITION_PART)
-        if cmp_part != None and cmp_part.loop_obj != None:
-            root, tbl = cmp_part.loop_obj.get_translation_tbl()
-            root += nlib.DEFAULT_NOTE_NUMBER
-            oct_adjust = (nt - (root+tbl[0]))//12
-            former_nt = 0
-            found = False
-            for ntx in tbl:
-                proper_nt = ntx + root + oct_adjust*12
-                if proper_nt == nt:
-                    found = True
-                    break
-                elif proper_nt > nt:
-                    if nt-former_nt < proper_nt-nt:
-                        # which is closer, below proper or above proper
-                        proper_nt = former_nt
-                    found = True
-                    break
-                former_nt = proper_nt
-            if not found:   # next octave
-                proper_nt = tbl[0] + root + (oct_adjust+1)*12
+        root += nlib.DEFAULT_NOTE_NUMBER
+        oct_adjust = (nt - (root+tbl[0]))//12
+        former_nt = 0
+        found = False
+        for ntx in tbl:
+            proper_nt = ntx + root + oct_adjust*12
+            if proper_nt == nt:
+                found = True
+                break
+            elif proper_nt > nt:
                 if nt-former_nt < proper_nt-nt:
                     # which is closer, below proper or above proper
                     proper_nt = former_nt
+                found = True
+                break
+            former_nt = proper_nt
+        if not found:   # next octave
+            proper_nt = tbl[0] + root + (oct_adjust+1)*12
+            if nt-former_nt < proper_nt-nt:
+                # which is closer, below proper or above proper
+                proper_nt = former_nt
+
         return proper_nt
+
+
+    def _note_event(self, ev, next_tick):
+        crntev = copy.deepcopy(ev)
+        cmp_part = self.sqs.get_part(nlib.COMPOSITION_PART)
+        if cmp_part != None and cmp_part.loop_obj != None:
+            root, tbl = cmp_part.loop_obj.get_translation_tbl()
+            arp_diff = self._identify_arpeggio_diff(next_tick, ev[nlib.NOTE])
+            if arp_diff != nlib.NO_NOTE:
+                self.last_note = self._translate_note_arp(root, tbl, arp_diff)
+            else:
+                self.last_note = self._translate_note_com(root, tbl, ev[nlib.NOTE])
+            print(self.last_note, arp_diff, ev[nlib.NOTE]) #@@@@@@@@@@@@
+            crntev[nlib.NOTE] = self.last_note
+        self.sqs.add_obj(epn.Note(self.sqs, self.md, crntev, self.keynote))
 
 
     def _generate_event(self, tick):
@@ -118,10 +164,7 @@ class PhraseLoop(Loop):
                 if ev[nlib.TYPE] == 'damper':# ev: ['damper', duration, tick, value]
                     self.sqs.add_obj(epn.Damper(self.sqs, self.md, ev))
                 elif ev[nlib.TYPE] == 'note':# ev: ['note', tick, duration, note, velocity]
-                    #arp_diff = self._judge_arpeggio_diff(next_tick, self.keynote)
-                    orgev = copy.deepcopy(ev)
-                    orgev[nlib.NOTE] = self._translate_note(ev[nlib.NOTE])
-                    self.sqs.add_obj(epn.Note(self.sqs, self.md, orgev, self.keynote))
+                    self._note_event(ev, next_tick)
             else:
                 break
             trace += 1

@@ -9,7 +9,7 @@ END_OF_DATA = -1
 
 MIDI_OUTPUT_PORT_NAME = 'IAC Driver WebMIDI'
 DEFAULT_BPM = 100
-DEFAULT_NOTE_NUMBER = 60
+DEFAULT_NOTE_NUMBER = 60    # C4
 
 FIRST_NORMAL_PART = 1
 MAX_NORMAL_PART = 4
@@ -64,6 +64,47 @@ CHORD_SCALE = {  # ±2オクターブ分
     'pentatonic':[0, 2, 4, 7, 9],
     'none': [1000, 1001]  # if more than 127, no sound by limit
 }
+
+
+def search_scale_nt_just_above(root, tbl, nt):
+    # nt の音程より上にある(nt含む)、一番近い root/tbl の音程を探す
+    scale_nt = 0
+    octave = -1
+    while nt > scale_nt:    # Octave 判定
+        octave += 1
+        scale_nt = root + octave*12
+
+    scale_nt = 0
+    octave -= 1
+    cnt = -1
+    while nt > scale_nt:    # Table index 判定
+        cnt += 1
+        if cnt >= len(tbl):
+            octave += 1
+            cnt = 0
+        scale_nt = root + tbl[cnt] + octave*12
+    return scale_nt 
+
+
+def search_scale_nt_just_below(root, tbl, nt):
+    # nt の音程から下にある(nt含む)、一番近い root/tbl の音程を探す    
+    scale_nt = 0
+    octave = -1
+    while nt > scale_nt:    # Octave 判定
+        octave += 1
+        scale_nt = root + octave*12
+
+    scale_nt = 127
+    octave -= 1
+    cnt = len(tbl)
+    while nt < scale_nt:    # Table index 判定
+        cnt -= 1
+        if cnt < 0:
+            octave -= 1
+            cnt = len(tbl)-1
+        scale_nt = root + tbl[cnt] + octave*12
+    return scale_nt
+
 
 def convert_exp2vel(exp_text):
     if exp_text == 'ff':
