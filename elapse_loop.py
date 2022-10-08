@@ -45,8 +45,8 @@ class PhraseLoop(Loop):
 
     def __init__(self, obj, md, msr, phr, ana, key, wt):
         super().__init__(obj, md, 'PhrLoop', msr)
-        self.phr = phr
-        self.ana = ana
+        self.phr = copy.deepcopy(phr)
+        self.ana = copy.deepcopy(ana)
         self.keynote = key
 
         self.play_counter = 0
@@ -133,7 +133,7 @@ class PhraseLoop(Loop):
         if cmp_part != None and cmp_part.loop_obj != None:
             root, tbl = cmp_part.loop_obj.get_translation_tbl()
             arp_diff = self._identify_arpeggio_diff(next_tick, ev[nlib.NOTE])
-            if arp_diff != nlib.NO_NOTE:
+            if cmp_part.loop_obj.get_chord() != 'thru' and arp_diff != nlib.NO_NOTE:
                 self.last_note = self._translate_note_arp(root, tbl, arp_diff)
             else:
                 self.last_note = self._translate_note_com(root, tbl, ev[nlib.NOTE])
@@ -191,12 +191,13 @@ class CompositionLoop(Loop):
 
     def __init__(self, obj, md, msr, cmp, key, wt):
         super().__init__(obj, md, 'ComLoop', msr)
-        self.cmp = cmp
+        self.cmp = copy.deepcopy(cmp)
         self.keynote = key
 
         self.play_counter = 0
         self.next_tick = 0
-        self.chord = ['chord',0,'thru']
+        self.seqdt = ['chord',0,'thru']
+        self.chord_name = self.seqdt[2]
         self.root = 0
         self.translation_tbl = nlib.CHORD_SCALE['thru']
 
@@ -204,16 +205,16 @@ class CompositionLoop(Loop):
         self.whole_tick = wt
 
     def get_chord(self):
-        return self.chord[2]
+        return self.seqdt[2]
 
     def get_translation_tbl(self):
         return self.root, self.translation_tbl
 
     def _prepare_note_translation(self):
-        chord_name = self.get_chord()
-        print(chord_name)
-        if chord_name != '':
-            self.root, self.translation_tbl = tx.TextParse.detect_chord_scale(chord_name)
+        self.chord_name = self.get_chord()
+        print(self.chord_name)
+        if self.chord_name != '':
+            self.root, self.translation_tbl = tx.TextParse.detect_chord_scale(self.chord_name)
 
     def _reset_note_tranlation(self):
         self.root = 0
@@ -238,7 +239,7 @@ class CompositionLoop(Loop):
                 break
             next_tick = self.cmp[trace][nlib.TICK]
             if next_tick < tick:
-                self.chord = self.cmp[trace]
+                self.seqdt = self.cmp[trace]
                 self._prepare_note_translation()
             else:
                 break
