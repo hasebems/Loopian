@@ -17,19 +17,27 @@ DAMPER_PEDAL_PART = FIRST_NORMAL_PART+MAX_NORMAL_PART
 COMPOSITION_PART = 0
 MAX_PART_COUNT = FIRST_NORMAL_PART+MAX_NORMAL_PART+1
 
-# seq data index
+#=====================
+# seq data index (seqdt)
+#=====================
 TYPE = 0
 TICK = 1
 DUR = 2
-# for 'note'
+# for 'note' : ['note', $TICK, $DUR, $NOTE, $VEL]
 NOTE = 3
 VEL = 4
-# for 'damper'
+# for 'damper' : ['damper', $TICK, $DUR, $VAL]
 VAL = 3
+# for 'chord' : ['chord', $TICK, $CHORD ]
+CHORD = 2
+
 # for analised
 ARP_NTCNT = 0
 ARP_DT = 4
 
+#=====================
+# Chord Text Table
+#=====================
 ROOT_NAME = ('I','II','III','IV','V','VI','VII')
 CHORD_SCALE = {  # ±2オクターブ分
     'thru':     [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
