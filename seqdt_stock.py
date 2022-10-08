@@ -36,7 +36,8 @@ class PhraseDataStock:
         nlists = note_text.replace(' ', '').split('=')  # 和音検出
         bpchs = []
         for nx in nlists:
-            base_pitch = keynote + nlib.convert_doremi(nx)
+            doremi = nlib.convert_doremi(nx)
+            base_pitch = keynote + doremi if doremi != nlib.REST else doremi
             bpchs.append(base_pitch)
         return bpchs
 
@@ -72,36 +73,57 @@ class PhraseDataStock:
         #           tick, 
         #           dur, 
         #           [ all note num ]      : general purpose
-        #           [True/False(one to one), note diff]  : for arpeggio
+        #          << [True/False(one to one), note diff] >> : for arpeggio
         #       ]
+        # 同tickの note を、一つのデータにまとめて beat_analysis に格納
         beat_analysis = []
-        crnt_tick = 0
+        crnt_tick = -1
         crnt_dur = 0
         note_cnt = 0
         note_all = []
         for note in self.generated: # ['note', tick, dur, note, vel]
-            if note[nlib.TICK] == crnt_tick:
+            if note[nlib.TICK] == crnt_tick: # 同じ tick なら、note_all に Note 追加
                 note_cnt += 1
                 note_all.append(note[3])
-            else:
-                beat_analysis.append([note_cnt, crnt_tick, crnt_dur, note_all])
+            else:                   # tick が進んだら、前の tick のデータを記録
+                if note_cnt > 0:
+                    beat_analysis.append([note_cnt, crnt_tick, crnt_dur, note_all])
                 crnt_tick = note[nlib.TICK]
                 crnt_dur = note[nlib.DUR]
                 note_cnt = 1
                 note_all = [note[3]]
         if note_cnt > 0: # add last one
             beat_analysis.append([note_cnt, crnt_tick, crnt_dur, note_all])
+
         # for arpeggio
+        # 上記で準備した beat_analysis の後ろに、arpeggio 用の解析データを追加
+        #  [ True/False, $DIFF ]
+        #       True/False: arpeggio 用 Note変換を発動させる（前の音と連続している）
+        #       $DIFF: 上記が True の場合の、前の音との音程の差分
+        last_note = nlib.REST
         last_cnt = 0
-        last_note = -1
+        total_tick = 0
         for ana in beat_analysis:
-            crnt_note = -1
-            if ana[nlib.ARP_NTCNT] == 1: crnt_note = ana[nlib.NOTE][0]
-            if last_note >= 0 and last_cnt == 1 and ana[nlib.ARP_NTCNT] == 1:
+            if total_tick != ana[nlib.TICK]: # 休みがあった
+                total_tick = ana[nlib.TICK]
+                last_note = nlib.REST
+                last_cnt = 0
+            else:
+                total_tick += ana[nlib.DUR]
+
+            crnt_note = nlib.NO_NOTE
+            crnt_cnt = ana[nlib.ARP_NTCNT]
+            if crnt_cnt == 1:    # arp 対象
+                crnt_note = ana[nlib.NOTE][0]
+
+            if last_note <= 127 and \
+               last_cnt == 1 and \
+               crnt_note <= 127 and \
+               crnt_cnt == 1: # 過去＆現在：単音、ノート適正
                 ana.append([True, crnt_note-last_note])
             else:
                 ana.append([False, 0])
-            last_cnt = ana[nlib.ARP_NTCNT]
+            last_cnt = crnt_cnt
             last_note = crnt_note
 
         print('analysed:', beat_analysis)
