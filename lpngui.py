@@ -408,7 +408,7 @@ class LpnGui:
 
         PART_TXT = ['L1: ','L2: ','R1: ','R2: ']
         for i in range(nlib.MAX_NORMAL_PART):
-            a,b = seq.get_part(i).get_loop_info()
+            a,b = seq.get_part(i+nlib.FIRST_NORMAL_PART).get_loop_info()
             self.partBox[i].set_text(PART_TXT[i] + str(a) + '/' + str(b))
 
 
