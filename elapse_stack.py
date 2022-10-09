@@ -27,6 +27,7 @@ class SeqStack:
         self.current_time = 0       # 現在の時刻
 
         self.bpm = 120
+        self.bpm_stock = 120
         self.beat = [4,4]
         self.tick_for_onemsr = nlib.DEFAULT_TICK_FOR_ONE_MEASURE # 1920
         self.stock_tick_for_onemsr = [nlib.DEFAULT_TICK_FOR_ONE_MEASURE,4,4]
@@ -104,6 +105,20 @@ class SeqStack:
             maxsq = len(self.sqobjs)
             #print('Destroyed!')
 
+    def _change_beat_event(self):
+        # change beat event があった
+        self.beat_start_msr = self.crnt_measure
+        self.bpm_start_time = self.current_time
+        self.bpm_start_tick = 0
+        self.tick_for_onemsr = self.stock_tick_for_onemsr[0]
+        self.beat = self.stock_tick_for_onemsr[1:3]
+
+    def _change_bpm_event(self):
+        self.bpm_start_tick = self._calc_current_tick(self.current_time)
+        self.bpm_start_time = self.current_time  # Get current time
+        self.bpm = self.bpm_stock
+
+
     def periodic(self):     # seqplay thread
         ## check flags
         if self.play_for_periodic and not self.during_play:
@@ -136,12 +151,10 @@ class SeqStack:
         if former_msr != self.crnt_measure:
             # 小節を跨いだ場合
             if self.stock_tick_for_onemsr[0] is not self.tick_for_onemsr:
-                # change beat event があった
-                self.beat_start_msr = self.crnt_measure
-                self.bpm_start_time = self.current_time
-                self.bpm_start_tick = 0
-                self.tick_for_onemsr = self.stock_tick_for_onemsr[0]
-                self.beat = self.stock_tick_for_onemsr[1:3]
+                self._change_beat_event()
+
+            if self.bpm != self.bpm_stock:
+                self._change_bpm_event()
 
             if self.fine_for_periodic:
                 # fine event
@@ -167,10 +180,7 @@ class SeqStack:
 
 
     def change_tempo(self, tempo):     # command thread
-        current_time = time.time()
-        self.bpm_start_tick = self._calc_current_tick(current_time)
-        self.bpm_start_time = current_time  # Get current time
-        self.bpm = tempo
+        self.bpm_stock = tempo
 
     def change_beat(self, beat):    # beat: number of ticks of one measure
         self.stock_tick_for_onemsr = beat
