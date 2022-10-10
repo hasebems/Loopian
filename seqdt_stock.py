@@ -135,7 +135,7 @@ class PhraseDataStock:
         self.raw = text
 
         # 2.complement data
-        cmpl, self.base_note, self.note_cnt = tx.TextParse._complement_data(text)   # リスト [3] = [note[],dur[],exp]
+        cmpl, self.base_note, self.note_cnt = tx.TextParse.complement_data(text)   # リスト [3] = [note[],dur[],exp]
         print('complement:',cmpl)
         if cmpl != None:
             self.complement = cmpl
