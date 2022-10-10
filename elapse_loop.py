@@ -130,15 +130,18 @@ class PhraseLoop(Loop):
     def _note_event(self, ev, next_tick):
         crntev = copy.deepcopy(ev)
         cmp_part = self.sqs.get_part(nlib.COMPOSITION_PART)
+        deb_txt = 'non'
         if cmp_part != None and cmp_part.loop_obj != None:
             root, tbl = cmp_part.loop_obj.get_translation_tbl()
             arp_diff = self._identify_arpeggio_diff(next_tick, ev[nlib.NOTE])
             if cmp_part.loop_obj.get_chord() != 'thru' and arp_diff != nlib.NO_NOTE:
                 self.last_note = self._translate_note_arp(root, tbl, arp_diff)
+                deb_txt = 'arp:' + str(root)
             else:
                 self.last_note = self._translate_note_com(root, tbl, ev[nlib.NOTE])
+                deb_txt = 'com:' + str(root)
             crntev[nlib.NOTE] = self.last_note
-        self.sqs.add_obj(epn.Note(self.sqs, self.md, crntev, self.keynote))
+        self.sqs.add_obj(epn.Note(self.sqs, self.md, crntev, self.keynote, deb_txt))
 
 
     def _generate_event(self, tick):
@@ -212,9 +215,9 @@ class CompositionLoop(Loop):
 
     def _prepare_note_translation(self):
         self.chord_name = self.get_chord()
-        print(self.chord_name)
         if self.chord_name != '':
             self.root, self.translation_tbl = tx.TextParse.detect_chord_scale(self.chord_name)
+        print(self.chord_name)
 
     def _reset_note_tranlation(self):
         self.root = 0
