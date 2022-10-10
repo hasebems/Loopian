@@ -8,15 +8,39 @@ class TextParse:
         pass
 
     def _fill_omitted_note_data(note_data):
-        # スペース削除し、',' '|' 区切りでリスト化
-        note_flow = re.split('[,|]', note_data.replace(' ', ''))
-        while '' in note_flow:
+        ## ,| 重複による同音指示の補填
+        fill1 = ''
+        doremi = ''
+        ntstr_end_flag = False
+        for i in range(len(note_data)):
+            ltr = note_data[i]
+            if ltr == ',':
+                fill1 += doremi + ','
+                ntstr_end_flag = True
+            elif ltr == '|':
+                fill1 += doremi + '|,'
+                doremi = ''
+                ntstr_end_flag = True
+            else:
+                if ntstr_end_flag:
+                    doremi = ltr
+                else:
+                    doremi += ltr
+                ntstr_end_flag = False
+        if doremi != '':
+            fill1 += doremi
+
+        # スペース削除し、',' 区切りでリスト化
+        fill2 = fill1.replace(' ', '').replace('|','|,')
+        note_flow = re.split('[,]', fill2)
+        while '' in note_flow:  # 何も入ってない要素を削除
             note_flow.remove('')
 
         # If find Repeat mark, expand all event.
         no_repeat = False
         while not no_repeat:
             no_repeat = True
+            '''
             repeat_start = 0
             for i, nt in enumerate(note_flow):  # |: :n|
                 if ':' in nt:
@@ -40,7 +64,7 @@ class TextParse:
                             note_flow[ins_ptr:ins_ptr] = note_flow[repeat_start:repeat_end_ptr]
                         break
             # end of for
-
+            '''
             repeat_start = 0
             first_bracket = False
             for i, nt in enumerate(note_flow):  # <  >*n
@@ -180,7 +204,7 @@ class TextParse:
         return dur_flow
 
 
-    def _complement_data(input_text):
+    def complement_data(input_text):
         # [] のセットを抜き出し、中身を note_info に入れる
         note_info = []
         tx = input_text
