@@ -8,7 +8,7 @@ import elapse_loop as phrlp
 class Part(sqp.ElapseIF):
 
     def __init__(self, obj, md, num):
-        super().__init__(obj, md, 'Part')
+        super().__init__(obj, md, 'Part', num)
         self.part_num = num
         self.first_measure_num = 0 # 新しい Phrase/Pattern が始まった絶対小節数
 

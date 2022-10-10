@@ -167,8 +167,11 @@ class SeqStack:
 
             ## new measure
             sqobjs_copy = copy.copy(self.sqobjs)
+            elapse_obj = ''                          # for debug
             for sqobj in sqobjs_copy:
                 sqobj.msrtop(self.crnt_measure)
+                elapse_obj += sqobj.who_I_am() + ',' # for debug
+            print(elapse_obj)                        # for debug
 
         ## play seqplay_object
         sqobjs_copy = copy.copy(self.sqobjs)
