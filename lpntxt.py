@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import re
+import math
 import lpnlib as nlib
 
 class TextParse:
@@ -7,6 +8,8 @@ class TextParse:
     def __init__(self):
         pass
 
+    #------------------------------------------------------------------------------
+    #   complement data
     def _fill_omitted_note_data(note_data):
         ## ,| 重複による同音指示の補填
         fill1 = ''
@@ -237,7 +240,7 @@ class TextParse:
         complement.append(TextParse._fill_omitted_dur_data(dur_text, num))
         complement.append(note_info[2])
 
-        return complement, base_note, num
+        return complement, base_note
 
 
     def complement_brace(input_text):
@@ -266,6 +269,60 @@ class TextParse:
         return chord_flow_next
 
 
+    #------------------------------------------------------------------------------
+    #   recombine data
+    def _add_note(generated, tick, notes, duration, base_note, velocity=100):
+        for note in notes:
+            if note != nlib.REST:
+                real_dur = math.floor(duration * nlib.DEFAULT_TICK_FOR_ONE_MEASURE / base_note) # add line
+                generated.append(['note', tick, real_dur, note, velocity])                      # add real_dur
+
+
+    def _cnv_note_to_pitch(keynote, note_text):
+        end = False
+        if note_text[-1] == '|':   # 小節最後のイベント
+            note_text = note_text[0:-1]
+            end = True
+        nlists = note_text.replace(' ', '').split('=')  # 和音検出
+        bpchs = []
+        for nx in nlists:
+            doremi = nlib.convert_doremi(nx)
+            base_pitch = keynote + doremi if doremi != nlib.REST else doremi
+            bpchs.append(base_pitch)
+        return bpchs, end
+
+
+    def _cnv_duration(dur_text):
+        if dur_text.isdecimal() is True:
+            return int(dur_text)
+        else:
+            return 1
+
+
+    def recombine_to_internal_format(complement, keynote, tick_for_onemsr, base_note):
+        if complement is None or len(complement[0]) == 0:
+            return 0, []
+
+        tick = 0
+        read_ptr = 0
+        rcmb = []
+        note_cnt = len(complement[0])
+        while read_ptr < note_cnt:
+            notes, mes_end = TextParse._cnv_note_to_pitch(keynote, complement[0][read_ptr])
+            dur = TextParse._cnv_duration(complement[1][read_ptr])
+            vel = nlib.convert_exp2vel(complement[2])
+            TextParse._add_note(rcmb, tick, notes, dur, base_note, vel)
+            if mes_end:
+                tick = ((tick//tick_for_onemsr) + 1)*tick_for_onemsr
+            else:
+                tick += int(dur * nlib.DEFAULT_TICK_FOR_ONE_MEASURE / base_note)
+            read_ptr += 1  # out from repeat
+
+        return tick, rcmb
+
+
+    #------------------------------------------------------------------------------
+    #   translate note
     def detect_chord_scale(chord):
         root = 0
         letter = chord[0]

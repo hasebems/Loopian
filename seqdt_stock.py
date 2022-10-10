@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-import math
 import lpnlib as nlib
 import expfilter_beat as efb
 import lpntxt as tx
@@ -17,54 +16,11 @@ class PhraseDataStock:
         self.randomized = None
 
         self.seq = seq
-        self.ptr = objs
-        self.ptr.set_seqdt_part(self)
+        self.part = objs
+        self.part.set_seqdt_part(self)
 
         self.whole_tick = 0
         self.base_note = 0
-        self.note_cnt = 0
-
-
-    def _add_note(self, generated, tick, notes, duration, base_note, velocity=100):
-        for note in notes:
-            if note != nlib.REST:
-                real_dur = math.floor(duration * nlib.DEFAULT_TICK_FOR_ONE_MEASURE / base_note) # add line
-                generated.append(['note', tick, real_dur, note, velocity])                      # add real_dur
-
-
-    def _cnv_note_to_pitch(keynote, note_text):
-        nlists = note_text.replace(' ', '').split('=')  # 和音検出
-        bpchs = []
-        for nx in nlists:
-            doremi = nlib.convert_doremi(nx)
-            base_pitch = keynote + doremi if doremi != nlib.REST else doremi
-            bpchs.append(base_pitch)
-        return bpchs
-
-
-    def _cnv_duration(dur_text):
-        if dur_text.isdecimal() is True:
-            return int(dur_text)
-        else:
-            return 1
-
-
-    def convert_to_internal_format(self, base_note, note_cnt):
-        if self.complement is None or len(self.complement[0]) == 0:
-            return 0, []
-
-        tick = 0
-        read_ptr = 0
-        cmpl = []
-        while read_ptr < note_cnt:
-            notes = PhraseDataStock._cnv_note_to_pitch(self.ptr.keynote, self.complement[0][read_ptr])
-            dur = PhraseDataStock._cnv_duration(self.complement[1][read_ptr])
-            vel = nlib.convert_exp2vel(self.complement[2])
-            self._add_note(cmpl, tick, notes, dur, base_note, vel)
-            tick += int(dur * nlib.DEFAULT_TICK_FOR_ONE_MEASURE / base_note)
-            read_ptr += 1  # out from repeat
-
-        return tick, cmpl
 
 
     def _analyse_plain_data(self):
@@ -135,21 +91,23 @@ class PhraseDataStock:
         self.raw = text
 
         # 2.complement data
-        cmpl, self.base_note, self.note_cnt = tx.TextParse.complement_data(text)   # リスト [3] = [note[],dur[],exp]
+        cmpl, self.base_note = tx.TextParse.complement_data(text)   # リスト [3] = [note[],dur[],exp]
         print('complement:',cmpl)
         if cmpl != None:
             self.complement = cmpl
         else:
             return False
 
-        # 3.recombined data
+        # 3-5.recombined data
         self.set_recombined()
 
         return True
 
     def set_recombined(self):
         # 3.recombined data
-        self.whole_tick, self.generated = self.convert_to_internal_format(self.base_note, self.note_cnt)
+        self.whole_tick, self.generated = \
+            tx.TextParse.recombine_to_internal_format( \
+                self.complement, self.part.keynote, self.seq.stock_tick_for_onemsr[0], self.base_note)
         print('recombined:',self.generated)
 
         # 4.analysed data
@@ -161,7 +119,7 @@ class PhraseDataStock:
         ### 
 
         print('humanized:',self.generated)
-        self.ptr.update_phrase()
+        self.part.update_phrase()
 
 
     def get_final(self):
@@ -185,9 +143,9 @@ class DamperPartStock:
 
     def __init__(self, objs, seq):
         self.seq = seq
-        self.ptr = objs
-        self.ptr.set_seqdt_part(self)
-        self.ptr.update_phrase()    # always
+        self.part = objs
+        self.part.set_seqdt_part(self)
+        self.part.update_phrase()    # always
 
     def set_raw(self, text):
         return True
@@ -204,8 +162,8 @@ class CompositionPartStock:
 
     def __init__(self, objs, seq):
         self.seq = seq
-        self.ptr = objs
-        self.ptr.set_seqdt_part(self)
+        self.part = objs
+        self.part.set_seqdt_part(self)
 
         self.raw = []
         self.complement = []
@@ -223,7 +181,7 @@ class CompositionPartStock:
             self.complement = cmpl
         else:
             return False
-        self.ptr.update_phrase()
+        self.part.update_phrase()
 
         # 3. recombined data
         self.set_recombined()

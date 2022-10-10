@@ -63,8 +63,10 @@ class Parsing:
                 beat_ev = ((nlib.DEFAULT_TICK_FOR_ONE_MEASURE/onpu)*btnum, btnum, onpu)
                 self.sqs.change_beat(beat_ev)
                 self.print_dialogue("Beat has changed!")
+                return True
             else:
                 self.print_dialogue("what?")
+                return False
 
     def change_key(self, key_text):
         key = 0
@@ -189,8 +191,8 @@ class Parsing:
             self.print_dialogue("Octave has changed!")
         elif command == 'beat':
             beat_list = tx[1].strip().split()
-            self.gendt.set_recombined()
-            self.change_beat(beat_list[0])
+            if self.change_beat(beat_list[0]):
+                self.gendt.set_recombined()
         elif command == 'bpm':
             bpmnumlist = tx[1].strip().split()
             if bpmnumlist[0].isdecimal():
