@@ -129,11 +129,13 @@ class Parsing:
                 self.sqs.get_part(self.input_part+nlib.FIRST_NORMAL_PART).change_oct(oct, True)
 
 
-    def change_cc(self, cc_num, cc_list):
-        if len(cc_list) > nlib.MAX_NORMAL_PART:
-            del cc_list[nlib.MAX_NORMAL_PART:]
-        for i, vol in enumerate(cc_list):
-            self.sqs.get_part(i+nlib.FIRST_NORMAL_PART).change_cc(cc_num, int(vol))
+    def change_cc(self, cc_num, value):
+#    def change_cc(self, cc_num, cc_list):
+#        if len(cc_list) > nlib.MAX_NORMAL_PART:
+#            del cc_list[nlib.MAX_NORMAL_PART:]
+#        for i, vol in enumerate(cc_list):
+#            self.sqs.get_part(i+nlib.FIRST_NORMAL_PART).change_cc(cc_num, int(vol))
+        self.md.send_control(0, cc_num, value)
 
     CONFIRM_MIDI_OUT_ID = -1
 
@@ -195,25 +197,25 @@ class Parsing:
                 self.sqs.change_tempo(int(bpmnumlist[0]))
                 self.gendt.set_recombined()
                 self.print_dialogue("BPM has changed!")
-        elif command == 'balance' or command == 'volume':
-            bl_list = tx[1].strip().split(',')
-            cc_list = [88 for _ in range(5)] # default: 7
-            for i, var in enumerate(bl_list):
-                if var.isdecimal():
-                    cc_list[i] = int(int(var)*12.7)
-            self.change_cc(7, cc_list)
-            self.print_dialogue("Balance has changed!")
-        elif command == 'pan':
-            bl_list = tx[1].strip().split(',')
-            cc_list = [64 for _ in range(5)] # default: C
-            for i, var in enumerate(bl_list):
-                try:
-                    pan = int(PAN_TRANS_TBL.index(var) * 6.4)
-                    cc_list[i] = pan if pan <= 127 else 127
-                except ValueError as error:
-                    continue
-            self.change_cc(10, cc_list)
-            self.print_dialogue("Pan has changed!")
+#        elif command == 'balance' or command == 'volume':
+#            bl_list = tx[1].strip().split(',')
+#            cc_list = [88 for _ in range(5)] # default: 7
+#            for i, var in enumerate(bl_list):
+#                if var.isdecimal():
+#                    cc_list[i] = int(int(var)*12.7)
+#            self.change_cc(7, cc_list)
+#            self.print_dialogue("Balance has changed!")
+#        elif command == 'pan':
+#            bl_list = tx[1].strip().split(',')
+#            cc_list = [64 for _ in range(5)] # default: C
+#            for i, var in enumerate(bl_list):
+#                try:
+#                    pan = int(PAN_TRANS_TBL.index(var) * 6.4)
+#                    cc_list[i] = pan if pan <= 127 else 127
+#                except ValueError as error:
+#                    continue
+#            self.change_cc(10, cc_list)
+#            self.print_dialogue("Pan has changed!")
 
     def letterB(self, input_text):
         self.print_dialogue("what?")
@@ -228,8 +230,8 @@ class Parsing:
                 else:
                     self.print_dialogue("Unable to start!")
         elif input_text[0:5] == 'panic':
-            for i in range(nlib.FIRST_NORMAL_PART, nlib.MAX_NORMAL_PART):
-                self.sqs.get_part(i).change_cc(120, 0)
+            #for i in range(nlib.FIRST_NORMAL_PART, nlib.MAX_NORMAL_PART):
+            self.change_cc(120, 0)
         else:
             self.print_dialogue("what?")
 
