@@ -39,13 +39,16 @@ class SeqStack:
         self.fine_for_periodic = False
 
         self.sqobjs = []
-        for i in range(nlib.MAX_PART_COUNT):
+        for i in range(nlib.MAX_PART_COUNT): # Part は、static に存在
             obj = sqp.Part(self,md,i)
             self.sqobjs.append(obj)
 
     def add_obj(self, obj):
         self.sqobjs.append(obj)
         #print(len(self.sqobjs))
+
+    def add_obj_in_front(self, obj):    # Part の直後に挿入
+        self.sqobjs.insert(nlib.MAX_PART_COUNT, obj)
 
     def get_time(self):
         return self.current_time

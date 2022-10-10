@@ -34,10 +34,11 @@ class Part(sqp.ElapseIF):
         if self.part_num != nlib.COMPOSITION_PART:
             self.loop_obj = phrlp.PhraseLoop(self.sqs, self.md, msr, elm, ana,  \
                 self.keynote, self.whole_tick)
+            self.sqs.add_obj(self.loop_obj)
         else:
             self.loop_obj = phrlp.CompositionLoop(self.sqs, self.md, msr, elm,  \
                 self.keynote, self.whole_tick)
-        self.sqs.add_obj(self.loop_obj)
+            self.sqs.add_obj_in_front(self.loop_obj)
 
     ## Seqplay thread内でコール
     def start(self):
