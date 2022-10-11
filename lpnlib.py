@@ -143,6 +143,8 @@ def gauss_rnd10():
     return rnd*3
 
 def convert_doremi(doremi_str):
+    if doremi_str == '': return 0
+
     # 最初に +/-/++/-- がある場合、オクターブ(+12/-12/+24/-24)とみなす
     # +/- を抜いた文字列の最初の一文字、あるいは二文字が移動ドなら、その音程を返す
     base_pitch = 0
@@ -162,6 +164,8 @@ def convert_doremi(doremi_str):
         else:
             nx = doremi_str[1:]
             base_pitch -= 12
+    else:
+        pass
 
     if len(nx) > 1:
         l2 = nx[1]
