@@ -150,10 +150,6 @@ class PhraseLoop(Loop):
             # データを持っていない
             return nlib.END_OF_DATA
 
-        if tick == 0:
-            self.play_counter = 0
-            tick = 1   # start時、最初のイベントを鳴らすため
-
         trace = self.play_counter
         next_tick = 0
         while True:
@@ -229,10 +225,6 @@ class CompositionLoop(Loop):
             # データを持っていない
             self._reset_note_tranlation()
             return nlib.END_OF_DATA
-
-        if tick == 0:
-            self.play_counter = 0
-            tick = 1   # start時、最初のイベントを鳴らすため
 
         trace = self.play_counter
         next_tick = 0
