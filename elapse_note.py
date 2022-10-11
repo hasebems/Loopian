@@ -44,7 +44,7 @@ class Note(ep.ElapseIF):
             # midi note on
             self._note_on()
         else:
-            if msr == self.off_msr and tick > self.off_tick:
+            if (msr == self.off_msr and tick > self.off_tick) or msr > self.off_msr:
                 self._note_off()
 
     def destroy_me(self):
@@ -92,7 +92,7 @@ class Damper(ep.ElapseIF):
             # midi control change on
             self._pedal_on()
         else:
-            if msr == self.off_msr and tick > self.off_tick:
+            if (msr == self.off_msr and tick > self.off_tick) or msr > self.off_msr:
                 self._pedal_off()
 
     def destroy_me(self):
