@@ -11,19 +11,10 @@ T_PINK = '\033[95m'
 T_WHITE = '\033[97m'
 T_END = '\033[0m'
 
-PAN_TRANS_TBL = ('L10','L9','L8','L7','L6','L5','L4','L3','L2','L1','C',
-                 'R1','R2','R3','R4','R5','R6','R7','R8','R9','R10')
-
-class Prompt:
-    NORMAL = 0
-    LOAD = 1
-    NOTHING = 2 # コマンドは受け付けるが、プロンプトは表示しない。Chain Loading中に使用。
-
 class Parsing:
     #   入力した文字列の解析
     #   一行単位で入力されるたびに生成される
     def __init__(self, sqs, md, dt):
-        self.prompt_mode = Prompt.NORMAL
         self.sqs = sqs
         self.md = md
         self.gui = None
