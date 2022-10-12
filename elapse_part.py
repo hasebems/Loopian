@@ -36,7 +36,7 @@ class Part(sqp.ElapseIF):
                 self.keynote, self.whole_tick)
             self.sqs.add_obj(self.loop_obj)
         else:
-            self.loop_obj = phrlp.CompositionLoop(self.sqs, self.md, msr, elm,  \
+            self.loop_obj = phrlp.CompositionLoop(self.sqs, self.md, msr, elm, ana, \
                 self.keynote, self.whole_tick)
             self.sqs.add_obj_in_front(self.loop_obj)
 

@@ -14,6 +14,7 @@ class PhraseDataStock:
         self.generated = None
         self.analysed = None        # no convert process
         self.randomized = None
+        self.exps = []
 
         self.seq = seq
         self.part = objs
@@ -55,8 +56,8 @@ class PhraseDataStock:
     def _arp_translation(beat_analysis):
         # for arpeggio
         # 上記で準備した beat_analysis の後ろに、arpeggio 用の解析データを追加
-        #  [ True/False, $DIFF ]
-        #       True/False: arpeggio 用 Note変換を発動させる（前の音と連続している）
+        #  [ 'com'/'arp', $DIFF ]
+        #       'arp': arpeggio 用 Note変換を発動させる（前の音と連続している）
         #       $DIFF: 上記が True の場合の、前の音との音程の差分
         last_note = nlib.REST   # 前回のノート
         last_cnt = 0            # 前回の同時発音数
@@ -85,9 +86,9 @@ class PhraseDataStock:
                last_cnt == 1 and \
                crnt_note <= 127 and \
                crnt_cnt == 1: # 過去＆現在：単音、ノート適正
-                ana.append([True, crnt_note-last_note])
+                ana.append(['arp', crnt_note-last_note])
             else:
-                ana.append([False, 0])
+                ana.append(['com'])
             last_cnt = crnt_cnt
             last_note = crnt_note
 
@@ -119,7 +120,7 @@ class PhraseDataStock:
 
     def set_recombined(self):
         # 3.recombined data
-        self.whole_tick, self.generated = \
+        self.whole_tick, self.generated, self.exps = \
             tx.TextParse.recombine_to_internal_format( \
                 self.complement, self.part.keynote, self.seq.stock_tick_for_onemsr[0], self.base_note)
         print('recombined:',self.generated)
@@ -182,6 +183,7 @@ class CompositionPartStock:
         self.raw = []
         self.complement = []
         self.generated = ['chord',0,'thru']
+        self.exp = []
 
         self.whole_tick = 0
 
@@ -190,9 +192,10 @@ class CompositionPartStock:
         self.raw = text
 
         # 2.complement data
-        cmpl = tx.TextParse.complement_brace(text)
+        cmpl, exp = tx.TextParse.complement_brace(text)
         if cmpl != None:
             self.complement = cmpl
+            self.exp = exp
         else:
             return False
         self.part.update_phrase()
@@ -211,7 +214,7 @@ class CompositionPartStock:
             self.whole_tick += 1920
 
     def get_final(self):
-        return self.whole_tick, self.generated, None
+        return self.whole_tick, self.generated, self.exp
 
 #------------------------------------------------------------------------------
 #   入力テキストデータの変換処理を集約するクラス

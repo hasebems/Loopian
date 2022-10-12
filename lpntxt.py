@@ -271,6 +271,7 @@ class TextParse:
     def complement_brace(input_text):
         # {} のセットを抜き出し、中身を note_info に入れる
         note_info = []
+        exp = []
         tx = input_text
         while True:
             num = tx.find('}')
@@ -288,10 +289,12 @@ class TextParse:
                 chord_flow_next = note_info[0].strip().split(',') # chord
             else:
                 chord_flow_next = note_info
+            if len(note_info) == 2:
+                exp = note_info[1]
         else:
             # if no ':', set 'all" pattern
             chord_flow_next = []
-        return chord_flow_next
+        return chord_flow_next, exp
 
 
     #------------------------------------------------------------------------------
@@ -324,10 +327,24 @@ class TextParse:
             return 1
 
 
+    def _cnv_exp(dur_text):
+        splited_txt = dur_text.replace(' ', '').split(',')
+        exps = []
+        vel = nlib.END_OF_DATA
+        for exp in splited_txt:
+            vel = convert_exp2vel(exp)
+            if vel == nlib.END_OF_DATA:
+                exps.append(exp)
+        if vel == nlib.END_OF_DATA:
+            vel = nlib.DEFAULT_VEL
+        return vel, exps
+
+
     def recombine_to_internal_format(complement, keynote, tick_for_onemsr, base_note):
         if complement is None or len(complement[0]) == 0:
             return 0, []
 
+        expvel, others = TextParse._cnv_exp(complement[2])
         tick = 0
         read_ptr = 0
         rcmb = []
@@ -335,15 +352,14 @@ class TextParse:
         while read_ptr < note_cnt:
             notes, mes_end = TextParse._cnv_note_to_pitch(keynote, complement[0][read_ptr])
             dur = TextParse._cnv_duration(complement[1][read_ptr])
-            vel = nlib.convert_exp2vel(complement[2])
-            TextParse._add_note(rcmb, tick, notes, dur, base_note, vel)
+            TextParse._add_note(rcmb, tick, notes, dur, base_note, expvel)
             if mes_end:
                 tick = ((tick//tick_for_onemsr) + 1)*tick_for_onemsr
             else:
                 tick += int(dur * nlib.DEFAULT_TICK_FOR_ONE_MEASURE / base_note)
             read_ptr += 1  # out from repeat
 
-        return tick, rcmb
+        return tick, rcmb, others
 
 
     #------------------------------------------------------------------------------

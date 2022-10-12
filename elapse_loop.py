@@ -57,11 +57,10 @@ class PhraseLoop(Loop):
         # for super's member
         self.whole_tick = wt
 
-    def _identify_arpeggio_diff(self, dt_tick, nt):
+    def _identify_trans_option(self, dt_tick, nt):
         for anaone in self.ana:
             if anaone[nlib.TICK] == dt_tick and nt in anaone[nlib.NOTE]:
-                if anaone[nlib.ARP_DT][0]:
-                    return anaone[nlib.ARP_DT][1]
+                return anaone[nlib.ARP_DT]
         return nlib.NO_NOTE
 
 
@@ -132,12 +131,16 @@ class PhraseLoop(Loop):
         cmp_part = self.sqs.get_part(nlib.COMPOSITION_PART)
         deb_txt = 'non'
         if cmp_part != None and cmp_part.loop_obj != None:
+            ana = cmp_part.loop_obj.get_ana()
             root, tbl = cmp_part.loop_obj.get_translation_tbl()
-            arp_diff = self._identify_arpeggio_diff(next_tick, ev[nlib.NOTE])
-            if cmp_part.loop_obj.get_chord() != 'thru' and arp_diff != nlib.NO_NOTE:
-                self.last_note = self._translate_note_arp(root, tbl, arp_diff)
+            option = self._identify_trans_option(next_tick, ev[nlib.NOTE])
+            if ana == 'para':
+                self.last_note = self._translate_note_com(root, tbl, ev[nlib.NOTE]+root)
+                deb_txt = 'para:' + str(root)
+            elif cmp_part.loop_obj.get_chord() != 'thru' and option[0] == 'arp':
+                self.last_note = self._translate_note_arp(root, tbl, option[1])
                 deb_txt = 'arp:' + str(root)
-            else:
+            else:   # option[0] == com
                 self.last_note = self._translate_note_com(root, tbl, ev[nlib.NOTE])
                 deb_txt = 'com:' + str(root)
             crntev[nlib.NOTE] = self.last_note
@@ -188,9 +191,10 @@ class PhraseLoop(Loop):
 #------------------------------------------------------------------------------
 class CompositionLoop(Loop):
 
-    def __init__(self, obj, md, msr, cmp, key, wt):
+    def __init__(self, obj, md, msr, cmp, ana, key, wt):
         super().__init__(obj, md, 'ComLoop', msr)
         self.cmp = copy.deepcopy(cmp)
+        self.ana = copy.deepcopy(ana)
         self.keynote = key
 
         self.play_counter = 0
@@ -202,6 +206,9 @@ class CompositionLoop(Loop):
 
         # for super's member
         self.whole_tick = wt
+
+    def get_ana(self):
+        return self.ana
 
     def get_chord(self):
         return self.seqdt[2]
