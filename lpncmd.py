@@ -304,7 +304,7 @@ class Parsing:
                     self.gui.change_part(self.input_part)
 
     def letter_bracket(self, input_text):
-        success = self.gendt.set_raw_normal(self.input_part, input_text)
+        success = self.gendt.set_raw_phrase(self.input_part, input_text)
         if success:
             self.print_dialogue("set Phrase!")
         else:

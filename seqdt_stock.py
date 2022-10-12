@@ -231,7 +231,7 @@ class SeqDataAllStock:
         self.composition_part = CompositionPartStock(seq.get_part(nlib.COMPOSITION_PART), seq)
 
 
-    def set_raw_normal(self, part, text):
+    def set_raw_phrase(self, part, text):
         if part >= nlib.MAX_NORMAL_PART: return False
         return self.part_data[part].set_raw(text)
 
