@@ -17,6 +17,9 @@ DAMPER_PEDAL_PART = FIRST_NORMAL_PART+MAX_NORMAL_PART
 COMPOSITION_PART = 0
 MAX_PART_COUNT = FIRST_NORMAL_PART+MAX_NORMAL_PART+1
 
+DEFAULT_VEL = 100
+
+
 #=====================
 # seq data index (seqdt)
 #=====================
