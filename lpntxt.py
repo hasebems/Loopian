@@ -3,6 +3,31 @@ import re
 import math
 import lpnlib as nlib
 
+
+def convert_exp2vel(exp_text):
+    if exp_text == 'ff':
+        vel = 127
+    elif exp_text == 'f':
+        vel = 114
+    elif exp_text == 'mf':
+        vel = 100
+    elif exp_text == 'mp':
+        vel = 84
+    elif exp_text == 'p':
+        vel = 64
+    elif exp_text == 'pp':
+        vel = 48
+    elif exp_text == 'ppp':
+        vel = 24
+    elif exp_text == 'pppp':
+        vel = 12
+    elif exp_text == 'ppppp':
+        vel = 1
+    else:
+        vel = nlib.END_OF_DATA
+    return vel
+
+
 class TextParse:
 
     def __init__(self):

@@ -114,30 +114,6 @@ def search_scale_nt_just_below(root, tbl, nt):
     return scale_nt
 
 
-def convert_exp2vel(exp_text):
-    if exp_text == 'ff':
-        vel = 127
-    elif exp_text == 'f':
-        vel = 114
-    elif exp_text == 'mf':
-        vel = 100
-    elif exp_text == 'mp':
-        vel = 84
-    elif exp_text == 'p':
-        vel = 64
-    elif exp_text == 'pp':
-        vel = 48
-    elif exp_text == 'ppp':
-        vel = 24
-    elif exp_text == 'pppp':
-        vel = 12
-    elif exp_text == 'ppppp':
-        vel = 1
-    else:
-        vel = 100
-    return vel
-
-
 def gauss_rnd10():
     rnd = random.gauss(0,1)
     return rnd*3
