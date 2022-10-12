@@ -131,10 +131,9 @@ class PhraseLoop(Loop):
         cmp_part = self.sqs.get_part(nlib.COMPOSITION_PART)
         deb_txt = 'non'
         if cmp_part != None and cmp_part.loop_obj != None:
-            ana = cmp_part.loop_obj.get_ana()
             root, tbl = cmp_part.loop_obj.get_translation_tbl()
             option = self._identify_trans_option(next_tick, ev[nlib.NOTE])
-            if ana == 'para':
+            if option[0] == 'para':
                 self.last_note = self._translate_note_com(root, tbl, ev[nlib.NOTE]+root)
                 deb_txt = 'para:' + str(root)
             elif cmp_part.loop_obj.get_chord() != 'thru' and option[0] == 'arp':

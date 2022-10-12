@@ -53,7 +53,7 @@ class PhraseDataStock:
         return beat_analysis
 
 
-    def _arp_translation(beat_analysis):
+    def _arp_translation(beat_analysis, option):
         # for arpeggio
         # 上記で準備した beat_analysis の後ろに、arpeggio 用の解析データを追加
         #  [ 'com'/'arp', $DIFF ]
@@ -82,7 +82,9 @@ class PhraseDataStock:
                 crnt_note = ana[nlib.NOTE][0]
 
             # 条件の確認と、ana への情報追加
-            if last_note <= 127 and \
+            if option == 'para':
+                ana.append(['para'])
+            elif last_note <= 127 and \
                last_cnt == 1 and \
                crnt_note <= 127 and \
                crnt_cnt == 1: # 過去＆現在：単音、ノート適正
@@ -96,9 +98,14 @@ class PhraseDataStock:
         return beat_analysis
 
 
-    def _analyse_plain_data(generated):
+    def _analyse_plain_data(generated, exps):
+        option = ''
+        for exp in exps:
+            if exp == 'para':
+                option = 'para'
+                break
         beat_analysis = PhraseDataStock._basic_analysis(generated)
-        return PhraseDataStock._arp_translation(beat_analysis)
+        return PhraseDataStock._arp_translation(beat_analysis, option)
 
 
     def set_raw(self, text):
@@ -126,7 +133,7 @@ class PhraseDataStock:
         print('recombined:',self.generated)
 
         # 4.analysed data
-        self.analysed = PhraseDataStock._analyse_plain_data(self.generated)
+        self.analysed = PhraseDataStock._analyse_plain_data(self.generated, self.exps)
 
         # 5.humanized data
         ### Add Filters
