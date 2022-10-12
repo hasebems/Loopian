@@ -8,7 +8,15 @@
 - 移動ド(d,r,m..)による階名指定
 - コード(I,II..)指定で、入力に変化を与えながらループ再生
 - 自動にピアノの表現を付加
-- BPM, Key などの基本的な音楽指示が可能
+- BPM, Key, 拍子(Beat)などの基本的な音楽指示が可能
+
+## what you can do
+
+- Live Coding
+- Musical Education
+- Loop Sequencer
+- Dynamic Easy Listening
+- Interactive Art(with Device)
 
 ## Spec.
 ### piano 専用 Realtime Loop Generator (Text Sequencer)
@@ -27,33 +35,22 @@
 
 ### テキスト入力
 
-- ユーザーは、Phrase入力（ [] で入力）と、Composition入力（ {}で入力）の二つの入力ができる
+- ユーザーは、Phrase入力（ [] で入力）と、Composition入力（{}で入力）の二つの入力ができる
 - Phrase入力の考え方
-    - User は、ノート番号とタイミング、簡易な表情指示を入力
-    - exp.engine はベロシティ、微妙なタイミング、dulation、ペダル情報を自動生成
-- 入力 Music Expression 一覧
-    - KeyEvent: Note On Timing, Note Number, Expression
-    - Expression: raw, ff,f,mf,mp,p,pp, dolce, stac./staccato, legato, marc./marcato etc.
+    - User は、ノート番号とタイミング、簡易な表情指示(Music Expression)を入力
+    - exp.engine は、簡易な表情指示からベロシティ、微妙なタイミング、dulation、ペダル情報を自動生成
 - Composition入力と、自動和音変換
     - Composition で指定された和音に従って、Phrase 入力の音は自動変換される
 - 各パートの Phrase も、Composition もそれぞれ独自の周期で loop する
+- Phrase入力 Music Expression 一覧
+    - ff,f,mf,mp,p,pp,ppp  （ベロシティ指定）
+    - ped, noped （ペダル奏法）
+    - para  （コード変換の指定）
+    - artic: stacc,legato,marc （dulation指定）
+    - p->f など音量の漸次的変化
+- Composition入力 Music Expression 一覧
+    - まだ
 
-### Filter
-
-- [raw] を指定しない限り、勝手に exp.engine によるフィルタがかけられる
-- フィルタ種類
-    - 強拍/弱拍(linear) -> velocity [実装済み]
-        - bpm が高いほど強調(bpm:72-180)
-    - 時間間隔(Non-linear) -> velocity/duration
-        - Note OffとNote Onの間隔は、短い音符になるほど、時間一定になりやすい
-        - 細かい音符は大きな velocity で弾くことは困難(limit)
-    - 未来密度、過去密度(linear) -> velocity/duration
-        - 密度：現在より２拍以内（未満ではない）にある音符×距離の総和
-        - 過去密度が高く、未来密度が低い場合、フレーズの終わりとみなし、velocity/duration は減らす
-        - 過去密度が低く、未来密度が高い場合、フレーズの開始とみなし、volocity をちょっと減らす
-        - 両密度とも高いとき、少し強め
-    - 音高平均との差(linear) -> velocity
-        - フレーズの平均音高より離れていると、velocity は強くなる
 
 ## Dev.
 
@@ -97,13 +94,39 @@ SeqDataAllStock <-- SeqStack
 - composition が入力されたら、「再構成」からやり直し
 - 実際の MIDI 出力はさらに、バッファに積まれ、latency の時間の後に出力される
 
-### 次にやること
 
+### Filter
+
+- [raw] を指定しない限り、勝手に exp.engine によるフィルタがかけられる
+- Humanization Filter
+    - 強拍/弱拍(linear) -> velocity [実装済み]
+        - bpm が高いほど強調(bpm:72-180)
+    - 時間間隔(Non-linear) -> velocity/duration
+        - Note OffとNote Onの間隔は、短い音符になるほど、時間一定になりやすい
+        - 細かい音符は大きな velocity で弾くことは困難(limit)
+    - 未来密度、過去密度(linear) -> velocity/duration
+        - 密度：現在より２拍以内（未満ではない）にある音符×距離の総和
+        - 過去密度が高く、未来密度が低い場合、フレーズの終わりとみなし、velocity/duration は減らす
+        - 過去密度が低く、未来密度が高い場合、フレーズの開始とみなし、volocity をちょっと減らす
+        - 両密度とも高いとき、少し強め
+    - 音高平均との差(linear) -> velocity
+        - フレーズの平均音高より離れていると、velocity は強くなる
+- Translation Filter
+    - Common
+    - Arpeggio
+        - 連続して同じ音が出ない
+        - 四分音符未満の長さに適用
+    - Parallel
+
+### 次にやること
 - アルペジオで連続して同じ音が出ないようにする -> 同音回避型和音変換対応　済
 - ベロシティが、周期的に変わる謎の現象 -> copy されていなかった不具合修正　済
 - | を小節区切り対応、 ,, 連続で同じものを補填する対応　済
-- 左手用に、平行移動型の和音変換（とその指示の仕様追加）
+- 小節の先頭の音が、時々和音が変わらない音で出てしまう不具合　済
+- 左手用に、平行移動型の和音変換、Music Expressionへの追加(trans:para/parallel)　済
+- Pedal On/Off の Music Expressionへの追加(noped)
 - さらなる humanized アルゴリズムの追加
+- Load/Save機能、Auto Load機能
 
 ## loopian 計画
 - loopian を使った動画制作
