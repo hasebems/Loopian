@@ -23,13 +23,12 @@ class PhraseDataStock:
         self.base_note = 0
 
 
-    def _analyse_plain_data(self):
+    def _basic_analysis(generated):
         # make beat analysis data: 
         #       [   note count,           : in same tick
         #           tick, 
         #           dur, 
         #           [ all note num ]      : general purpose
-        #          << [True/False(one to one), note diff] >> : for arpeggio
         #       ]
         # 同tickの note を、一つのデータにまとめて beat_analysis に格納
         beat_analysis = []
@@ -37,7 +36,7 @@ class PhraseDataStock:
         crnt_dur = 0
         note_cnt = 0
         note_all = []
-        for note in self.generated: # ['note', tick, dur, note, vel]
+        for note in generated: # ['note', tick, dur, note, vel]
             if note[nlib.TICK] == crnt_tick: # 同じ tick なら、note_all に Note 追加
                 note_cnt += 1
                 note_all.append(note[3])
@@ -50,28 +49,38 @@ class PhraseDataStock:
                 note_all = [note[3]]
         if note_cnt > 0: # add last one
             beat_analysis.append([note_cnt, crnt_tick, crnt_dur, note_all])
+        return beat_analysis
 
+
+    def _arp_translation(beat_analysis):
         # for arpeggio
         # 上記で準備した beat_analysis の後ろに、arpeggio 用の解析データを追加
         #  [ True/False, $DIFF ]
         #       True/False: arpeggio 用 Note変換を発動させる（前の音と連続している）
         #       $DIFF: 上記が True の場合の、前の音との音程の差分
-        last_note = nlib.REST
-        last_cnt = 0
-        total_tick = 0
+        last_note = nlib.REST   # 前回のノート
+        last_cnt = 0            # 前回の同時発音数
+        total_tick = 0          # 現在の Loop 内 tick 数
         for ana in beat_analysis:
+            # total_tick の更新
             if total_tick != ana[nlib.TICK]: # 休みがあった
+                total_tick = ana[nlib.TICK]
+                last_note = nlib.REST       # arp にならない
+                last_cnt = 0
+            elif ana[nlib.DUR] >= 480:      # 今回、四分音符以上なら arp にならない
                 total_tick = ana[nlib.TICK]
                 last_note = nlib.REST
                 last_cnt = 0
             else:
                 total_tick += ana[nlib.DUR]
 
+            # crnt_note の更新
             crnt_note = nlib.NO_NOTE
             crnt_cnt = ana[nlib.ARP_NTCNT]
             if crnt_cnt == 1:    # arp 対象
                 crnt_note = ana[nlib.NOTE][0]
 
+            # 条件の確認と、ana への情報追加
             if last_note <= 127 and \
                last_cnt == 1 and \
                crnt_note <= 127 and \
@@ -84,6 +93,11 @@ class PhraseDataStock:
 
         print('analysed:', beat_analysis)
         return beat_analysis
+
+
+    def _analyse_plain_data(generated):
+        beat_analysis = PhraseDataStock._basic_analysis(generated)
+        return PhraseDataStock._arp_translation(beat_analysis)
 
 
     def set_raw(self, text):
@@ -111,7 +125,7 @@ class PhraseDataStock:
         print('recombined:',self.generated)
 
         # 4.analysed data
-        self.analysed = self._analyse_plain_data()
+        self.analysed = PhraseDataStock._analyse_plain_data(self.generated)
 
         # 5.humanized data
         ### Add Filters
