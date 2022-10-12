@@ -342,7 +342,7 @@ class TextParse:
 
     def recombine_to_internal_format(complement, keynote, tick_for_onemsr, base_note):
         if complement is None or len(complement[0]) == 0:
-            return 0, []
+            return 0, [], []
 
         expvel, others = TextParse._cnv_exp(complement[2])
         tick = 0
