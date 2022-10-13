@@ -43,11 +43,12 @@ class Loop(ep.ElapseIF):
 #------------------------------------------------------------------------------
 class PhraseLoop(Loop):
 
-    def __init__(self, obj, md, msr, phr, ana, key, wt):
+    def __init__(self, obj, md, msr, phr, ana, key, wt, pnum):
         super().__init__(obj, md, 'PhrLoop', msr)
         self.phr = copy.deepcopy(phr)
         self.ana = copy.deepcopy(ana)
         self.keynote = key
+        self.part_num = pnum    # 親パートの番号
 
         self.play_counter = 0
         self.next_tick = 0
@@ -128,7 +129,7 @@ class PhraseLoop(Loop):
 
     def _note_event(self, ev, next_tick):
         crntev = copy.deepcopy(ev)
-        cmp_part = self.sqs.get_part(nlib.COMPOSITION_PART)
+        cmp_part = self.sqs.get_part(nlib.FIRST_COMPOSITION_PART+self.part_num-nlib.FIRST_NORMAL_PART)
         deb_txt = 'non'
         if cmp_part != None and cmp_part.loop_obj != None:
             root, tbl = cmp_part.loop_obj.get_translation_tbl()

@@ -228,8 +228,16 @@ class CompositionPartStock:
 class SeqDataAllStock:
 
     def __init__(self, seq):
+        self.composition_part = []
         self.part_data = []
         self.seq = seq
+
+        # Composition Part
+        for i in range(nlib.MAX_NORMAL_PART):
+            pdt = CompositionPartStock(seq.get_part(i+nlib.FIRST_COMPOSITION_PART), seq)
+            self.composition_part.append(pdt)
+
+        # Normal Part
         for i in range(nlib.MAX_NORMAL_PART):
             pdt = PhraseDataStock(seq.get_part(i+nlib.FIRST_NORMAL_PART), seq)
             self.part_data.append(pdt)
@@ -237,16 +245,14 @@ class SeqDataAllStock:
         # Damper Pedal Part
         self.damper_part = DamperPartStock(seq.get_part(nlib.DAMPER_PEDAL_PART), seq)
 
-        # Composition Part
-        self.composition_part = CompositionPartStock(seq.get_part(nlib.COMPOSITION_PART), seq)
-
 
     def set_raw_phrase(self, part, text):
         if part >= nlib.MAX_NORMAL_PART: return False
         return self.part_data[part].set_raw(text)
 
-    def set_raw_composition(self, text):
-        return self.composition_part.set_raw(text)
+    def set_raw_composition(self, part, text):
+        if part >= nlib.MAX_COMPOSITION_PART: return False
+        return self.composition_part[part].set_raw(text)
 
     def set_recombined(self):
         self.composition_part.set_recombined()

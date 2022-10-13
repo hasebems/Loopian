@@ -166,6 +166,8 @@ class LpnInputBox:
         elif num == 1: self.part_text = 'L2>'
         elif num == 2: self.part_text = 'R1>'
         elif num == 3: self.part_text = 'R2>'
+        elif num == nlib.ALL_PART: self.part_text = 'Al>'
+        else: self.part_text = '??>'
 
     def _key_ev_backspace(self):
         txt_len = len(self.text)
@@ -400,11 +402,11 @@ class LpnGui:
         msr, beat, tick, count = seq.get_tick()
         self.beatBox.set_text(str(msr+1) + ' : ' + str(beat+1) + ' : ' + str(tick))
         self.keyBox.set_text('key: ' + seq.key_text)
-        chord_name = ''
-        cmp_part = seq.get_part(nlib.COMPOSITION_PART)
-        if cmp_part != None and cmp_part.loop_obj != None:
-            chord_name = cmp_part.loop_obj.get_chord()
-        self.chdBox.set_text('chord: ' + chord_name)
+        #chord_name = ''
+        #cmp_part = seq.get_part(nlib.COMPOSITION_PART)
+        #if cmp_part != None and cmp_part.loop_obj != None:
+        #    chord_name = cmp_part.loop_obj.get_chord()
+        #self.chdBox.set_text('chord: ' + chord_name)
 
         PART_TXT = ['L1: ','L2: ','R1: ','R2: ']
         for i in range(nlib.MAX_NORMAL_PART):

@@ -210,6 +210,14 @@ class Parsing:
 #            self.change_cc(10, cc_list)
 #            self.print_dialogue("Pan has changed!")
 
+    def letterA(self, input_text):
+        if input_text[0:3] == "all":
+            self.input_part = nlib.ALL_PART
+            self.gui.change_part(self.input_part)
+            self.print_dialogue('Changed current part to all')
+        else:
+            self.print_dialogue("what?")
+
     def letterB(self, input_text):
         self.print_dialogue("what?")
 
@@ -304,14 +312,24 @@ class Parsing:
                     self.gui.change_part(self.input_part)
 
     def letter_bracket(self, input_text):
-        success = self.gendt.set_raw_phrase(self.input_part, input_text)
+        success = False
+        if self.input_part == nlib.ALL_PART:
+            for i in range(nlib.MAX_NORMAL_PART):
+                success = self.gendt.set_raw_phrase(i, input_text)
+        else:
+            success = self.gendt.set_raw_phrase(self.input_part, input_text)
         if success:
             self.print_dialogue("set Phrase!")
         else:
             self.print_dialogue("what?")
 
     def letter_brace(self, input_text):
-        success = self.gendt.set_raw_composition(input_text)
+        success = False
+        if self.input_part == nlib.ALL_PART:
+            for i in range(nlib.MAX_COMPOSITION_PART):
+                success = self.gendt.set_raw_composition(i, input_text)
+        else:
+            success = self.gendt.set_raw_composition(self.input_part, input_text)
         if success:
             self.print_dialogue("set Composition!")
         else:
@@ -323,6 +341,8 @@ class Parsing:
             self.letter_bracket(input_text)
         elif first_letter == '{':
             self.letter_brace(input_text)
+        elif first_letter == 'a':
+            self.letterA(input_text)
         elif first_letter == 'b':
             self.letterB(input_text)
         elif first_letter == 'c':
