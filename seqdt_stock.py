@@ -255,7 +255,8 @@ class SeqDataAllStock:
         return self.composition_part[part].set_raw(text)
 
     def set_recombined(self):
-        self.composition_part.set_recombined()
-        self.damper_part.set_recombined()
+        for cpart in self.composition_part:
+            cpart.set_recombined()
         for part in self.part_data:
             part.set_recombined()
+        self.damper_part.set_recombined()
