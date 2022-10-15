@@ -357,26 +357,24 @@ class LpnGui:
         self.cmd = cmd
         self.cmd.set_gui(self)
 
+        # コマンド入力＆スクロール
         self.font = pg.font.Font(None, 28)   # フォントの設定
         self.scroll_box = LpnScroll(self.COLUMN1_X, self.SURFACE_Y_SZ-330, self.SURFACE_X_SZ-60, 250)
         self.inputBox = LpnInputBox(self, self.COLUMN1_X, self.SURFACE_Y_SZ-60, self.SURFACE_X_SZ-60)
         self.inputBox.activate()
         self.inputBox.set_part_text(cmd.input_part)
 
-        self.dateBox = LpnGuiText(self.COLUMN1_X, self.LINE2_Y)
-        self.timeBox = LpnGuiText(self.COLUMN2_X, self.LINE2_Y)
-        self.bpmBox =  LpnGuiText(self.COLUMN3_X, self.LINE2_Y)
-        self.beatBox = LpnGuiText(self.COLUMN4_X, self.LINE2_Y)
-        self.keyBox =  LpnGuiText(self.COLUMN1_X, self.LINE3_Y)
-        self.chdBox =  LpnGuiText(self.COLUMN2_X, self.LINE3_Y)
-
-        XP = [self.COLUMN29_X,self.COLUMN35_X,self.COLUMN39_X,self.COLUMN45_X]
-        self.partBox = [LpnGuiText(XP[i],self.LINE3_Y,90) for i in range(nlib.MAX_NORMAL_PART)]
+        # 上段の８つの表示ボックス
+        self.keyBox = LpnGuiText(self.COLUMN1_X, self.LINE2_Y)
+        self.bpmBox = LpnGuiText(self.COLUMN2_X, self.LINE2_Y)
+        self.beatBox =  LpnGuiText(self.COLUMN3_X, self.LINE2_Y)
+        self.someBox = LpnGuiText(self.COLUMN4_X, self.LINE2_Y)
+        XPOSI = [self.COLUMN1_X, self.COLUMN2_X, self.COLUMN3_X, self.COLUMN4_X]
+        self.partBox = [LpnGuiText(XPOSI[i], self.LINE3_Y) for i in range(nlib.MAX_NORMAL_PART)]
 
         # Title
         font = pg.font.SysFont(FONTS[136], 32)
         self.title_text = font.render('Loopian', True, (255,255,255))
-
 
     def change_part(self, part):
         self.inputBox.set_part_text(part)
@@ -396,37 +394,41 @@ class LpnGui:
     def _update_display(self, current_time, seq):
         self.inputBox.update(current_time)
         self.scroll_box.update()
-        self.timeBox.set_text(datetime.datetime.now().strftime("%H:%M:%S"))
-        self.dateBox.set_text(str(datetime.date.today()))
+
         self.bpmBox.set_text('bpm: ' + str(seq.bpm))
         msr, beat, tick, count = seq.get_tick()
         self.beatBox.set_text(str(msr+1) + ' : ' + str(beat+1) + ' : ' + str(tick))
         self.keyBox.set_text('key: ' + seq.key_text)
-        #chord_name = ''
-        #cmp_part = seq.get_part(nlib.COMPOSITION_PART)
-        #if cmp_part != None and cmp_part.loop_obj != None:
-        #    chord_name = cmp_part.loop_obj.get_chord()
-        #self.chdBox.set_text('chord: ' + chord_name)
 
-        PART_TXT = ['L1: ','L2: ','R1: ','R2: ']
+        PART_TXT = ['L1:','L2:','R1:','R2:']
         for i in range(nlib.MAX_NORMAL_PART):
             a,b = seq.get_part(i+nlib.FIRST_NORMAL_PART).get_loop_info()
             if b==0: a=0
-            self.partBox[i].set_text(PART_TXT[i] + str(int(a)) + '/' + str(int(b)))
+            chord_name = ''
+            lpobj = seq.get_part(i+nlib.FIRST_COMPOSITION_PART).loop_obj
+            if lpobj != None:
+                chord_name = lpobj.get_chord()
+            self.partBox[i].set_text(PART_TXT[i] + str(int(a)) + '/' + str(int(b)) + ' ' + chord_name)
 
 
     def _draw(self):
         self.screen.fill((0,0,0))
         self.screen.blit(self.title_text, (400, 5))
+
+        # Date & Time
+        dt_text = str(datetime.date.today()) + ' ' + datetime.datetime.now().strftime("%H:%M:%S")
+        font = pg.font.SysFont(FONTS[116], 14)
+        self.screen.blit(font.render(dt_text, True, (180,180,180)) ,(720,self.SURFACE_Y_SZ-20))
+
+        # UI parts
         self.inputBox.draw(self.screen)
         self.scroll_box.draw(self.screen)
-        self.timeBox.draw(self.screen)
-        self.dateBox.draw(self.screen)
         self.bpmBox.draw(self.screen)
         self.beatBox.draw(self.screen)
         self.keyBox.draw(self.screen)
-        self.chdBox.draw(self.screen)
-        for i in range(nlib.MAX_NORMAL_PART): self.partBox[i].draw(self.screen)
+        self.someBox.draw(self.screen)
+        for i in range(nlib.MAX_NORMAL_PART):
+            self.partBox[i].draw(self.screen)
 
 
     def loop(self, seq):
