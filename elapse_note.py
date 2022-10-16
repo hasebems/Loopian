@@ -7,13 +7,12 @@ import lpnlib as nlib
 #   Note On時に生成され、MIDI を出力した後、Note Offを生成して destroy される
 class Note(ep.ElapseIF):
 
-    def __init__(self, obj, md, ev, key, txt):
+    def __init__(self, obj, md, ev, txt):
         super().__init__(obj, md, 'Note')
         self.midi_ch = 0
         self.note_num = ev[nlib.NOTE]
         self.velocity = ev[nlib.VEL]
         self.duration = ev[nlib.DUR]
-        self.key = key
         self.txt = txt
         self.during_noteon = False
         self.destroy = False
@@ -21,7 +20,7 @@ class Note(ep.ElapseIF):
         self.off_tick = 0
 
     def _note_on(self):
-        num = self.note_num + self.key - nlib.DEFAULT_NOTE_NUMBER
+        num = self.note_num
         self.note_num = nlib.note_limit(num, 0, 127)
         self.md.set_fifo(self.sqs.get_time(), ['note', self.midi_ch, self.note_num, self.velocity])
         print('Note:', self.note_num, self.velocity, self.txt)

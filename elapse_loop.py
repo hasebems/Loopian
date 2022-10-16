@@ -145,7 +145,7 @@ class PhraseLoop(Loop):
                 self.last_note = self._translate_note_com(root, tbl, ev[nlib.NOTE])
                 deb_txt = 'com:' + str(root)
             crntev[nlib.NOTE] = self.last_note
-        self.sqs.add_obj(epn.Note(self.sqs, self.md, crntev, self.keynote, deb_txt))
+        self.sqs.add_obj(epn.Note(self.sqs, self.md, crntev, deb_txt))
 
 
     def _generate_event(self, tick):
