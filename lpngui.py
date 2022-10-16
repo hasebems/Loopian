@@ -402,13 +402,15 @@ class LpnGui:
 
         PART_TXT = ['L1:','L2:','R1:','R2:']
         for i in range(nlib.MAX_NORMAL_PART):
-            a,b = seq.get_part(i+nlib.FIRST_NORMAL_PART).get_loop_info()
-            if b==0: a=0
+            beat_str = '---'
             chord_name = ''
-            lpobj = seq.get_part(i+nlib.FIRST_COMPOSITION_PART).loop_obj
-            if lpobj != None:
-                chord_name = lpobj.get_chord()
-            self.partBox[i].set_text(PART_TXT[i] + str(int(a)) + '/' + str(int(b)) + ' ' + chord_name)
+            a,b = seq.get_part(i+nlib.FIRST_NORMAL_PART).get_loop_info()
+            if b!=0:
+                beat_str = str(int(a)) + '/' + str(int(b))
+                lpobj = seq.get_part(i+nlib.FIRST_COMPOSITION_PART).loop_obj
+                if lpobj != None:
+                    chord_name = lpobj.get_chord()
+            self.partBox[i].set_text(PART_TXT[i] + beat_str + ' ' + chord_name)
 
 
     def _draw(self):
