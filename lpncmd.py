@@ -78,7 +78,7 @@ class Parsing:
         elif first_letter == 'B':
             key += 11
         else:
-            return
+            return False
         if len(key_text) > 1:
             octave_letter = key_text[1:]
             if key_text[1] == '#':
@@ -92,6 +92,7 @@ class Parsing:
             if octave_letter.isdecimal():
                 oct = int(octave_letter)
         self.sqs.change_key_oct(key, oct, key_text)
+        return True
 
     def change_oct(self, text, all):
         def generate_oct_number(text):
@@ -164,14 +165,13 @@ class Parsing:
             return
 
         command = tx[0].strip()
-        if command == 'part':
-            pass
-        elif command == 'block':
-            pass
-        elif command == 'key':
+        if command == 'key':
             key_list = tx[1].strip().split()
-            self.change_key(key_list[0])
-            self.print_dialogue("Key has changed!")
+            if self.change_key(key_list[0]):
+                self.gendt.set_recombined()
+                self.print_dialogue("Key has changed!")
+            else:
+                self.print_dialogue("what?")
         elif command == 'oct':
             if ',' in tx[1]:
                 oct_list = tx[1].strip().split(',')
@@ -179,17 +179,25 @@ class Parsing:
             else:
                 oct_list = tx[1].strip().split()
                 self.change_oct(oct_list[0], 'all' in prm_text)
+            self.gendt.set_recombined()
             self.print_dialogue("Octave has changed!")
         elif command == 'beat':
             beat_list = tx[1].strip().split()
             if self.change_beat(beat_list[0]):
                 self.gendt.set_recombined()
+            else:
+                self.print_dialogue("what?")
         elif command == 'bpm':
             bpmnumlist = tx[1].strip().split()
             if bpmnumlist[0].isdecimal():
                 self.sqs.change_tempo(int(bpmnumlist[0]))
                 self.gendt.set_recombined()
                 self.print_dialogue("BPM has changed!")
+            else:
+                self.print_dialogue("what?")
+        else:
+            self.print_dialogue("what?")
+
 #        elif command == 'balance' or command == 'volume':
 #            bl_list = tx[1].strip().split(',')
 #            cc_list = [88 for _ in range(5)] # default: 7
