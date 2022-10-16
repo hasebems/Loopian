@@ -256,7 +256,7 @@ class TextParse:
             note_info.append('raw') # set default exp. value
         elif bracket_num == 0 or bracket_num > 3:
             # [] の数が 1〜3 以外ならエラー
-            return None, 0,0
+            return None, 0
 
         complement = []
         dt, num = TextParse._fill_omitted_note_data(note_info[0])
@@ -264,7 +264,6 @@ class TextParse:
         dur_text, base_note = TextParse._change_basic_note_dur(note_info[1])
         complement.append(TextParse._fill_omitted_dur_data(dur_text, num))
         complement.append(note_info[2])
-
         return complement, base_note
 
 
