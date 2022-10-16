@@ -41,15 +41,16 @@
     - exp.engine は、簡易な表情指示からベロシティ、微妙なタイミング、dulation、ペダル情報を自動生成
 - Composition入力と、自動和音変換
     - Composition で指定された和音に従って、Phrase 入力の音は自動変換される
-- 各パートの Phrase も、Composition もそれぞれ独自の周期で loop する
+    - Composition も、各パートごとに設定する
+    - 全体に同じ Composition を適用したい場合、全パート入力モードにする
+- 各パートの Phrase も、Composition も、それぞれ独自の周期で loop する
 - Phrase入力 Music Expression 一覧
     - ff,f,mf,mp,p,pp,ppp  （ベロシティ指定）
     - ped, noped （ペダル奏法）
-    - para  （コード変換の指定）
     - artic: stacc,legato,marc （dulation指定）
     - p->f など音量の漸次的変化
 - Composition入力 Music Expression 一覧
-    - まだ
+    - para  （コード変換の指定）
 
 
 ## Dev.
@@ -87,8 +88,7 @@ SeqDataAllStock <-- SeqStack
     - 小節冒頭にこのデータが Loop Obj.にロードされる
     - 再生時、リアルタイムに最後の二つの処理が行われる
 - 上記の各データが、他の要因で変更されるタイミング
-- bpm が変わったら、「再構成」からやり直し
-- beat/key が変わったら、「補填」からやり直し
+- bpm/beat/key が変わったら、「再構成」からやり直し
 - 再生で Loop がひとまわりするたびに「乱数」からやり直し
 - phrase が入力されたら、最初からやり直し
 - composition が入力されたら、「再構成」からやり直し
@@ -124,6 +124,8 @@ SeqDataAllStock <-- SeqStack
 - | を小節区切り対応、 ,, 連続で同じものを補填する対応　済
 - 小節の先頭の音が、時々和音が変わらない音で出てしまう不具合　済
 - 左手用に、平行移動型の和音変換、Music Expressionへの追加(trans:para/parallel)　済
+- Composition を４つのパート独立に設定できる　済
+
 - Pedal On/Off の Music Expressionへの追加(noped)
 - さらなる humanized アルゴリズムの追加
 - Load/Save機能、Auto Load機能
