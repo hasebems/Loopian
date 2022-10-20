@@ -17,6 +17,7 @@ class Part(sqp.ElapseIF):
         self.loop_measure = 0   # whole_tick と同時生成
         self.lp_elapsed_msr = 0    # loop 内の経過小節数
         self.whole_tick = 0     # loop_measure と同時生成
+        self.sync_next_msr_flag = False
         self.state_reserve = False
         self.seqdt_part = None
 
@@ -66,6 +67,11 @@ class Part(sqp.ElapseIF):
 
             elif self.loop_measure != 0 and elapsed_msr%self.loop_measure == 0:
                 # 前小節にて Loop Obj が終了した時
+                new_loop(msr)
+
+            elif self.loop_measure != 0 and self.sync_next_msr_flag:
+                # sync コマンドによる強制リセット
+                self.sync_next_msr_flag = False
                 new_loop(msr)
 
             else:
@@ -118,4 +124,8 @@ class Part(sqp.ElapseIF):
         self.state_reserve = True
 
     def update_phrase(self):
+        self.state_reserve = True
+
+    def sync(self):
+        self.sync_next_msr_flag = True
         self.state_reserve = True

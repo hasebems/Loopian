@@ -23,8 +23,8 @@ loopian は、Live Coding などで使うために開発している、テキス
 -------------------
 
 - phrase : 階名にて指定する単パートの音群
-- composition : phrase に Chord 情報などを適用して、大楽節を作り出す
-- loop : loopian は基本的に、phrase/composition の繰り返しを延々と演奏する。この繰り返しのこと。
+- composition : phrase に適用する数小節分の Chord 情報
+- loop : loopian は基本的に、phrase/composition を繰り返し演奏する。この繰り返す単位
 - part : phrase は独立した４つの Loop 再生が可能である。その４つを part と呼び、各 part は left 1(L1)/left 2(L2)/right 1(R1)/right 2(R2) という名前で示される。
 
 
@@ -57,6 +57,11 @@ loopian は、Live Coding などで使うために開発している、テキス
 - 'play' 'start' : シーケンス開始
 - 'fine' : この小節の最後でシーケンス終了
 - 'stop' : 直ちにシーケンス終了
+- 'sync' : 次の小節の頭で、ループ先頭に戻る
+    - sync       : そのパートのみ
+    - sync right : 右手パート(right1/2)
+    - sync left  : 左手パート(left1/2)
+    - sync all   : 全パート
 
 
 Phrase 追加

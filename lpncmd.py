@@ -218,6 +218,30 @@ class Parsing:
 #            self.change_cc(10, cc_list)
 #            self.print_dialogue("Pan has changed!")
 
+    def parse_sync_command(self, input_text):
+        prm_text = input_text.strip()
+        if prm_text == '':
+            self.sqs.get_part(self.input_part+nlib.FIRST_COMPOSITION_PART).sync()
+            self.sqs.get_part(self.input_part+nlib.FIRST_NORMAL_PART).sync()
+            self.print_dialogue("Synchronized!")
+        elif prm_text == 'all':
+            for i in range(nlib.MAX_PART_COUNT):
+                self.sqs.get_part(i).sync()
+            self.print_dialogue("All Part Synchronized!")
+        elif prm_text == 'right':
+            for i in range(2,3):
+                self.sqs.get_part(nlib.FIRST_COMPOSITION_PART+i).sync()
+                self.sqs.get_part(nlib.FIRST_NORMAL_PART+i).sync()
+            self.print_dialogue("Right Part Synchronized!")
+        elif prm_text == 'left':
+            for i in range(0,1):
+                self.sqs.get_part(nlib.FIRST_COMPOSITION_PART+i).sync()
+                self.sqs.get_part(nlib.FIRST_NORMAL_PART+i).sync()
+            self.print_dialogue("Left Part Synchronized!")
+        else:
+            self.print_dialogue("what?")
+            return
+
     def letterA(self, input_text):
         if input_text[0:3] == "all":
             self.input_part = nlib.ALL_PART
@@ -256,6 +280,8 @@ class Parsing:
             self.print_dialogue("Stopped!")
         elif input_text[0:3] == 'set':
             self.parse_set_command(input_text[3:])
+        elif input_text[0:4] == 'sync':
+            self.parse_sync_command(input_text[4:])
         else:
             self.print_dialogue("what?")
 
