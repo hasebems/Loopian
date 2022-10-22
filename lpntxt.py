@@ -345,17 +345,19 @@ class TextParse:
 
         expvel, others = TextParse._cnv_exp(complement[2])
         tick = 0
+        msr = 1
         read_ptr = 0
         rcmb = []
         note_cnt = len(complement[0])
         while read_ptr < note_cnt:
             notes, mes_end = TextParse._cnv_note_to_pitch(keynote, complement[0][read_ptr])
             dur = TextParse._cnv_duration(complement[1][read_ptr])
-            TextParse._add_note(rcmb, tick, notes, dur, base_note, expvel)
-            if mes_end:
-                tick = ((tick//tick_for_onemsr) + 1)*tick_for_onemsr
-            else:
+            if tick < tick_for_onemsr*msr:
+                TextParse._add_note(rcmb, tick, notes, dur, base_note, expvel)
                 tick += int(dur * nlib.DEFAULT_TICK_FOR_ONE_MEASURE / base_note)
+            if mes_end:
+                tick = msr*tick_for_onemsr
+                msr += 1
             read_ptr += 1  # out from repeat
 
         return tick, rcmb, others
