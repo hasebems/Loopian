@@ -24,7 +24,7 @@ class SeqStack:
         self.elapsed_time = 0       # start からの経過時間
         self.crnt_measure = -1      # start からの小節数（最初の小節からイベントを出すため、-1初期化)
         self.crnt_tick_inmsr = 0    # 現在の小節内の tick 数
-        self.current_time = 0       # 現在の時刻
+        self.crnt_time = 0       # 現在の時刻
 
         self.bpm = 120
         self.bpm_stock = 120
@@ -51,7 +51,7 @@ class SeqStack:
         self.sqobjs.insert(nlib.MAX_PART_COUNT, obj)
 
     def get_time(self):
-        return self.current_time
+        return self.crnt_time
 
     def get_sqobj_count(self, type):
         count = 0
@@ -85,8 +85,8 @@ class SeqStack:
 
     def _calc_current_tick(self, crnt_time):
         diff_time = crnt_time - self.bpm_start_time
-        one_tick = 60/(480*self.bpm)
-        return diff_time/one_tick + self.bpm_start_tick
+        elapsed_tick = (480*self.bpm*diff_time)/60
+        return elapsed_tick + self.bpm_start_tick
 
     def _play(self):
         self.bpm_start_time = self.origin_time = time.time()  # Get current time
@@ -111,14 +111,14 @@ class SeqStack:
     def _change_beat_event(self):
         # change beat event があった
         self.beat_start_msr = self.crnt_measure
-        self.bpm_start_time = self.current_time
+        self.bpm_start_time = self.crnt_time
         self.bpm_start_tick = 0
         self.tick_for_onemsr = self.stock_tick_for_onemsr[0]
         self.beat = self.stock_tick_for_onemsr[1:3]
 
     def _change_bpm_event(self):
-        self.bpm_start_tick = self._calc_current_tick(self.current_time)
-        self.bpm_start_time = self.current_time  # Get current time
+        self.bpm_start_tick = self._calc_current_tick(self.crnt_time)
+        self.bpm_start_time = self.crnt_time  # Get current time
         self.bpm = self.bpm_stock
 
 
@@ -143,9 +143,9 @@ class SeqStack:
             return
 
         ## detect tick and measure
-        self.current_time = time.time()
-        tick_beat_starts = self._calc_current_tick(self.current_time)
-        self.elapsed_time = self.current_time - self.origin_time
+        self.crnt_time = time.time()
+        tick_beat_starts = self._calc_current_tick(self.crnt_time)
+        self.elapsed_time = self.crnt_time - self.origin_time
         former_msr = self.crnt_measure
         self.crnt_measure = tick_beat_starts//self.tick_for_onemsr + self.beat_start_msr
         self.crnt_tick_inmsr = tick_beat_starts%self.tick_for_onemsr
@@ -188,7 +188,9 @@ class SeqStack:
     def change_tempo(self, tempo):     # command thread
         self.bpm_stock = tempo
 
-    def change_beat(self, beat):    # beat: number of ticks of one measure
+    def change_beat(self, btnum, onpu):    # beat: number of ticks of one measure
+        # [1小節内のtick, 1小節内の拍数, 一拍の音価(2/4/8/16...)]
+        beat = ((nlib.DEFAULT_TICK_FOR_ONE_MEASURE/onpu)*btnum, btnum, onpu)
         self.stock_tick_for_onemsr = beat
 
     def change_key_oct(self, key, oct, text):     # command thread

@@ -50,9 +50,7 @@ class Parsing:
             if onpu_str.isdecimal():
                 onpu = int(onpu_str)
             if btnum >= 1 and onpu >= 1:
-                # [1小節内のtick, 1小節内の拍数, 一拍の音価(2/4/8/16...)]
-                beat_ev = ((nlib.DEFAULT_TICK_FOR_ONE_MEASURE/onpu)*btnum, btnum, onpu)
-                self.sqs.change_beat(beat_ev)
+                self.sqs.change_beat(btnum, onpu)
                 self.print_dialogue("Beat has changed!")
                 return True
             else:
