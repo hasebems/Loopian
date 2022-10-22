@@ -227,12 +227,12 @@ class Parsing:
                 self.sqs.get_part(i).sync()
             self.print_dialogue("All Part Synchronized!")
         elif prm_text == 'right':
-            for i in range(2,3):
+            for i in range(nlib.MAX_LEFT_PART, nlib.MAX_LEFT_PART+nlib.MAX_RIGHT_PART):
                 self.sqs.get_part(nlib.FIRST_COMPOSITION_PART+i).sync()
                 self.sqs.get_part(nlib.FIRST_NORMAL_PART+i).sync()
             self.print_dialogue("Right Part Synchronized!")
         elif prm_text == 'left':
-            for i in range(0,1):
+            for i in range(0, nlib.MAX_LEFT_PART):
                 self.sqs.get_part(nlib.FIRST_COMPOSITION_PART+i).sync()
                 self.sqs.get_part(nlib.FIRST_NORMAL_PART+i).sync()
             self.print_dialogue("Left Part Synchronized!")
