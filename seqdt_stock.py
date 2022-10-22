@@ -126,10 +126,14 @@ class PhraseDataStock:
         return True
 
     def set_recombined(self):
+        # Next measure information
+        next_tick_for_onemsr = self.seq.stock_tick_for_onemsr[0]
+        next_bpm = self.seq.bpm_stock
+
         # 3.recombined data
         self.whole_tick, self.generated, self.exps = \
             tx.TextParse.recombine_to_internal_format( \
-                self.complement, self.part.keynote, self.seq.stock_tick_for_onemsr[0], self.base_note)
+                self.complement, self.part.keynote, next_tick_for_onemsr, self.base_note)
         print('recombined:',self.generated)
 
         # 4.analysed data
@@ -137,7 +141,7 @@ class PhraseDataStock:
 
         # 5.humanized data
         ### Add Filters
-        self.generated = efb.BeatFilter().filtering(self.generated, self.seq.bpm, self.seq.tick_for_onemsr)
+        self.generated = efb.BeatFilter().filtering(self.generated, next_bpm, next_tick_for_onemsr)
         ### 
 
         print('humanized:',self.generated)

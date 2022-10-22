@@ -14,7 +14,7 @@ class BeatFilter(ef.ExpfilterIF):
         if bpm < self.MIN_VEL:
             return inputs
 
-        # 純粋な四拍子、三拍子のみ救う
+        # 純粋な四拍子、三拍子のみ対応
         outputs = []
         base_bpm = (bpm-self.MIN_VEL)*self.EFFECT/100
         if tick_for_onemsr == 1920:
@@ -41,4 +41,6 @@ class BeatFilter(ef.ExpfilterIF):
                 else:
                     dt[nlib.VEL] -= int(base_bpm/4) # weak
                 outputs.append(dt)
+        else:
+            outputs = inputs
         return outputs
