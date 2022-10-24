@@ -84,10 +84,10 @@ class PhraseDataStock:
             # 条件の確認と、ana への情報追加
             if option == 'para':
                 ana.append(['para'])
-            elif last_note <= 127 and \
-               last_cnt == 1 and \
-               crnt_note <= 127 and \
-               crnt_cnt == 1: # 過去＆現在：単音、ノート適正
+            elif last_note <= 127 and last_cnt == 1 and \
+               crnt_note <= 127 and crnt_cnt == 1 and \
+               crnt_note-last_note > -10 and crnt_note-last_note < 10:
+                # 過去＆現在：単音、ノート適正、差が10半音以内
                 ana.append(['arp', crnt_note-last_note])
             else:
                 ana.append(['com'])
