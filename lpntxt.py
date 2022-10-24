@@ -298,10 +298,9 @@ class TextParse:
 
     #------------------------------------------------------------------------------
     #   recombine data
-    def _add_note(generated, tick, notes, duration, base_note, velocity=100):
+    def _add_note(generated, tick, notes, real_dur, velocity=100):
         for note in notes:
             if note != nlib.REST:
-                real_dur = math.floor(duration * nlib.DEFAULT_TICK_FOR_ONE_MEASURE / base_note) # add line
                 generated.append(['note', tick, real_dur, note, velocity])                      # add real_dur
 
 
@@ -353,8 +352,9 @@ class TextParse:
             notes, mes_end = TextParse._cnv_note_to_pitch(keynote, complement[0][read_ptr])
             dur = TextParse._cnv_duration(complement[1][read_ptr])
             if tick < tick_for_onemsr*msr:
-                TextParse._add_note(rcmb, tick, notes, dur, base_note, expvel)
-                tick += int(dur * nlib.DEFAULT_TICK_FOR_ONE_MEASURE / base_note)
+                real_dur = math.floor(dur * nlib.DEFAULT_TICK_FOR_ONE_MEASURE / base_note) # add line
+                TextParse._add_note(rcmb, tick, notes, real_dur, expvel)
+                tick += real_dur #int(dur * nlib.DEFAULT_TICK_FOR_ONE_MEASURE / base_note)
             if mes_end:
                 tick = msr*tick_for_onemsr
                 msr += 1
