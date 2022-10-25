@@ -13,7 +13,8 @@ class Part(sqp.ElapseIF):
         self.first_measure_num = 0 # 新しい Phrase/Pattern が始まった絶対小節数
 
         self.loop_obj = None
-        self.keynote = nlib.DEFAULT_NOTE_NUMBER
+        left_part = 1-(num%nlib.FIRST_NORMAL_PART)//nlib.MAX_LEFT_PART # left なら 1, でなければ 0
+        self.keynote = nlib.DEFAULT_NOTE_NUMBER - 12*left_part
         self.loop_measure = 0   # whole_tick と同時生成
         self.lp_elapsed_msr = 0    # loop 内の経過小節数
         self.whole_tick = 0     # loop_measure と同時生成
