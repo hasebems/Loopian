@@ -134,3 +134,19 @@ SeqDataAllStock <-- SeqStack
 - loopian を使った動画制作
 - loopian::device によるリアルタイム演奏
 - GUI/MIDI以外を rust に書き換える
+
+### 動画作成
+- QuickTime Player で新規画面収録
+- 画面サイズ 896 * 504
+- オーディオ出力 : 複数出力装置（BlackHole & xxxのスピーカー）
+    - DAWの出力も確認
+- 録音設定 : オプションから BlackHole 2ch を選択
+- Audio MIDI -> オーディオ装置 -> 「複数出力装置」選択 -> マスター装置: BlackHole 2ch
+- iMovieに入れるが、YouTubeではなく、ファイル出力指定にする
+- 紹介文
+Loopian is a looping real-time sequencer that specifies notes by text.
+It is primarily designed to control Piano tones.
+It is being developed for use in Live Coding-like real-time text input to generate music, loop-based phrase transformations in real-time for performance, interactive art, etc.
+- Loopian は、テキストで音符を指定するループ型のリアルタイムシーケンサです。
+主に Piano 音色を操作するための機能を備えています。
+Live Coding 風にリアルタイムにテキストを入力して音楽を生成したり、ループベースのフレーズをリアルタイムに変容させるパフォーマンスやインタラクティブアートなどに使用することを念頭に開発中。
