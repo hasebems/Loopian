@@ -126,6 +126,7 @@ class LpnInputBox:
     CURSOR_MAX_LOCATE = 79
     TEXT_OFS_X = 5
     TEXT_OFS_Y = 5
+    AUTO_MOVE_WAIT = 5
 
     def __init__(self, parent, x, y, w, h=28, text=''):
         self.rect = pg.Rect(x, y, w, h)
@@ -142,6 +143,7 @@ class LpnInputBox:
         self.cursor_location = 0
         self.shift_key = False
         self.old_time = 0
+        self.wait_time = self.AUTO_MOVE_WAIT
         self.parent = parent
         self.history_position = 0   # history function
         self.input_history = []     # history function
@@ -260,13 +262,12 @@ class LpnInputBox:
         elif event.type == pg.KEYUP:
             if event.key == pg.K_BACKSPACE:
                 self.cursor_bs = False
-                self._key_ev_backspace()                
             elif event.key == pg.K_LEFT:
                 self.cursor_left = False
-                self._detect_cursor_location()
+                #self._detect_cursor_location()
             elif event.key == pg.K_RIGHT:
                 self.cursor_right = False
-                self._detect_cursor_location()
+                #self._detect_cursor_location()
             elif event.key == pg.K_RSHIFT:
                 self.shift_key = False
             elif event.key == pg.K_LSHIFT:
@@ -277,15 +278,18 @@ class LpnInputBox:
         self.cursor_blink = True if time%5 > 2 else False
         if self.cursor_left or self.cursor_right:
             # cursor auto inc/dec
-            while time > self.old_time + 1:
+            while time > self.old_time + self.wait_time:
                 self._detect_cursor_location()
+                self.wait_time = 2
                 self.old_time += 1
         elif self.cursor_bs:
             # cursor back space
-            while time > self.old_time + 1:
+            while time > self.old_time + self.wait_time:
                 self._key_ev_backspace()
+                self.wait_time = 2
                 self.old_time += 1
         else:
+            self.wait_time = self.AUTO_MOVE_WAIT
             self.old_time = time
         
     def draw(self, screen):
