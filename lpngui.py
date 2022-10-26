@@ -123,6 +123,7 @@ class LpnInputBox:
     LETTER_WIDTH = 10
     CURSOR_THICKNESS = 4
     CURSOR_COLOR = (160,160,160)
+    CURSOR_MAX_LOCATE = 79
     TEXT_OFS_X = 5
     TEXT_OFS_Y = 5
 
@@ -134,6 +135,7 @@ class LpnInputBox:
         self.txt_surface = self.font.render(text, True, self.color) # True/False:境界がなめらか
         self.prompt_font = pg.font.SysFont(FONTS[116], self.FONT_SIZE)
         self.active = False
+        self.cursor_bs = False
         self.cursor_blink = False
         self.cursor_left = False
         self.cursor_right = False
@@ -157,6 +159,8 @@ class LpnInputBox:
             self.cursor_location += 1
         elif self.cursor_left and self.cursor_location > 0:
             self.cursor_location -= 1
+        if self.cursor_location > self.CURSOR_MAX_LOCATE:
+            self.cursor_location = self.CURSOR_MAX_LOCATE
 
     def activate(self):
         self.active = True
@@ -175,7 +179,7 @@ class LpnInputBox:
             pass
         elif txt_len < self.cursor_location:
             self.text = self.text[:-1]
-            self.cursor_location -= 1
+            self.cursor_location -= 1   
         else:
             self.text = self.text[:self.cursor_location-1] + self.text[self.cursor_location:]
             self.cursor_location -= 1
@@ -210,6 +214,8 @@ class LpnInputBox:
             self.cursor_location = len(self.text)
 
     def _key_ev_normal(self, event):
+        if len(self.text) > self.CURSOR_MAX_LOCATE-1:
+            return
         # insert one letter to text
         txt_list = list(self.text)
         txt_list.insert(self.cursor_location, event.unicode)
@@ -226,6 +232,7 @@ class LpnInputBox:
             if event.key == pg.K_RETURN:
                 return self._key_ev_return()
             elif event.key == pg.K_BACKSPACE:
+                self.cursor_bs = True
                 self._key_ev_backspace()
             elif event.key == pg.K_LEFT:
                 self.cursor_left = True
@@ -251,7 +258,10 @@ class LpnInputBox:
                 self._key_ev_normal(event)
 
         elif event.type == pg.KEYUP:
-            if event.key == pg.K_LEFT:
+            if event.key == pg.K_BACKSPACE:
+                self.cursor_bs = False
+                self._key_ev_backspace()                
+            elif event.key == pg.K_LEFT:
                 self.cursor_left = False
                 self._detect_cursor_location()
             elif event.key == pg.K_RIGHT:
@@ -263,13 +273,18 @@ class LpnInputBox:
                 self.shift_key = False
         return False
 
-    def update(self, time):
-        self.cursor_blink = True if time%10 > 2 else False
+    def update(self, time): # time: 100msec count
+        self.cursor_blink = True if time%5 > 2 else False
         if self.cursor_left or self.cursor_right:
             # cursor auto inc/dec
-            while time > self.old_time + 2:
+            while time > self.old_time + 1:
                 self._detect_cursor_location()
-                self.old_time += 2
+                self.old_time += 1
+        elif self.cursor_bs:
+            # cursor back space
+            while time > self.old_time + 1:
+                self._key_ev_backspace()
+                self.old_time += 1
         else:
             self.old_time = time
         
@@ -384,7 +399,7 @@ class LpnGui:
         if cmd:
             self.cmd.start_parsing(text) # input command
 
-    def _make_time(self):
+    def _100msec_timer(self):
         tm = pg.time.get_ticks()
         while tm - self.raw_time > 100:
             self._100ms_time += 1
@@ -437,7 +452,7 @@ class LpnGui:
         clock = pg.time.Clock()
         while self.loop_enable.running:
             clock.tick(30)     # 30FPS
-            current_time = self._make_time()
+            current_time = self._100msec_timer()
 
             # イベントを処理
             for event in pg.event.get():
