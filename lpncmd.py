@@ -343,6 +343,19 @@ class Parsing:
                     self.input_part = part - 1
                     self.gui.change_part(self.input_part)
 
+    def letter_plus(self, input_text):
+        success = False
+        if self.input_part != nlib.ALL_PART:
+            tx = input_text.strip()
+            if tx[1] == '[':
+                success = self.gendt.set_raw_phrase(self.input_part, input_text)
+                if success: self.print_dialogue("set Phrase!")
+            elif tx[1] == '{':
+                success = self.gendt.set_raw_composition(self.input_part, input_text)
+                if success: self.print_dialogue("set Composition!")
+        if not success:
+            self.print_dialogue("what?")
+
     def letter_bracket(self, input_text):
         success = False
         if self.input_part == nlib.ALL_PART:
@@ -369,7 +382,9 @@ class Parsing:
 
     def start_parsing(self, input_text):
         first_letter = input_text[0:1]
-        if first_letter == '[':
+        if first_letter == '+':
+            self.letter_plus(input_text)
+        elif first_letter == '[':
             self.letter_bracket(input_text)
         elif first_letter == '{':
             self.letter_brace(input_text)

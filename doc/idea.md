@@ -78,7 +78,7 @@ SeqDataAllStock <-- SeqStack
 
 - データは以下の過程で内容を書き換えられていく
     1. ユーザーが入力した生データ(生/raw)
-    1. 生データに足りないデータを補填したデータ(補填/complement)
+    1. 生データに足りないデータを補填したり、追加フレーズを繋げたデータ(補填/complement)
     1. SMF 的な、tick/note/velocity をセットにしたデータ(再構成/recombined)
     1. コード変換時に自然な変換をするための分析データ(分析/analyzed)
     1. velocity/duration を生演奏に近づけたデータ(生演奏/humanized)

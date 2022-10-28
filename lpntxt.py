@@ -2,7 +2,7 @@
 import re
 import math
 import lpnlib as nlib
-
+import copy
 
 def convert_exp2vel(exp_text):
     if exp_text == 'ff':
@@ -232,20 +232,72 @@ class TextParse:
         return dur_flow
 
 
-    def complement_data(input_text):
-        # [] のセットを抜き出し、中身を note_info に入れる
+    def _attached_to_noteinfo(block, delimiter_str, dur):
+        # + で連結された一つ一つの attached_bracket/brace を一つにまとめる
+        # dur: ２番目が duration かどうか？
         note_info = []
-        tx = input_text
+        total_block = len(block)    # + で繋がれた data block 数
+        total_ninfo = len(block[0]) # 最初の raw データ内の [] の数に合わせる
+
+        # note
+        dtstr = ''
+        for i in range(total_block):
+            delimiter = delimiter_str if dtstr != '' else ''
+            dtstr += delimiter + block[i][0]
+        note_info.append(dtstr)
+
+        # duration
+        if total_ninfo >= 2 and dur:
+            dtstr = block[0][1]
+            dtstr_list = dtstr.split(':')
+            durstr = dtstr_list[0]
+            for i in range(1,total_block):
+                if len(block[i]) >= 2:
+                    durstr += ',' + block[i][1].split(':')[0]
+            durstr += ':' + dtstr_list[1]
+            note_info.append(durstr)
+
+        # exp.
+        exp_index = 2           # brace
+        if dur: exp_index = 3   # bracket
+        if total_ninfo >= exp_index:
+            exstr = ''
+            for i in range(total_block):
+                if len(block[i]) >= exp_index:
+                    comma = ',' if exstr != '' else ''
+                    exstr += comma + block[i][exp_index-1]
+            note_info.append(exstr)
+
+        return note_info
+
+
+    def complement_bracket(tx):
+        # [] のセットを抜き出し、中身を attached_bracket/note_info に入れる
+        num = tx.find('[')
+        tx = tx[num:].strip()
+
+        note_info = []
+        attached_bracket = []
         while True:
-            num = tx.find(']')  # 見つからなかった時
-            if num == -1:
+            num = tx.find(']')
+            if num == -1: # 見つからなかった時
                 break
             note_info.append(tx[1:num])
-            tx = tx[num + 1:].strip()
+            tx = tx[num+1:].strip()
             if len(tx) == 0:
                 break
-            if tx[0:1] != '[':
+            if tx[0:2] == '+[':
+                attached_bracket.append(copy.copy(note_info))
+                note_info.clear()
+                tx = tx[1:]
+                continue
+            if tx[0] != '[':
                 break
+
+        # 連結データ(attached_block)があった時の処理
+        if attached_bracket and note_info:
+            attached_bracket.append(note_info) # 最後の note_info を追加
+            note_info = TextParse._attached_to_noteinfo(attached_bracket, '|', True)
 
         # [] の数が 1,2 の時は中身を補填
         bracket_num = len(note_info)
@@ -267,22 +319,35 @@ class TextParse:
         return complement, base_note
 
 
-    def complement_brace(input_text):
-        # {} のセットを抜き出し、中身を note_info に入れる
+    def complement_brace(tx):
+        # [] のセットを抜き出し、中身を attached_brace/note_info に入れる
+        num = tx.find('{')
+        tx = tx[num:].strip()
+
         note_info = []
-        exp = []
-        tx = input_text
+        attached_brace = []
         while True:
             num = tx.find('}')
             if num == -1:
                 break
             note_info.append(tx[1:num])
-            tx = tx[num + 1:].strip()
+            tx = tx[num+1:].strip()
             if len(tx) == 0:
                 break
+            if tx[0:2] == '+{':
+                attached_brace.append(copy.copy(note_info))
+                note_info.clear()
+                tx = tx[1:]
+                continue
             if tx[0:1] != '{':
                 break
 
+        # 連結データ(attached_block)があった時の処理
+        if attached_brace and note_info:
+            attached_brace.append(note_info) # 最後の note_info を追加
+            note_info = TextParse._attached_to_noteinfo(attached_brace, ',', False)
+
+        exp = []
         if len(note_info) != 0:
             if ',' in note_info[0]:
                 chord_flow_next = note_info[0].strip().split(',') # chord

@@ -110,10 +110,13 @@ class PhraseDataStock:
 
     def set_raw(self, text):
         # 1. raw
-        self.raw = text
+        if text[0] == '+' and self.raw != None:
+            self.raw += text
+        else:
+            self.raw = text
 
         # 2.complement data
-        cmpl, self.base_note = tx.TextParse.complement_data(text)   # リスト [3] = [note[],dur[],exp]
+        cmpl, self.base_note = tx.TextParse.complement_bracket(self.raw)   # リスト [3] = [note[],dur[],exp]
         print('complement:',cmpl)
         if cmpl != None:
             self.complement = cmpl
@@ -200,10 +203,13 @@ class CompositionPartStock:
 
     def set_raw(self, text):
         # 1. raw
-        self.raw = text
+        if text[0] == '+' and self.raw != None:
+            self.raw += text
+        else:
+            self.raw = text
 
         # 2.complement data
-        cmpl, exp = tx.TextParse.complement_brace(text)
+        cmpl, exp = tx.TextParse.complement_brace(self.raw)
         if cmpl != None:
             self.complement = cmpl
             self.exp = exp
