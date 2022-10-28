@@ -168,6 +168,8 @@ class PhraseDataStock:
         return self.whole_tick, self.randomized, self.analysed
 
 
+#------------------------------------------------------------------------------
+#   Damper の入力テキストの変換
 class DamperPartStock:
 
     def __init__(self, objs, seq):
@@ -210,6 +212,7 @@ class CompositionPartStock:
 
         # 2.complement data
         cmpl, exp = tx.TextParse.complement_brace(self.raw)
+        print('complement:',cmpl)
         if cmpl != None:
             self.complement = cmpl
             self.exp = exp
@@ -223,12 +226,14 @@ class CompositionPartStock:
 
 
     def set_recombined(self):
+        # Next measure information
+        tick_for_onemsr = self.seq.stock_tick_for_onemsr[0]
+        tick_for_onebeat = tick_for_onemsr//self.seq.stock_tick_for_onemsr[1]
+
         # 3. recombined
-        self.generated = []
-        self.whole_tick = 0
-        for cd in self.complement:
-            self.generated.append(['chord', self.whole_tick, cd])
-            self.whole_tick += 1920
+        self.whole_tick, self.generated = \
+            tx.TextParse.recombine_to_chord_loop(self.complement, tick_for_onemsr, tick_for_onebeat)
+        print('recombined:',self.generated)
 
     def get_final(self):
         return self.whole_tick, self.generated, self.exp

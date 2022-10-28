@@ -34,33 +34,32 @@ class TextParse:
         pass
 
     #------------------------------------------------------------------------------
-    #   complement data
+    #   complement data for Phrase
     def _fill_omitted_note_data(note_data):
         ## ,| 重複による同音指示の補填
         fill1 = ''
         doremi = ''
-        ntstr_end_flag = False
+        doremi_end_flag = False
         for i in range(len(note_data)):
             ltr = note_data[i]
             if ltr == ',':
                 fill1 += doremi + ','
-                ntstr_end_flag = True
+                doremi_end_flag = True
             elif ltr == '|':
                 fill1 += doremi + '|,'
                 doremi = ''
-                ntstr_end_flag = True
+                doremi_end_flag = True
             else:
-                if ntstr_end_flag:
+                if doremi_end_flag:
                     doremi = ltr
                 else:
                     doremi += ltr
-                ntstr_end_flag = False
+                doremi_end_flag = False
         if doremi != '':
             fill1 += doremi
 
         # スペース削除し、',' 区切りでリスト化
-        fill2 = fill1.replace(' ', '').replace('|','|,')
-        note_flow = re.split('[,]', fill2)
+        note_flow = re.split('[,]', fill1)
         while '' in note_flow:  # 何も入ってない要素を削除
             note_flow.remove('')
 
@@ -318,6 +317,37 @@ class TextParse:
         complement.append(note_info[2])
         return complement, base_note
 
+    #------------------------------------------------------------------------------
+    #   complement data for Composition
+    def _fill_omitted_chord_data(chord_data):
+        ## ,| 重複による同音指示の補填
+        fill1 = ''
+        doremi = ''
+        doremi_end_flag = False
+        for i in range(len(chord_data)):
+            ltr = chord_data[i]
+            if ltr == ',':
+                fill1 += doremi + ','
+                doremi_end_flag = True
+            elif ltr == '|':
+                fill1 += doremi + '|,'
+                #doremi = ''
+                doremi_end_flag = True
+            else:
+                if doremi_end_flag:
+                    doremi = ltr
+                else:
+                    doremi += ltr
+                doremi_end_flag = False
+        if doremi != '':
+            fill1 += doremi
+
+        # スペース削除し、',' 区切りでリスト化
+        chord_flow = re.split('[,]', fill1)
+        while '' in chord_flow:  # 何も入ってない要素を削除
+            chord_flow.remove('')
+        return chord_flow
+
 
     def complement_brace(tx):
         # [] のセットを抜き出し、中身を attached_brace/note_info に入れる
@@ -345,19 +375,15 @@ class TextParse:
         # 連結データ(attached_block)があった時の処理
         if attached_brace and note_info:
             attached_brace.append(note_info) # 最後の note_info を追加
-            note_info = TextParse._attached_to_noteinfo(attached_brace, ',', False)
+            note_info = TextParse._attached_to_noteinfo(attached_brace, '|', False)
 
         exp = []
         if len(note_info) != 0:
-            if ',' in note_info[0]:
-                chord_flow_next = note_info[0].strip().split(',') # chord
-            else:
-                chord_flow_next = note_info
+            chord_flow_next = TextParse._fill_omitted_chord_data(note_info[0])
             if len(note_info) == 2:
                 exp = note_info[1]
         else:
-            # if no ':', set 'all" pattern
-            chord_flow_next = []
+            return [], []
         return chord_flow_next, exp
 
 
@@ -427,6 +453,32 @@ class TextParse:
 
         return tick, rcmb, others
 
+
+    def recombine_to_chord_loop(complement, tick_for_onemsr, tick_for_onebeat):
+        if complement is None or len(complement) == 0:
+            return 0, []
+
+        tick = 0
+        msr = 1
+        read_ptr = 0
+        rcmb = []
+        note_cnt = len(complement)
+        while read_ptr < note_cnt:
+            mes_end = False
+            chord = complement[read_ptr]
+            if chord[-1] == '|':
+                mes_end= True
+                chord = chord[0:-1]
+            if tick < tick_for_onemsr*msr:
+                rcmb.append(['chord', tick, chord])
+                tick += tick_for_onebeat
+            if mes_end:
+                tick = msr*tick_for_onemsr
+                msr += 1
+            read_ptr += 1  # out from repeat
+
+        tick = msr*tick_for_onemsr
+        return tick, rcmb
 
     #------------------------------------------------------------------------------
     #   translate note
