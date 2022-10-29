@@ -21,7 +21,7 @@ class PhraseDataStock:
         self.part.set_seqdt_part(self)
 
         self.whole_tick = 0
-        self.base_note = 0
+        self.note_value = 0     # 音価
 
 
     def _basic_analysis(generated):
@@ -116,7 +116,7 @@ class PhraseDataStock:
             self.raw = text
 
         # 2.complement data
-        cmpl, self.base_note = tx.TextParse.complement_bracket(self.raw)   # リスト [3] = [note[],dur[],exp]
+        cmpl, self.note_value = tx.TextParse.complement_bracket(self.raw)   # リスト [3] = [note[],dur[],exp]
         print('complement:',cmpl)
         if cmpl != None:
             self.complement = cmpl
@@ -136,7 +136,7 @@ class PhraseDataStock:
         # 3.recombined data
         self.whole_tick, self.generated, self.exps = \
             tx.TextParse.recombine_to_internal_format( \
-                self.complement, self.part.keynote, next_tick_for_onemsr, self.base_note)
+                self.complement, self.part.base_note, next_tick_for_onemsr, self.note_value)
         print('recombined:',self.generated)
 
         # 4.analysed data

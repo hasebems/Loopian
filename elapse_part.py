@@ -14,7 +14,8 @@ class Part(sqp.ElapseIF):
 
         self.loop_obj = None
         left_part = 1-(num%nlib.FIRST_NORMAL_PART)//nlib.MAX_LEFT_PART # left なら 1, でなければ 0
-        self.keynote = nlib.DEFAULT_NOTE_NUMBER - 12*left_part
+        self.keynote = 0
+        self.base_note = nlib.DEFAULT_NOTE_NUMBER - 12*left_part
         self.loop_measure = 0   # whole_tick と同時生成
         self.lp_elapsed_msr = 0    # loop 内の経過小節数
         self.whole_tick = 0     # loop_measure と同時生成
@@ -56,22 +57,25 @@ class Part(sqp.ElapseIF):
 
         elapsed_msr = msr - self.first_measure_num
         if self.state_reserve:
-            self.state_reserve = False
             # 前小節にて phrase/pattern 指定された時
             if msr == 0:
                 # 今回 start したとき
+                self.state_reserve = False
                 new_loop(msr)
 
             elif self.loop_measure == 0:
                 # データのない状態で start し、今回初めて指定された時
+                self.state_reserve = False
                 new_loop(msr)
 
             elif self.loop_measure != 0 and elapsed_msr%self.loop_measure == 0:
                 # 前小節にて Loop Obj が終了した時
+                self.state_reserve = False
                 new_loop(msr)
 
             elif self.loop_measure != 0 and self.sync_next_msr_flag:
                 # sync コマンドによる強制リセット
+                self.state_reserve = False
                 self.sync_next_msr_flag = False
                 new_loop(msr)
 
@@ -107,21 +111,20 @@ class Part(sqp.ElapseIF):
     def get_loop_info(self):
         return self.lp_elapsed_msr, self.loop_measure
 
-    def change_key(self, key):  # 0-11: C4(midi:60)-B4
-        self.keynote = nlib.note_limit(key+nlib.DEFAULT_NOTE_NUMBER, 0, 127)
+    def change_key(self, key):  # 0-11
+        self.keynote = key
         self.state_reserve = True
 
     def change_oct(self, oct, relative):
         # relative=False,oct=4: center(C4=60)
         # relative=True, oct=0: center(C4=60)
         if oct == nlib.NO_NOTE:
-            newoct = 5
+            return
         elif relative:
-            newoct = self.keynote // 12 + oct
+            newoct = self.base_note//12 + oct
         else:
             newoct = oct + 1
-        key = newoct * 12 + self.keynote % 12
-        self.keynote = nlib.note_limit(key, 0, 127)
+        self.base_note = nlib.note_limit(newoct*12, 0, 127)
         self.state_reserve = True
 
     def update_phrase(self):
