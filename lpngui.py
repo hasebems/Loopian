@@ -386,8 +386,8 @@ class LpnGui:
         # 上段の８つの表示ボックス
         self.keyBox = LpnGuiText(self.COLUMN1_X, self.LINE2_Y)
         self.bpmBox = LpnGuiText(self.COLUMN2_X, self.LINE2_Y)
-        self.beatBox =  LpnGuiText(self.COLUMN3_X, self.LINE2_Y)
-        self.someBox = LpnGuiText(self.COLUMN4_X, self.LINE2_Y)
+        self.timeSigBox = LpnGuiText(self.COLUMN3_X, self.LINE2_Y)
+        self.beatBox =  LpnGuiText(self.COLUMN4_X, self.LINE2_Y)
         XPOSI = [self.COLUMN1_X, self.COLUMN2_X, self.COLUMN3_X, self.COLUMN4_X]
         self.partBox = [LpnGuiText(XPOSI[i], self.LINE3_Y) for i in range(nlib.MAX_NORMAL_PART)]
 
@@ -418,6 +418,7 @@ class LpnGui:
         msr, beat, tick, count = seq.get_tick()
         self.beatBox.set_text(str(msr+1) + ' : ' + str(beat+1) + ' : ' + str(tick))
         self.keyBox.set_text('key: ' + seq.key_text)
+        self.timeSigBox.set_text('beat: ' + str(seq.beat[0]) + '/' + str(seq.beat[1]))
 
         PART_TXT = ['L1:','L2:','R1:','R2:']
         for i in range(nlib.MAX_NORMAL_PART):
@@ -447,7 +448,7 @@ class LpnGui:
         self.bpmBox.draw(self.screen)
         self.beatBox.draw(self.screen)
         self.keyBox.draw(self.screen)
-        self.someBox.draw(self.screen)
+        self.timeSigBox.draw(self.screen)
         for i in range(nlib.MAX_NORMAL_PART):
             self.partBox[i].draw(self.screen)
 
