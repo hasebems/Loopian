@@ -77,6 +77,7 @@ class Part(sqp.ElapseIF):
                 # sync コマンドによる強制リセット
                 self.state_reserve = False
                 self.sync_next_msr_flag = False
+                self.sqs.del_obj(self.loop_obj)
                 new_loop(msr)
 
             else:
