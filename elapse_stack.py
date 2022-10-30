@@ -48,7 +48,8 @@ class SeqStack:
         #print(len(self.sqobjs))
 
     def del_obj(self, del_obj):
-        self.sqobjs.remove(del_obj)
+        if del_obj in self.sqobjs:
+            self.sqobjs.remove(del_obj)
 
     def add_obj_in_front(self, obj):    # Part の直後に挿入
         self.sqobjs.insert(nlib.MAX_PART_COUNT, obj)
