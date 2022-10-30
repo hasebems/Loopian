@@ -136,7 +136,9 @@ class PhraseLoop(Loop):
             ana = cmp_part.loop_obj.get_ana()
             option = self._identify_trans_option(next_tick, ev[nlib.NOTE])
             if ana == 'para':
-                self.last_note = self._translate_note_com(root, tbl, ev[nlib.NOTE]+root)
+                tgt_nt = ev[nlib.NOTE]+root
+                if root > 5: tgt_nt -= 12
+                self.last_note = self._translate_note_com(root, tbl, tgt_nt)
                 deb_txt = 'para:' + str(root)
             elif cmp_part.loop_obj.get_chord() != 'thru' and option[0] == 'arp':
                 self.last_note = self._translate_note_arp(root, tbl, option[1])
