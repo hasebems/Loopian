@@ -199,6 +199,7 @@ class CompositionLoop(Loop):
         self.keynote = key
 
         self.play_counter = 0
+        self.elapsed_tick = 0
         self.next_tick = 0
         self.seqdt = ['chord',0,'thru']
         self.chord_name = self.seqdt[2]
@@ -254,13 +255,13 @@ class CompositionLoop(Loop):
     ## IF Function by ElapseIF Class
     def periodic(self, msr, tick):
         tk_onemsr = self.tick_for_one_measure
-        elapsed_tick = (msr - self.first_measure_num)*tk_onemsr + tick
-        if elapsed_tick >= self.whole_tick:
+        self.elapsed_tick = (msr - self.first_measure_num)*tk_onemsr + tick
+        if self.elapsed_tick >= self.whole_tick:
             self.destroy = True
             return
 
-        if elapsed_tick >= self.next_tick:
-            nt = self._generate_event(elapsed_tick)
+        if self.elapsed_tick >= self.next_tick:
+            nt = self._generate_event(self.elapsed_tick)
             if nt == nlib.END_OF_DATA:
                 self.destroy = True
             self.next_tick = nt
