@@ -462,6 +462,7 @@ class TextParse:
         msr = 1
         read_ptr = 0
         rcmb = []
+        same_chord = ''
         note_cnt = len(complement)
         while read_ptr < note_cnt:
             mes_end = False
@@ -472,7 +473,9 @@ class TextParse:
             if tick < tick_for_onemsr*msr:
                 adjust_tick = tick              # 途中拍で和音が変わる時、音が変わらない暫定対策
                 if tick != 0: adjust_tick -= 1  # 
-                rcmb.append(['chord', adjust_tick, chord])
+                if same_chord != chord:
+                    same_chord = chord
+                    rcmb.append(['chord', adjust_tick, chord])
                 tick += tick_for_onebeat
             if mes_end:
                 tick = msr*tick_for_onemsr
