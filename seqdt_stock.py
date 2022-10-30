@@ -177,6 +177,7 @@ class DamperPartStock:
         self.part = objs
         self.part.set_seqdt_part(self)
         self.part.update_phrase()    # always
+        self.tick_for_onemsr = nlib.DEFAULT_TICK_FOR_ONE_MEASURE
 
     def set_raw(self, text):
         return True
@@ -185,7 +186,35 @@ class DamperPartStock:
         pass
 
     def get_final(self):
-        return 1920, [['damper',40,1870,127]], None
+        self.tick_for_onemsr = self.seq.get_tick_for_onemsr()
+        
+        # 全 Composition Part の Chord 情報を収集、マージ、ソートする
+        tick_change_point = []
+        for i in range(nlib.FIRST_COMPOSITION_PART,nlib.MAX_COMPOSITION_PART):
+            pt = self.seq.get_part(i)
+            if pt.loop_obj == None: continue
+            cmpdt = pt.loop_obj.cmp
+            search_tick = round(pt.loop_obj.elapsed_tick) - 40
+            for dt in cmpdt:
+                tick = dt[nlib.TICK]
+                if search_tick < tick and tick < search_tick + self.tick_for_onemsr:
+                    tick = (tick + 40)%self.tick_for_onemsr
+                    tick_change_point.append(tick)
+        tick_change_point = list(set(tick_change_point))
+        tick_change_point.sort()
+
+        # Chord 変化情報から Pedal 情報を生成
+        gendt = []
+        for i in range(len(tick_change_point)):
+            ont = tick_change_point[i]
+            if i+1 < len(tick_change_point):
+                oft = tick_change_point[i+1] - 20
+            else:
+                oft = self.tick_for_onemsr - 20
+            gendt.append(['damper',ont,oft,127])
+        print("Pedal Ddata: ", gendt)
+
+        return self.tick_for_onemsr, gendt, None
 
 #------------------------------------------------------------------------------
 #   Composition の入力テキストの変換
