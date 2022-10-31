@@ -9,6 +9,7 @@ import lpngui
 import seqdt_stock as stk
 import lpncmd as ps
 import elapse_stack as sqs
+import lpnlib as nlib
 import midi
 
 class Loop:
@@ -33,11 +34,12 @@ def generate_ev(loop, fl, seq, prs):
 
 def main():
     lp = Loop()
+    log = nlib.Log()
     md = midi.Midi()
     seq = sqs.SeqStack(md)
     gendt = stk.SeqDataAllStock(seq)
     prs = ps.Parsing(seq, md, gendt)
-    gui = lpngui.LpnGui(lp, prs)
+    gui = lpngui.LpnGui(lp, prs, log)
 
     md_job = threading.Thread(target=midi_periodic, args=(lp, md))
     md_job.start()
@@ -46,6 +48,7 @@ def main():
 
     prs.midi_setting(prs.CONFIRM_MIDI_OUT_ID)
     gui.loop(seq)
+    log.save_file()
 
     ev_job.join()
     md_job.join()

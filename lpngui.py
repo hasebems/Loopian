@@ -366,7 +366,7 @@ class LpnGui:
     LAMP_INTERVAL = 40
     PART_INTERVAL = 40
 
-    def __init__(self, loop_enable, cmd):
+    def __init__(self, loop_enable, cmd, log):
         pg.init()
         self.screen = pg.display.set_mode((self.SURFACE_X_SZ, self.SURFACE_Y_SZ))
         pg.display.set_caption("Loopian")    # タイトル文字を指定
@@ -375,6 +375,7 @@ class LpnGui:
         self.loop_enable = loop_enable
         self.cmd = cmd
         self.cmd.set_gui(self)
+        self.log = log
 
         # コマンド入力＆スクロール
         self.font = pg.font.Font(None, 28)   # フォントの設定
@@ -402,6 +403,7 @@ class LpnGui:
         self.scroll_box.show_text(text, cmd)
         if cmd:
             self.cmd.start_parsing(text) # input command
+            self.log.record(text)
 
     def _100msec_timer(self):
         tm = pg.time.get_ticks()

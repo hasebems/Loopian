@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import os
 import datetime
 import random
 
@@ -211,17 +212,19 @@ def note_limit(num, min_value, max_value):
 class Log:
 
     def __init__(self):
-        self.log_text = ['Start Log\n']
+        self.log_text = ['<<Start Log>>\n']
 
     def record(self, log_str):
         date = datetime.datetime.now()
         add_str = str(date) + ' : ' + log_str + '\n'
         self.log_text.append(add_str)
-        while len(self.log_text) > 200:
-            del self.log_text[0]
 
     def save_file(self):
-        self.log_text.append('End Log')
-        with open("log.txt", mode='w') as lf:
+        self.log_text.append('<<End Log>>')
+        date = datetime.datetime.now()
+        date_list = str(date).split('.')
+        fname = date_list[0].replace(' ','_').replace(':','-') + '.txt'
+        os.makedirs('log', exist_ok=True)
+        with open('log/' + str(fname), mode='w') as lf:
             for lstr in self.log_text:
                 lf.write(lstr)
