@@ -130,68 +130,6 @@ def gauss_rnd10():
     rnd = random.gauss(0,1)
     return rnd*3
 
-def convert_doremi(doremi_str):
-    if doremi_str == '': return 0
-
-    # 最初に +/-/++/-- がある場合、オクターブ(+12/-12/+24/-24)とみなす
-    # +/- を抜いた文字列の最初の一文字、あるいは二文字が移動ドなら、その音程を返す
-    base_pitch = 0
-    pm_sign = doremi_str[0]
-    nx = doremi_str
-    if pm_sign == '+':  # octave up
-        if doremi_str[1] == '+':
-            nx = doremi_str[2:]
-            base_pitch += 24
-        else:
-            nx = doremi_str[1:]
-            base_pitch += 12
-    elif pm_sign == '-':  # octave down
-        if doremi_str[1] == '-':
-            nx = doremi_str[2:]
-            base_pitch -= 24
-        else:
-            nx = doremi_str[1:]
-            base_pitch -= 12
-    else:
-        pass
-
-    if len(nx) > 1:
-        l2 = nx[1]
-    else:
-        l2 = None
-    if l2 is None or (l2 != 'i' and l2 != 'a' and l2 != 'o'):
-        l1 = nx[0]
-        if l1 == 'x':
-            base_pitch = REST
-        elif l1 == 'd':
-            base_pitch += 0
-        elif l1 == 'r':
-            base_pitch += 2
-        elif l1 == 'm':
-            base_pitch += 4
-        elif l1 == 'f':
-            base_pitch += 5
-        elif l1 == 's':
-            base_pitch += 7
-        elif l1 == 'l':
-            base_pitch += 9
-        elif l1 == 't':
-            base_pitch += 11
-    else:
-        l12 = nx[0:2]
-        if l12 == 'di' or l12 == 'ra':
-            base_pitch += 1
-        elif l12 == 'ri' or l12 == 'ma':
-            base_pitch += 3
-        elif l12 == 'fi' or l12 == 'sa':
-            base_pitch += 6
-        elif l12 == 'si' or l12 == 'lo':
-            base_pitch += 8
-        elif l12 == 'li' or l12 == 'ta':
-            base_pitch += 10
-
-    return base_pitch
-
 
 def limit(num, min_value, max_value):
     if num > max_value:

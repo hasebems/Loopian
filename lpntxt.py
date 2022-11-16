@@ -28,6 +28,29 @@ def convert_exp2vel(exp_text):
     return vel
 
 
+def convert_doremi(doremi):
+    if len(doremi) == 0: return nlib.REST
+    base_pitch = 0
+    solfa = True
+    while len(doremi) != 0:
+        l0 = doremi[0]
+        if   l0 == 'x': return nlib.REST
+        elif l0 == 'i': return base_pitch+1
+        elif l0 == 'a': return base_pitch-1
+        elif l0 == '+': base_pitch += 12
+        elif l0 == '-': base_pitch -= 12
+        elif solfa:
+            if   l0 == 'd': base_pitch += 0
+            elif l0 == 'r': base_pitch += 2
+            elif l0 == 'm': base_pitch += 4
+            elif l0 == 'f': base_pitch += 5
+            elif l0 == 's': base_pitch += 7
+            elif l0 == 'l': base_pitch += 9
+            elif l0 == 't': base_pitch += 11
+            solfa = False
+        doremi = doremi[1:]
+    return base_pitch
+
 class TextParse:
 
     def __init__(self):
@@ -136,6 +159,12 @@ class TextParse:
         return nf, no_repeat
 
 
+    def _fill_note_data5(note_data):
+
+
+        return note_data
+
+
     def _fill_omitted_note_data(note_data):
         ## ,| 重複による同音指示の補填
         fill = TextParse._fill_note_data1(note_data)
@@ -159,6 +188,8 @@ class TextParse:
             no_repeat = True
             note_flow, no_repeat = TextParse._fill_note_data4(note_flow, no_repeat)
         # end of while
+
+        note_flow = TextParse._fill_note_data5(note_flow)
 
         return note_flow, len(note_flow)
 
@@ -416,7 +447,7 @@ class TextParse:
     def _add_note(generated, tick, notes, real_dur, velocity=100):
         for note in notes:
             if note != nlib.REST:
-                generated.append(['note', tick, real_dur, note, velocity])                      # add real_dur
+                generated.append(['note', tick, real_dur, note, velocity])  # add real_dur
 
 
     def _cnv_note_to_pitch(keynote, note_text):
@@ -427,7 +458,7 @@ class TextParse:
         nlists = note_text.replace(' ', '').split('=')  # 和音検出
         bpchs = []
         for nx in nlists:
-            doremi = nlib.convert_doremi(nx)
+            doremi = convert_doremi(nx)
             base_pitch = keynote + doremi if doremi != nlib.REST else doremi
             bpchs.append(base_pitch)
         return bpchs, end
