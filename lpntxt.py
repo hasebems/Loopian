@@ -35,19 +35,20 @@ class TextParse:
 
     #------------------------------------------------------------------------------
     #   complement data for Phrase
-    def _fill_omitted_note_data(note_data):
-        ## ,| 重複による同音指示の補填
-        fill1 = ''
-        doremi = ''
-        doremi_end_flag = False
-        for i in range(len(note_data)):
-            ltr = note_data[i]
+    def _fill_note_data1(nd):
+        # ,| のみの入力による、休符指示の補填
+        fill = ''
+        doremi = 'x'
+        doremi_end_flag = True
+        for i in range(len(nd)):
+            ltr = nd[i]
             if ltr == ',':
-                fill1 += doremi + ','
+                fill += doremi + ','
+                doremi = 'x'
                 doremi_end_flag = True
             elif ltr == '|':
-                fill1 += doremi + '|,'
-                doremi = ''
+                fill += doremi + '|,'
+                doremi = 'x'
                 doremi_end_flag = True
             else:
                 if doremi_end_flag:
@@ -56,10 +57,91 @@ class TextParse:
                     doremi += ltr
                 doremi_end_flag = False
         if doremi != '':
-            fill1 += doremi
+            fill += doremi
+        return fill
+
+    def _fill_note_data2(nf, no_repeat):
+        # : :| による同フレーズの展開 -> 仕様削除
+        '''
+        repeat_start = 0
+        for i, nt in enumerate(nf):  # |: :n|
+            if ':' in nt:
+                no_repeat = False
+                locate = nt.find(':')
+                if locate == 0:
+                    nf[i] = nt[1:]
+                    repeat_start = i
+                else:
+                    repeat_count = 0
+                    num = nt.rfind(':') - len(nt)
+                    nf[i] = nt[0:num]
+                    if num == -1:
+                        repeat_count = 1
+                    else:
+                        if nt[num + 1:].isdecimal():
+                            repeat_count = int(nt[num + 1:])
+                    repeat_end_ptr = i + 1
+                    for j in range(repeat_count):
+                        ins_ptr = repeat_end_ptr + j * (repeat_end_ptr - repeat_start)
+                        nf[ins_ptr:ins_ptr] = nf[repeat_start:repeat_end_ptr]
+                    break
+        # end of for
+        '''
+        return nf, no_repeat
+
+
+    def _fill_note_data3(nf, no_repeat):
+        # < >*n による同フレーズの展開
+        repeat_start = 0
+        first_bracket = False
+        for i, nt in enumerate(nf):  # <  >*n
+            if '<' in nt:
+                no_repeat = False
+                locate = nt.find('<')
+                if locate == 0:
+                    nf[i] = nt[1:]
+                    repeat_start = i
+                    first_bracket = True
+            elif '>' in nt:
+                repeat_count = 0
+                re_cnt = nt.rfind('>')
+                nf[i] = nt[0:re_cnt]
+                if nt[re_cnt + 1:re_cnt + 2] == '*' and first_bracket is True:
+                    if nt[re_cnt + 2:].isdecimal():
+                        repeat_count = int(nt[re_cnt + 2:])
+                    if repeat_count > 1:
+                        repeat_end_ptr = i + 1
+                        for j in range(repeat_count - 1):
+                            ins_ptr = repeat_end_ptr + j * (repeat_end_ptr - repeat_start)
+                            nf[ins_ptr:ins_ptr] = nf[repeat_start:repeat_end_ptr]
+                break
+        # end of for
+        return nf, no_repeat
+
+    def _fill_note_data4(nf, no_repeat):
+        # d*4 のような同音連打
+        for i, nt in enumerate(nf):
+            if '*' in nt:
+                no_repeat = False
+                locate = nt.find('*')
+                nf[i] = nt[0:locate]
+                repeat_count = 0
+                if nt[locate + 1:].isdecimal():
+                    repeat_count = int(nt[locate + 1:])
+                if repeat_count > 1:
+                    for j in range(repeat_count - 1):
+                        nf.insert(i + 1, nt[0:locate])
+                break
+        # end of for
+        return nf, no_repeat
+
+
+    def _fill_omitted_note_data(note_data):
+        ## ,| 重複による同音指示の補填
+        fill = TextParse._fill_note_data1(note_data)
 
         # スペース削除し、',' 区切りでリスト化
-        note_flow = re.split('[,]', fill1)
+        note_flow = re.split('[,]', fill)
         while '' in note_flow:  # 何も入ってない要素を削除
             note_flow.remove('')
 
@@ -67,74 +149,15 @@ class TextParse:
         no_repeat = False
         while not no_repeat:
             no_repeat = True
-            '''
-            repeat_start = 0
-            for i, nt in enumerate(note_flow):  # |: :n|
-                if ':' in nt:
-                    no_repeat = False
-                    locate = nt.find(':')
-                    if locate == 0:
-                        note_flow[i] = nt[1:]
-                        repeat_start = i
-                    else:
-                        repeat_count = 0
-                        num = nt.rfind(':') - len(nt)
-                        note_flow[i] = nt[0:num]
-                        if num == -1:
-                            repeat_count = 1
-                        else:
-                            if nt[num + 1:].isdecimal():
-                                repeat_count = int(nt[num + 1:])
-                        repeat_end_ptr = i + 1
-                        for j in range(repeat_count):
-                            ins_ptr = repeat_end_ptr + j * (repeat_end_ptr - repeat_start)
-                            note_flow[ins_ptr:ins_ptr] = note_flow[repeat_start:repeat_end_ptr]
-                        break
-            # end of for
-            '''
-            repeat_start = 0
-            first_bracket = False
-            for i, nt in enumerate(note_flow):  # <  >*n
-                if '<' in nt:
-                    no_repeat = False
-                    locate = nt.find('<')
-                    if locate == 0:
-                        note_flow[i] = nt[1:]
-                        repeat_start = i
-                        first_bracket = True
-                elif '>' in nt:
-                    repeat_count = 0
-                    re_cnt = nt.rfind('>')
-                    note_flow[i] = nt[0:re_cnt]
-                    if nt[re_cnt + 1:re_cnt + 2] == '*' and first_bracket is True:
-                        if nt[re_cnt + 2:].isdecimal():
-                            repeat_count = int(nt[re_cnt + 2:])
-                        if repeat_count > 1:
-                            repeat_end_ptr = i + 1
-                            for j in range(repeat_count - 1):
-                                ins_ptr = repeat_end_ptr + j * (repeat_end_ptr - repeat_start)
-                                note_flow[ins_ptr:ins_ptr] = note_flow[repeat_start:repeat_end_ptr]
-                    break
-            # end of for
+            note_flow, no_repeat = TextParse._fill_note_data2(note_flow, no_repeat)
+            note_flow, no_repeat = TextParse._fill_note_data3(note_flow, no_repeat)
         # end of while
 
         # Same note repeat
         no_repeat = False
         while not no_repeat:
             no_repeat = True
-            for i, nt in enumerate(note_flow):
-                if '*' in nt:
-                    no_repeat = False
-                    locate = nt.find('*')
-                    note_flow[i] = nt[0:locate]
-                    repeat_count = 0
-                    if nt[locate + 1:].isdecimal():
-                        repeat_count = int(nt[locate + 1:])
-                    if repeat_count > 1:
-                        for j in range(repeat_count - 1):
-                            note_flow.insert(i + 1, nt[0:locate])
-                    break
-            # end of for
+            note_flow, no_repeat = TextParse._fill_note_data4(note_flow, no_repeat)
         # end of while
 
         return note_flow, len(note_flow)
@@ -309,6 +332,7 @@ class TextParse:
             # [] の数が 1〜3 以外ならエラー
             return None, 0
 
+        # [][][] が三つある状態
         complement = []
         dt, num = TextParse._fill_omitted_note_data(note_info[0])
         complement.append(dt)
