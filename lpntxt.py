@@ -28,6 +28,95 @@ def convert_exp2vel(exp_text):
     return vel
 
 
+def convert_doremiz(doremi, last_pitch):
+    last_note = last_pitch
+    while last_note >= 12:
+        last_note -= 12
+    while last_note < 0:
+        last_note += 12
+
+    if len(doremi) == 0: return nlib.REST
+    oct_pitch = 0
+    while len(doremi) != 0:
+        l0 = doremi[0]
+        if   l0 == 'x': return nlib.REST
+        elif l0 == '+': oct_pitch += 12
+        elif l0 == '-': oct_pitch -= 12
+        else: break
+        doremi = doremi[1:]
+
+    base_note = 0
+    if len(doremi) != 0:
+        l0 = doremi[0]
+        if   l0 == 'd': base_note += 0
+        elif l0 == 'r': base_note += 2
+        elif l0 == 'm': base_note += 4
+        elif l0 == 'f': base_note += 5
+        elif l0 == 's': base_note += 7
+        elif l0 == 'l': base_note += 9
+        elif l0 == 't': base_note += 11
+        else: return nlib.REST
+    else: return nlib.REST
+    doremi = doremi[1:]
+
+    if len(doremi) != 0:
+        l0 = doremi[0]
+        if   l0 == 'i': base_note += 1
+        elif l0 == 'a': base_note -= 1
+
+    base_pitch = 0
+    if oct_pitch == 0:      # +/- が書かれていない場合
+        diff = base_note - last_note
+        if diff < 0: diff += 12
+        if diff > 6:
+            base_pitch = last_pitch+diff-12
+        else:
+            base_pitch = last_pitch+diff     
+
+    elif oct_pitch > 0:     # + 書かれている場合
+        while base_note < last_pitch: base_note += 12
+        if oct_pitch > 12: base_note += (oct_pitch-12)
+        base_pitch = base_note
+
+    else:                   # - 書かれている場合
+        while base_note > last_pitch: base_note -= 12
+        if oct_pitch < -12: base_note -= (oct_pitch+12)
+        base_pitch = base_note
+
+    return base_pitch
+
+
+def convert_doremi(doremi, last_pitch):
+    if len(doremi) == 0: return nlib.REST
+    base_pitch = 0
+    while len(doremi) != 0:
+        l0 = doremi[0]
+        if   l0 == 'x': return nlib.REST
+        elif l0 == '+': base_pitch += 12
+        elif l0 == '-': base_pitch -= 12
+        else: break
+        doremi = doremi[1:]
+
+    if len(doremi) != 0:
+        l0 = doremi[0]
+        if   l0 == 'd': base_pitch += 0
+        elif l0 == 'r': base_pitch += 2
+        elif l0 == 'm': base_pitch += 4
+        elif l0 == 'f': base_pitch += 5
+        elif l0 == 's': base_pitch += 7
+        elif l0 == 'l': base_pitch += 9
+        elif l0 == 't': base_pitch += 11
+        else: return nlib.REST
+    else: return nlib.REST
+    doremi = doremi[1:]
+
+    if len(doremi) != 0:
+        l0 = doremi[0]
+        if   l0 == 'i': base_pitch += 1
+        elif l0 == 'a': base_pitch -= 1
+    return base_pitch
+
+'''
 def convert_doremi(doremi):
     if len(doremi) == 0: return nlib.REST
     base_pitch = 0
@@ -50,14 +139,18 @@ def convert_doremi(doremi):
             solfa = False
         doremi = doremi[1:]
     return base_pitch
+'''
 
+#----------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------
 class TextParse:
 
     def __init__(self):
         pass
 
     #------------------------------------------------------------------------------
-    #   complement data for Phrase
+    #   Phrase の省略されたノートを補填せよ
     def _fill_note_data1(nd):
         # ,| のみの入力による、休符指示の補填
         fill = ''
@@ -69,7 +162,7 @@ class TextParse:
                 fill += doremi + ','
                 doremi = 'x'
                 doremi_end_flag = True
-            elif ltr == '|':
+            elif ltr == '|' or ltr == '/':
                 fill += doremi + '|,'
                 doremi = 'x'
                 doremi_end_flag = True
@@ -189,11 +282,14 @@ class TextParse:
             note_flow, no_repeat = TextParse._fill_note_data4(note_flow, no_repeat)
         # end of while
 
+        # ここで音価表現を抜き出す
         note_flow = TextParse._fill_note_data5(note_flow)
 
         return note_flow, len(note_flow)
 
 
+    #------------------------------------------------------------------------------
+    #   基準音価を変更せよ
     def _change_basic_note_dur(dur_text):
         base_note = 4
         # コロンで設定されている基本音価を調査し、tickに変更
@@ -232,6 +328,8 @@ class TextParse:
         return dur_text, base_note
 
 
+    #------------------------------------------------------------------------------
+    #   省略された duration を戻せ
     def _fill_omitted_dur_data(dur_text, note_num):
         dur_flow = []
         if ',' in dur_text:
@@ -285,6 +383,8 @@ class TextParse:
         return dur_flow
 
 
+    #------------------------------------------------------------------------------
+    #   combine by '+'
     def _attached_to_noteinfo(block, delimiter_str, dur):
         # + で連結された一つ一つの attached_bracket/brace を一つにまとめる
         # dur: ２番目が duration かどうか？
@@ -324,6 +424,8 @@ class TextParse:
         return note_info
 
 
+    #------------------------------------------------------------------------------
+    #   recognize [] set
     def complement_bracket(tx):
         # [] のセットを抜き出し、中身を attached_bracket/note_info に入れる
         num = tx.find('[')
@@ -371,6 +473,7 @@ class TextParse:
         complement.append(TextParse._fill_omitted_dur_data(dur_text, num))
         complement.append(note_info[2])
         return complement, base_note
+
 
     #------------------------------------------------------------------------------
     #   complement data for Composition
@@ -441,29 +544,35 @@ class TextParse:
             return [], []
         return chord_flow_next, exp
 
+    def _has_note_duration(nt):
+        return nt, 1
+
 
     #------------------------------------------------------------------------------
-    #   recombine data
+    #   recombine data: analyse note
     def _add_note(generated, tick, notes, real_dur, velocity=100):
         for note in notes:
             if note != nlib.REST:
                 generated.append(['note', tick, real_dur, note, velocity])  # add real_dur
 
 
-    def _cnv_note_to_pitch(keynote, note_text):
+    def _cnv_note_to_pitch(keynote, note_text, last_note):
         end = False
         if note_text[-1] == '|':   # 小節最後のイベント
             note_text = note_text[0:-1]
             end = True
+        note_text, duration = TextParse._has_note_duration(note_text)
         nlists = note_text.replace(' ', '').split('=')  # 和音検出
         bpchs = []
         for nx in nlists:
-            doremi = convert_doremi(nx)
+            doremi = convert_doremiz(nx, last_note)
             base_pitch = keynote + doremi if doremi != nlib.REST else doremi
             bpchs.append(base_pitch)
-        return bpchs, end
+        return bpchs, end, doremi
 
 
+    #------------------------------------------------------------------------------
+    #   recombine data: analyse duration 
     def _cnv_duration(dur_text):
         if dur_text.isdecimal() is True:
             return int(dur_text)
@@ -484,18 +593,22 @@ class TextParse:
         return vel, exps
 
 
+    #------------------------------------------------------------------------------
+    #   recombine 再構築せよ
     def recombine_to_internal_format(complement, keynote, tick_for_onemsr, base_note):
         if complement is None or len(complement[0]) == 0:
             return 0, [], []
 
         expvel, others = TextParse._cnv_exp(complement[2])
+        last_nt = 5
         tick = 0
         msr = 1
         read_ptr = 0
         rcmb = []
         note_cnt = len(complement[0])
         while read_ptr < note_cnt:
-            notes, mes_end = TextParse._cnv_note_to_pitch(keynote, complement[0][read_ptr])
+            notes, mes_end, nt = TextParse._cnv_note_to_pitch(keynote, complement[0][read_ptr], last_nt)
+            if nt != nlib.REST: last_nt = nt
             dur = TextParse._cnv_duration(complement[1][read_ptr])
             if tick < tick_for_onemsr*msr:
                 real_dur = math.floor(dur * nlib.DEFAULT_TICK_FOR_ONE_MEASURE / base_note) # add line
@@ -509,6 +622,8 @@ class TextParse:
         return tick, rcmb, others
 
 
+    #------------------------------------------------------------------------------
+    #   recombine data for chord
     def recombine_to_chord_loop(complement, tick_for_onemsr, tick_for_onebeat):
         if complement is None or len(complement) == 0:
             return 0, []
@@ -539,6 +654,7 @@ class TextParse:
 
         tick = msr*tick_for_onemsr
         return tick, rcmb
+
 
     #------------------------------------------------------------------------------
     #   translate note
