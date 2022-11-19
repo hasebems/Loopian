@@ -284,101 +284,6 @@ class TextParse:
 
 
     #------------------------------------------------------------------------------
-    #   基準音価を変更せよ
-    def _change_basic_note_dur(dur_text):
-        base_note = 4
-        # コロンで設定されている基本音価を調査し、tickに変更
-        if ':' in dur_text:
-            sp_txt = dur_text.split(':')
-            base_note_text = '4'
-            # 基本音価はコロンの前か後か？
-            if (',' in sp_txt[0]) or ('(' and ')' in sp_txt[1]):
-                dur_text = sp_txt[0]
-                base_note_text = sp_txt[1]
-            elif (',' in sp_txt[1]) or ('(' and ')' in sp_txt[0]):
-                base_note_text = sp_txt[0]
-                dur_text = sp_txt[1]
-            elif sp_txt[0] == '':
-                dur_text = '1'
-                base_note_text = sp_txt[1]
-            elif sp_txt[0].isdecimal() and sp_txt[1].isdecimal() and int(sp_txt[0]) < int(sp_txt[1]):
-                dur_text = sp_txt[0]
-                base_note_text = sp_txt[1]
-            else:
-                base_note_text = sp_txt[0]
-                dur_text = sp_txt[1]
-
-##            if '(' and ')' in base_note_text:
-##                percent = re.findall("(?<=\().+?(?=\))", base_note_text)
-##                if '%' in percent[0]:
-##                    per = percent[0].strip('%')
-##                    if per.isdecimal() is True and int(per) <= 100:
-##                        self.durPer = int(per)  # % の数値
-##                elif percent[0] == 'stacc.':
-##                    self.durPer = 50
-            dur_len = re.sub("\(.+?\)", "", base_note_text)
-            if dur_len.isdecimal() is True:
-                base_note = int(dur_len)
-
-        return dur_text, base_note
-
-
-    #------------------------------------------------------------------------------
-    #   省略された duration を戻せ
-    def _fill_omitted_dur_data(dur_text, note_num):
-        dur_flow = []
-        if ',' in dur_text:
-            dur_flow = re.split('[,|]', dur_text.replace(' ', ''))
-        else:
-            # ','が無い場合、全体を一つの文字列にし、リストとして追加
-            dur_flow.append(dur_text)
-
-        no_repeat = False
-        while not no_repeat:
-            no_repeat = True
-            repeat_start = 0
-            first_bracket = False
-            for i, dur in enumerate(dur_flow):  # <  >*n
-                if '<' in dur:
-                    no_repeat = False
-                    locate = dur.find('<')
-                    if locate == 0:
-                        dur_flow[i] = dur[1:]
-                        repeat_start = i
-                        first_bracket = True
-                elif '>' in dur:
-                    re_cnt = dur.rfind('>')
-                    dur_flow[i] = dur[0:re_cnt]
-                    if dur[re_cnt + 1:re_cnt + 2] == '*' and first_bracket is True:
-                        repeat_count = 0
-                        if dur[re_cnt + 2:].isdecimal():
-                            repeat_count = int(dur[re_cnt + 2:])
-                        if repeat_count > 1:
-                            repeat_end_ptr = i + 1
-                            for j in range(repeat_count - 1):
-                                ins_ptr = repeat_end_ptr + j * (repeat_end_ptr - repeat_start)
-                                dur_flow[ins_ptr:ins_ptr] = dur_flow[repeat_start:repeat_end_ptr]
-                    elif i + 1 == len(dur_flow) and first_bracket is True:
-                        cntr = 0
-                        while True:
-                            dur_flow.append(dur_flow[repeat_start + cntr])
-                            cntr += 1
-                            if note_num <= len(dur_flow):
-                                break
-                    break
-            # end of for
-        # end of while
-
-        dur_num = len(dur_flow)
-        if dur_num < note_num:
-            for _ in range(note_num - dur_num):
-                dur_flow.append(dur_flow[dur_num - 1])  # 足りない要素を補填
-        elif dur_num > note_num:
-            del dur_flow[note_num:]  # 多い要素を削除
-        return dur_flow
-
-
-    #------------------------------------------------------------------------------
     #   combine by '+'
     def _attached_to_noteinfo(block, delimiter_str, dur):
         # + で連結された一つ一つの attached_bracket/brace を一つにまとめる
@@ -452,21 +357,17 @@ class TextParse:
         # [] の数が 1,2 の時は中身を補填
         bracket_num = len(note_info)
         if bracket_num == 1:
-            note_info.append('1')   # set default value
             note_info.append('raw') # set default exp. value
-        elif bracket_num == 2:
-            note_info.append('raw') # set default exp. value
-        elif bracket_num == 0 or bracket_num > 3:
-            # [] の数が 1〜3 以外ならエラー
+        elif bracket_num == 0 or bracket_num > 2:
+            # [] の数が 1〜2 以外ならエラー
             return None, 0
 
-        # [][][] が三つある状態
+        # 戻り値の生成
         complement = []
+        base_note = 4
         dt, num = TextParse._fill_omitted_note_data(note_info[0])
         complement.append(dt)
-        dur_text, base_note = TextParse._change_basic_note_dur(note_info[1])
-        complement.append(TextParse._fill_omitted_dur_data(dur_text, num))
-        complement.append(note_info[2])
+        complement.append(note_info[1])
         return complement, base_note
 
 
@@ -542,23 +443,19 @@ class TextParse:
 
     #------------------------------------------------------------------------------
     #   recombine data: カンマで区切られた単位の階名テキスト解析
-    def _add_note_duration(nt):
+    def _add_dur_info(nt):
+        dur = 1
         if len(nt) > 0 and nt[-1] == 'o':
-            nt = nt[0:-1] + ':F'    # note の後ろに :F をつけると小節残り全部
+            nt = nt[0:-1]
+            dur = nlib.FULL
         else:
-            length = 1
             ext_str = nt
             while len(ext_str) > 0 and (ext_str[-1] == '.' or ext_str[-1] == '~'):
-                length += 1
-                ext_str = ext_str[0:-1] if len(ext_str) > 0 else ''
-            nt = ext_str + ':' + str(length)    # 音価 :n 
-        return nt
-
-
-    def _add_note(generated, tick, notes, real_dur, velocity=100):
-        for note in notes:
-            if note != nlib.REST:
-                generated.append(['note', tick, real_dur, note, velocity])  # add real_dur
+                dur += 1
+                ext_str = ext_str[0:-1]
+            if len(ext_str) == 0: dur -= 1  # '.~' しか存在しなかった
+            nt = ext_str 
+        return nt, dur
 
 
     def _cnv_note_to_pitch(keynote, note_text, last_note):
@@ -566,25 +463,18 @@ class TextParse:
         if note_text[-1] == '|':   # 小節最後のイベント
             note_text = note_text[0:-1]
             end = True
-        note_text = TextParse._add_note_duration(note_text)
+        note_text, dur = TextParse._add_dur_info(note_text)
         nlists = note_text.replace(' ', '').split('=')  # 和音検出
         bpchs = []
         for nx in nlists:
             doremi = convert_doremi(nx, last_note)
             base_pitch = keynote + doremi if doremi != nlib.NO_NOTE else doremi
             bpchs.append(base_pitch)
-        return bpchs, end, doremi
+        return bpchs, end, dur, doremi
 
 
     #------------------------------------------------------------------------------
-    #   recombine data: duration テキスト解析
-    def _cnv_duration(dur_text):
-        if dur_text.isdecimal() is True:
-            return int(dur_text)
-        else:
-            return 1
-
-
+    #   recombine: Phrase を内部フォーマットに再構築せよ
     def _cnv_exp(dur_text):
         splited_txt = dur_text.replace(' ', '').split(',')
         exps = []
@@ -598,26 +488,48 @@ class TextParse:
         return vel, exps
 
 
-    #------------------------------------------------------------------------------
-    #   recombine 内部フォーマットに再構築せよ
+    def _add_note(generated, tick, notes, real_dur, velocity=100):
+        if len(notes) != 0:
+            for note in notes:
+                if note == nlib.REST:
+                    print('error')
+                elif note == nlib.NO_NOTE:  # '=' による和音入力時
+                    same_tick = generated[-1][1]
+                    cnt = 0
+                    while True:
+                        if len(generated) <= cnt: break
+                        cnt += 1
+                        if generated[-cnt][1] == same_tick:
+                            generated[-cnt][2] += real_dur
+                        else: break
+                else:
+                    generated.append(['note', tick, real_dur, note, velocity])  # add real_dur
+        else:
+            print('error!')
+
+
     def recombine_to_internal_format(complement, keynote, tick_for_onemsr, base_note):
         if complement is None or len(complement[0]) == 0:
             return 0, [], []
 
-        expvel, others = TextParse._cnv_exp(complement[2])
-        last_nt = 5
+        expvel, others = TextParse._cnv_exp(complement[1])
+        last_nt = 5 # d-t が同じオクターブで始まる値
         tick = 0
         msr = 1
         read_ptr = 0
         rcmb = []
         note_cnt = len(complement[0])
         while read_ptr < note_cnt:
+            notes, mes_end, dur, nt = TextParse._cnv_note_to_pitch(keynote, complement[0][read_ptr], last_nt)
             if nt != nlib.NO_NOTE: last_nt = nt    # 次回の音程の上下判断のため
             if tick < tick_for_onemsr*msr:
-                real_dur = math.floor(dur * nlib.DEFAULT_TICK_FOR_ONE_MEASURE / base_note) # add line
+                if dur == nlib.FULL:   # o があった場合
+                    real_dur = tick_for_onemsr*msr-tick
+                else:
+                    real_dur = math.floor(dur * nlib.DEFAULT_TICK_FOR_ONE_MEASURE / base_note)
                 TextParse._add_note(rcmb, tick, notes, real_dur, expvel)
                 tick += real_dur #int(dur * nlib.DEFAULT_TICK_FOR_ONE_MEASURE / base_note)
-            if mes_end:
+            if mes_end:     # 小節線があった場合
                 tick = msr*tick_for_onemsr
                 msr += 1
             read_ptr += 1  # out from repeat
@@ -626,7 +538,7 @@ class TextParse:
 
 
     #------------------------------------------------------------------------------
-    #   recombine data for chord
+    #   recombine: chord データを内部データに再構築せよ
     def recombine_to_chord_loop(complement, tick_for_onemsr, tick_for_onebeat):
         if complement is None or len(complement) == 0:
             return 0, []
