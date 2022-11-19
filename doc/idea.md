@@ -144,9 +144,16 @@ SeqDataAllStock <-- SeqStack
 - Audio MIDI -> オーディオ装置 -> 「複数出力装置」選択 -> マスター装置: BlackHole 2ch
 - iMovieに入れるが、YouTubeではなく、ファイル出力指定にする
 - 紹介文
-Loopian is a looping real-time sequencer that specifies notes by text.
-It is primarily designed to control Piano tones.
-It is being developed for use in Live Coding-like real-time text input to generate music, loop-based phrase transformations in real-time for performance, interactive art, etc.
-- Loopian は、テキストで音符を指定するループ型のリアルタイムシーケンサです。
-主に Piano 音色を操作するための機能を備えています。
-Live Coding 風にリアルタイムにテキストを入力して音楽を生成したり、ループベースのフレーズをリアルタイムに変容させるパフォーマンスやインタラクティブアートなどに使用することを念頭に開発中。
+Loopian is a real-time loop sequencer that describes notes by text.
+It is designed to be played primarily in Piano tones.
+Usages:
+    - Generating music by entering text in real-time in the style of Live Coding
+    - Loop-based phrase transformations in real-time for performance, interactive art, etc.
+    - Solmization practice in music education with movable-do
+
+Loopian は、テキストで音符を指定するリアルタイムループシーケンサです。
+主に Piano 音色で演奏されることを前提に開発しています。
+使用用途：
+    - Live Coding 風にリアルタイムにテキストを入力して音楽を生成
+    - ループベースのフレーズをリアルタイムに変容させるパフォーマンス、インタラクティブアートなどへの応用
+    - 音楽教育における、移動ドによるソルミゼーション実践
