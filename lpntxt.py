@@ -28,7 +28,7 @@ def convert_exp2vel(exp_text):
     return vel
 
 
-def convert_doremiz(doremi, last_pitch):
+def convert_doremi_2(doremi, last_pitch):
     last_note = last_pitch
     while last_note >= 12:
         last_note -= 12
@@ -86,7 +86,7 @@ def convert_doremiz(doremi, last_pitch):
     return base_pitch
 
 
-def convert_doremi(doremi, last_pitch):
+def convert_doremi_1(doremi, last_pitch):
     if len(doremi) == 0: return nlib.REST
     base_pitch = 0
     while len(doremi) != 0:
@@ -116,8 +116,8 @@ def convert_doremi(doremi, last_pitch):
         elif l0 == 'a': base_pitch -= 1
     return base_pitch
 
-'''
-def convert_doremi(doremi):
+
+def convert_doremi_0(doremi):
     if len(doremi) == 0: return nlib.REST
     base_pitch = 0
     solfa = True
@@ -139,7 +139,11 @@ def convert_doremi(doremi):
             solfa = False
         doremi = doremi[1:]
     return base_pitch
-'''
+
+
+def convert_doremi(doremi, last_pitch):
+    return convert_doremi_2(doremi, last_pitch)
+
 
 #----------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------
@@ -252,12 +256,6 @@ class TextParse:
         return nf, no_repeat
 
 
-    def _fill_note_data5(note_data):
-
-
-        return note_data
-
-
     def _fill_omitted_note_data(note_data):
         ## ,| 重複による同音指示の補填
         fill = TextParse._fill_note_data1(note_data)
@@ -281,9 +279,6 @@ class TextParse:
             no_repeat = True
             note_flow, no_repeat = TextParse._fill_note_data4(note_flow, no_repeat)
         # end of while
-
-        # ここで音価表現を抜き出す
-        note_flow = TextParse._fill_note_data5(note_flow)
 
         return note_flow, len(note_flow)
 
@@ -544,12 +539,22 @@ class TextParse:
             return [], []
         return chord_flow_next, exp
 
-    def _has_note_duration(nt):
-        return nt, 1
-
 
     #------------------------------------------------------------------------------
-    #   recombine data: analyse note
+    #   recombine data: カンマで区切られた単位の階名テキスト解析
+    def _add_note_duration(nt):
+        if len(nt) > 0 and nt[-1] == 'o':
+            nt = nt[0:-1] + ':F'    # note の後ろに :F をつけると小節残り全部
+        else:
+            length = 1
+            ext_str = nt
+            while len(ext_str) > 0 and (ext_str[-1] == '.' or ext_str[-1] == '~'):
+                length += 1
+                ext_str = ext_str[0:-1] if len(ext_str) > 0 else ''
+            nt = ext_str + ':' + str(length)    # 音価 :n 
+        return nt
+
+
     def _add_note(generated, tick, notes, real_dur, velocity=100):
         for note in notes:
             if note != nlib.REST:
@@ -561,18 +566,18 @@ class TextParse:
         if note_text[-1] == '|':   # 小節最後のイベント
             note_text = note_text[0:-1]
             end = True
-        note_text, duration = TextParse._has_note_duration(note_text)
+        note_text = TextParse._add_note_duration(note_text)
         nlists = note_text.replace(' ', '').split('=')  # 和音検出
         bpchs = []
         for nx in nlists:
-            doremi = convert_doremiz(nx, last_note)
+            doremi = convert_doremi(nx, last_note)
             base_pitch = keynote + doremi if doremi != nlib.REST else doremi
             bpchs.append(base_pitch)
         return bpchs, end, doremi
 
 
     #------------------------------------------------------------------------------
-    #   recombine data: analyse duration 
+    #   recombine data: duration テキスト解析
     def _cnv_duration(dur_text):
         if dur_text.isdecimal() is True:
             return int(dur_text)
@@ -594,7 +599,7 @@ class TextParse:
 
 
     #------------------------------------------------------------------------------
-    #   recombine 再構築せよ
+    #   recombine 内部フォーマットに再構築せよ
     def recombine_to_internal_format(complement, keynote, tick_for_onemsr, base_note):
         if complement is None or len(complement[0]) == 0:
             return 0, [], []
