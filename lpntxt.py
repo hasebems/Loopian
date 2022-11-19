@@ -28,7 +28,7 @@ def convert_exp2vel(exp_text):
     return vel
 
 
-def convert_doremi_2(doremi, last_pitch):
+def convert_doremi_closer(doremi, last_pitch):
     last_note = last_pitch
     while last_note >= 12:
         last_note -= 12
@@ -86,7 +86,7 @@ def convert_doremi_2(doremi, last_pitch):
     return base_pitch
 
 
-def convert_doremi_1(doremi, last_pitch):
+def convert_doremi_fixed(doremi):
     if len(doremi) == 0: return nlib.NO_NOTE
     base_pitch = 0
     while len(doremi) != 0:
@@ -140,9 +140,6 @@ def convert_doremi_0(doremi):
         doremi = doremi[1:]
     return base_pitch
 
-
-def convert_doremi(doremi, last_pitch):
-    return convert_doremi_2(doremi, last_pitch)
 
 
 #----------------------------------------------------------------------------------
@@ -449,7 +446,13 @@ class TextParse:
         return nt, dur
 
 
-    def _cnv_note_to_pitch(keynote, note_text, last_note):
+    def _cnv_note_to_pitch(keynote, note_text, last_note, input_mode):
+        def convert_doremi(nx, last_note):
+            if input_mode == nlib.INPUT_CLOSER:
+                return convert_doremi_closer(nx, last_note)
+            else: # input_mode == nlib.INPUT_FIXED:
+                return convert_doremi_fixed(nx)
+
         end = False
         if note_text[-1] == '|':   # 小節最後のイベント
             note_text = note_text[0:-1]
@@ -499,7 +502,7 @@ class TextParse:
             print('error!')
 
 
-    def recombine_to_internal_format(complement, keynote, tick_for_onemsr, base_note):
+    def recombine_to_internal_format(complement, keynote, tick_for_onemsr, base_note, imd):
         if complement is None or len(complement[0]) == 0:
             return 0, [], []
 
@@ -511,7 +514,8 @@ class TextParse:
         rcmb = []
         note_cnt = len(complement[0])
         while read_ptr < note_cnt:
-            notes, mes_end, dur, nt = TextParse._cnv_note_to_pitch(keynote, complement[0][read_ptr], last_nt)
+            notes, mes_end, dur, nt = \
+                TextParse._cnv_note_to_pitch(keynote, complement[0][read_ptr], last_nt, imd)
             if nt != nlib.NO_NOTE: last_nt = nt    # 次回の音程の上下判断のため
             if tick < tick_for_onemsr*msr:
                 if dur == nlib.FULL:   # o があった場合

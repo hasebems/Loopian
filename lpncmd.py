@@ -193,6 +193,16 @@ class Parsing:
                 self.print_dialogue("BPM has changed!")
             else:
                 self.print_dialogue("what?")
+        elif command == 'input':
+            input_list = tx[1].strip()
+            if input_list == 'fixed':
+                self.gendt.set_input_mode(nlib.INPUT_FIXED)
+                self.print_dialogue("Input has changed!")
+            elif input_list == 'closer':
+                self.gendt.set_input_mode(nlib.INPUT_CLOSER)
+                self.print_dialogue("Input has changed!")
+            else:
+                self.print_dialogue("what?")
         else:
             self.print_dialogue("what?")
 

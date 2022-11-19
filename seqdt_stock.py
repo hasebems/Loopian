@@ -108,7 +108,7 @@ class PhraseDataStock:
         return PhraseDataStock._arp_translation(beat_analysis, option)
 
 
-    def set_raw(self, text):
+    def set_raw(self, text, imd):
         # 1. raw
         if text[0] == '+' and self.raw != None:
             self.raw += text
@@ -124,11 +124,11 @@ class PhraseDataStock:
             return False
 
         # 3-5.recombined data
-        self.set_recombined()
+        self.set_recombined(imd)
 
         return True
 
-    def set_recombined(self):
+    def set_recombined(self, imd):
         # Next measure information
         next_tick_for_onemsr = self.seq.stock_tick_for_onemsr[0]
         next_bpm = self.seq.bpm_stock
@@ -136,7 +136,7 @@ class PhraseDataStock:
         # 3.recombined data
         self.whole_tick, self.generated, self.exps = \
             tx.TextParse.recombine_to_internal_format( \
-                self.complement, self.part.base_note, next_tick_for_onemsr, self.note_value)
+                self.complement, self.part.base_note, next_tick_for_onemsr, self.note_value, imd)
         print('recombined:',self.generated)
 
         # 4.analysed data
@@ -274,6 +274,7 @@ class SeqDataAllStock:
     def __init__(self, seq):
         self.composition_part = []
         self.part_data = []
+        self.input_mode = nlib.INPUT_CLOSER
         self.seq = seq
 
         # Composition Part
@@ -289,10 +290,12 @@ class SeqDataAllStock:
         # Damper Pedal Part
         self.damper_part = DamperPartStock(seq.get_part(nlib.DAMPER_PEDAL_PART), seq)
 
+    def set_input_mode(self, md):
+        self.input_mode = md
 
     def set_raw_phrase(self, part, text):
         if part >= nlib.MAX_NORMAL_PART: return False
-        return self.part_data[part].set_raw(text)
+        return self.part_data[part].set_raw(text, self.input_mode)
 
     def set_raw_composition(self, part, text):
         if part >= nlib.MAX_COMPOSITION_PART: return False
@@ -302,5 +305,5 @@ class SeqDataAllStock:
         for cpart in self.composition_part:
             cpart.set_recombined()
         for part in self.part_data:
-            part.set_recombined()
+            part.set_recombined(self.input_mode)
         self.damper_part.set_recombined()

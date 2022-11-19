@@ -3,6 +3,9 @@ import os
 import datetime
 import random
 
+#=====================
+# numbers
+#=====================
 REST = 1000
 NO_NOTE = 1001
 FULL = 10000
@@ -14,6 +17,15 @@ MIDI_OUTPUT_PORT_NAME = 'IAC Driver WebMIDI'
 DEFAULT_BPM = 100
 DEFAULT_NOTE_NUMBER = 60    # C4
 
+DEFAULT_VEL = 100
+
+# Input mode
+INPUT_FIXED = 0
+INPUT_CLOSER = 1
+
+#=====================
+# part number
+#=====================
 MAX_LEFT_PART = 2
 MAX_RIGHT_PART = 2
 MAX_PART = MAX_LEFT_PART+MAX_RIGHT_PART
@@ -26,9 +38,6 @@ MAX_NORMAL_PART = MAX_PART          # Composition と対応
 
 DAMPER_PEDAL_PART = MAX_COMPOSITION_PART+MAX_NORMAL_PART
 MAX_PART_COUNT = MAX_COMPOSITION_PART+MAX_NORMAL_PART+1
-
-DEFAULT_VEL = 100
-
 
 #=====================
 # seq data index (seqdt)
