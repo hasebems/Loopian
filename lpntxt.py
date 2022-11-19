@@ -285,9 +285,8 @@ class TextParse:
 
     #------------------------------------------------------------------------------
     #   combine by '+'
-    def _attached_to_noteinfo(block, delimiter_str, dur):
+    def _attached_to_noteinfo(block, delimiter_str):
         # + で連結された一つ一つの attached_bracket/brace を一つにまとめる
-        # dur: ２番目が duration かどうか？
         note_info = []
         total_block = len(block)    # + で繋がれた data block 数
         total_ninfo = len(block[0]) # 最初の raw データ内の [] の数に合わせる
@@ -299,20 +298,8 @@ class TextParse:
             dtstr += delimiter + block[i][0]
         note_info.append(dtstr)
 
-        # duration
-        if total_ninfo >= 2 and dur:
-            dtstr = block[0][1]
-            dtstr_list = dtstr.split(':')
-            durstr = dtstr_list[0]
-            for i in range(1,total_block):
-                if len(block[i]) >= 2:
-                    durstr += ',' + block[i][1].split(':')[0]
-            durstr += ':' + dtstr_list[1]
-            note_info.append(durstr)
-
         # exp.
-        exp_index = 2           # brace
-        if dur: exp_index = 3   # bracket
+        exp_index = 2
         if total_ninfo >= exp_index:
             exstr = ''
             for i in range(total_block):
@@ -352,19 +339,23 @@ class TextParse:
         # 連結データ(attached_block)があった時の処理
         if attached_bracket and note_info:
             attached_bracket.append(note_info) # 最後の note_info を追加
-            note_info = TextParse._attached_to_noteinfo(attached_bracket, '|', True)
+            note_info = TextParse._attached_to_noteinfo(attached_bracket, '|')
 
-        # [] の数が 1,2 の時は中身を補填
+        # [] の数が 1 の時は中身を補填
         bracket_num = len(note_info)
         if bracket_num == 1:
             note_info.append('raw') # set default exp. value
-        elif bracket_num == 0 or bracket_num > 2:
-            # [] の数が 1〜2 以外ならエラー
+        elif bracket_num == 0 or bracket_num > 1:
+            # [] の数が 1 以外ならエラー
             return None, 0
 
         # 戻り値の生成
         complement = []
         base_note = 4
+        num = note_info[0].find(':')
+        if num != -1 and note_info[0][0:num].isdecimal():
+            base_note = int(note_info[0][0:num])
+            note_info[0] = note_info[0][num+1:]
         dt, num = TextParse._fill_omitted_note_data(note_info[0])
         complement.append(dt)
         complement.append(note_info[1])
@@ -429,7 +420,7 @@ class TextParse:
         # 連結データ(attached_block)があった時の処理
         if attached_brace and note_info:
             attached_brace.append(note_info) # 最後の note_info を追加
-            note_info = TextParse._attached_to_noteinfo(attached_brace, '|', False)
+            note_info = TextParse._attached_to_noteinfo(attached_brace, '|')
 
         exp = []
         if len(note_info) != 0:
@@ -442,7 +433,7 @@ class TextParse:
 
 
     #------------------------------------------------------------------------------
-    #   recombine data: カンマで区切られた単位の階名テキスト解析
+    #   recombine data: カンマで区切られた階名単位のテキストを解析せよ
     def _add_dur_info(nt):
         dur = 1
         if len(nt) > 0 and nt[-1] == 'o':
