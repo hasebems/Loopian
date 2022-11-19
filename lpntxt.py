@@ -35,11 +35,11 @@ def convert_doremi_2(doremi, last_pitch):
     while last_note < 0:
         last_note += 12
 
-    if len(doremi) == 0: return nlib.REST
+    if len(doremi) == 0: return nlib.NO_NOTE
     oct_pitch = 0
     while len(doremi) != 0:
         l0 = doremi[0]
-        if   l0 == 'x': return nlib.REST
+        if   l0 == 'x': return nlib.NO_NOTE
         elif l0 == '+': oct_pitch += 12
         elif l0 == '-': oct_pitch -= 12
         else: break
@@ -55,8 +55,8 @@ def convert_doremi_2(doremi, last_pitch):
         elif l0 == 's': base_note += 7
         elif l0 == 'l': base_note += 9
         elif l0 == 't': base_note += 11
-        else: return nlib.REST
-    else: return nlib.REST
+        else: return nlib.NO_NOTE
+    else: return nlib.NO_NOTE
     doremi = doremi[1:]
 
     if len(doremi) != 0:
@@ -87,11 +87,11 @@ def convert_doremi_2(doremi, last_pitch):
 
 
 def convert_doremi_1(doremi, last_pitch):
-    if len(doremi) == 0: return nlib.REST
+    if len(doremi) == 0: return nlib.NO_NOTE
     base_pitch = 0
     while len(doremi) != 0:
         l0 = doremi[0]
-        if   l0 == 'x': return nlib.REST
+        if   l0 == 'x': return nlib.NO_NOTE
         elif l0 == '+': base_pitch += 12
         elif l0 == '-': base_pitch -= 12
         else: break
@@ -106,8 +106,8 @@ def convert_doremi_1(doremi, last_pitch):
         elif l0 == 's': base_pitch += 7
         elif l0 == 'l': base_pitch += 9
         elif l0 == 't': base_pitch += 11
-        else: return nlib.REST
-    else: return nlib.REST
+        else: return nlib.NO_NOTE
+    else: return nlib.NO_NOTE
     doremi = doremi[1:]
 
     if len(doremi) != 0:
@@ -118,12 +118,12 @@ def convert_doremi_1(doremi, last_pitch):
 
 
 def convert_doremi_0(doremi):
-    if len(doremi) == 0: return nlib.REST
+    if len(doremi) == 0: return nlib.NO_NOTE
     base_pitch = 0
     solfa = True
     while len(doremi) != 0:
         l0 = doremi[0]
-        if   l0 == 'x': return nlib.REST
+        if   l0 == 'x': return nlib.NO_NOTE
         elif l0 == 'i': return base_pitch+1
         elif l0 == 'a': return base_pitch-1
         elif l0 == '+': base_pitch += 12
@@ -571,7 +571,7 @@ class TextParse:
         bpchs = []
         for nx in nlists:
             doremi = convert_doremi(nx, last_note)
-            base_pitch = keynote + doremi if doremi != nlib.REST else doremi
+            base_pitch = keynote + doremi if doremi != nlib.NO_NOTE else doremi
             bpchs.append(base_pitch)
         return bpchs, end, doremi
 
@@ -612,9 +612,7 @@ class TextParse:
         rcmb = []
         note_cnt = len(complement[0])
         while read_ptr < note_cnt:
-            notes, mes_end, nt = TextParse._cnv_note_to_pitch(keynote, complement[0][read_ptr], last_nt)
-            if nt != nlib.REST: last_nt = nt
-            dur = TextParse._cnv_duration(complement[1][read_ptr])
+            if nt != nlib.NO_NOTE: last_nt = nt    # 次回の音程の上下判断のため
             if tick < tick_for_onemsr*msr:
                 real_dur = math.floor(dur * nlib.DEFAULT_TICK_FOR_ONE_MEASURE / base_note) # add line
                 TextParse._add_note(rcmb, tick, notes, real_dur, expvel)
