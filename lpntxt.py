@@ -371,7 +371,7 @@ class TextParse:
             if ltr == ',':
                 fill1 += doremi + ','
                 doremi_end_flag = True
-            elif ltr == '|':
+            elif ltr == '|' or ltr == '/':
                 fill1 += doremi + '|,'
                 #doremi = ''
                 doremi_end_flag = True
