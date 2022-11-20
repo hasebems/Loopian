@@ -54,6 +54,9 @@ class Note(ep.ElapseIF):
         if self.during_noteon:
             self._note_off()
 
+    def fine(self):
+        if self.during_noteon:
+            self._note_off()
 
 #------------------------------------------------------------------------------
 #   ペダルの ElapseIF Obj.
@@ -99,5 +102,9 @@ class Damper(ep.ElapseIF):
         return self.destroy
 
     def stop(self):
+        if self.during_pedal:
+            self._pedal_off()
+
+    def fine(self):
         if self.during_pedal:
             self._pedal_off()
