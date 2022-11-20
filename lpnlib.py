@@ -6,6 +6,7 @@ import random
 #=====================
 # numbers
 #=====================
+MAX_NOTE_NUM = 127
 REST = 1000
 NO_NOTE = 1001
 FULL = 10000
@@ -124,7 +125,7 @@ def search_scale_nt_just_below(root, tbl, nt):
         octave += 1
         scale_nt = root + octave*12
 
-    scale_nt = 127
+    scale_nt = MAX_NOTE_NUM
     octave -= 1
     cnt = len(tbl)
     while nt < scale_nt:    # Table index 判定

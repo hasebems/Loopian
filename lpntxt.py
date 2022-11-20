@@ -39,7 +39,7 @@ def convert_doremi_closer(doremi, last_pitch):
     oct_pitch = 0
     while len(doremi) != 0:
         l0 = doremi[0]
-        if   l0 == 'x': return nlib.NO_NOTE
+        if   l0 == 'x': return nlib.REST
         elif l0 == '+': oct_pitch += 12
         elif l0 == '-': oct_pitch -= 12
         else: break
@@ -91,7 +91,7 @@ def convert_doremi_fixed(doremi):
     base_pitch = 0
     while len(doremi) != 0:
         l0 = doremi[0]
-        if   l0 == 'x': return nlib.NO_NOTE
+        if   l0 == 'x': return nlib.REST
         elif l0 == '+': base_pitch += 12
         elif l0 == '-': base_pitch -= 12
         else: break
@@ -123,7 +123,7 @@ def convert_doremi_0(doremi):
     solfa = True
     while len(doremi) != 0:
         l0 = doremi[0]
-        if   l0 == 'x': return nlib.NO_NOTE
+        if   l0 == 'x': return nlib.REST
         elif l0 == 'i': return base_pitch+1
         elif l0 == 'a': return base_pitch-1
         elif l0 == '+': base_pitch += 12
@@ -462,7 +462,7 @@ class TextParse:
         bpchs = []
         for nx in nlists:
             doremi = convert_doremi(nx, last_note)
-            base_pitch = keynote + doremi if doremi != nlib.NO_NOTE else doremi
+            base_pitch = keynote + doremi if doremi <= nlib.MAX_NOTE_NUM else doremi
             bpchs.append(base_pitch)
         return bpchs, end, dur, doremi
 
@@ -486,8 +486,10 @@ class TextParse:
         if len(notes) != 0:
             for note in notes:
                 if note == nlib.REST:
-                    print('error')
-                elif note == nlib.NO_NOTE:  # '=' による和音入力時
+                    continue
+                elif note == nlib.NO_NOTE:
+                    if len(generated) == 0: continue
+                    # 前の入力が '=' による和音入力だった場合も考え、直前の同じタイミングのデータを全て調べる
                     same_tick = generated[-1][1]
                     cnt = 0
                     while True:
@@ -516,7 +518,7 @@ class TextParse:
         while read_ptr < note_cnt:
             notes, mes_end, dur, nt = \
                 TextParse._cnv_note_to_pitch(keynote, complement[0][read_ptr], last_nt, imd)
-            if nt != nlib.NO_NOTE: last_nt = nt    # 次回の音程の上下判断のため
+            if nt <= nlib.MAX_NOTE_NUM: last_nt = nt    # 次回の音程の上下判断のため
             if tick < tick_for_onemsr*msr:
                 if dur == nlib.FULL:   # o があった場合
                     real_dur = tick_for_onemsr*msr-tick
