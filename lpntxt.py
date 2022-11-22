@@ -342,17 +342,19 @@ class TextParse:
         bracket_num = len(note_info)
         if bracket_num == 1:
             note_info.append('raw') # set default exp. value
-        elif bracket_num == 0 or bracket_num > 1:
-            # [] の数が 1 以外ならエラー
+        elif bracket_num == 0 or bracket_num > 2:
+            # [] の数が 1,2 以外ならエラー
             return None, 0
 
-        # 戻り値の生成
+        # 基準音価の確認と設定
         complement = []
         base_note = 4
         num = note_info[0].find(':')
         if num != -1 and note_info[0][0:num].isdecimal():
             base_note = int(note_info[0][0:num])
             note_info[0] = note_info[0][num+1:]
+
+        # 戻り値の生成
         dt, num = TextParse._fill_omitted_note_data(note_info[0])
         complement.append(dt)
         complement.append(note_info[1])
