@@ -172,9 +172,9 @@ class PhraseDataStock:
 #   Damper の入力テキストの変換
 class DamperPartStock:
 
-    def __init__(self, objs, seq):
+    def __init__(self, pt, seq):
         self.seq = seq
-        self.part = objs
+        self.part = pt
         self.part.set_seqdt_part(self)
         self.part.update_phrase()    # always
         self.tick_for_onemsr = nlib.DEFAULT_TICK_FOR_ONE_MEASURE
@@ -190,29 +190,37 @@ class DamperPartStock:
         
         # 全 Composition Part の Chord 情報を収集、マージ、ソートする
         tick_change_point = []
-        for i in range(nlib.FIRST_COMPOSITION_PART,nlib.MAX_COMPOSITION_PART):
+        CHK_MARGIN = 40
+        for i in range(nlib.FIRST_COMPOSITION_PART,
+                       nlib.FIRST_COMPOSITION_PART+nlib.MAX_COMPOSITION_PART):
             pt = self.seq.get_part(i)
             if pt.loop_obj == None: continue
+
             cmpdt = pt.loop_obj.cmp
-            search_tick = round(pt.loop_obj.elapsed_tick) - 40
+            #search_tick = round(pt.loop_obj.elapsed_tick) - CHK_MARGIN
             for dt in cmpdt:
+                tick_change_point.append(CHK_MARGIN)    # 小節冒頭には必ずイベントを発生させる
                 tick = dt[nlib.TICK]
-                if search_tick < tick and tick < search_tick + self.tick_for_onemsr:
-                    tick = (tick + 40)%self.tick_for_onemsr
+                #if search_tick < tick and tick < search_tick + self.tick_for_onemsr:
+                if 0 <= tick and tick < self.tick_for_onemsr:
+                    # コードイベントの CHK_MARGIN 後ろの tick を記録
+                    tick = (tick + CHK_MARGIN)%self.tick_for_onemsr
                     tick_change_point.append(tick)
-        tick_change_point = list(set(tick_change_point))
+        tick_change_point = list(set(tick_change_point)) # 重複した要素を排除して並び替え
         tick_change_point.sort()
 
         # Chord 変化情報から Pedal 情報を生成
-        gendt = []
+        gendt = []                         
         for i in range(len(tick_change_point)):
-            ont = tick_change_point[i]
-            if i+1 < len(tick_change_point):
-                oft = tick_change_point[i+1] - 20
+            ont = tick_change_point[i]                  # On Event
+            if i==0 and len(tick_change_point) == 1:    # Off Event
+                oft = self.tick_for_onemsr - (CHK_MARGIN//2)
+            elif i+1 < len(tick_change_point):
+                oft = tick_change_point[i+1] - (CHK_MARGIN//2)
             else:
-                oft = self.tick_for_onemsr - 20
+                oft = self.tick_for_onemsr - (CHK_MARGIN//2)    
             gendt.append(['damper',ont,oft,127])
-        print("Pedal Ddata: ", gendt)
+        print("Pedal Event: ", gendt)
 
         return self.tick_for_onemsr, gendt, None
 
@@ -272,38 +280,38 @@ class CompositionPartStock:
 class SeqDataAllStock:
 
     def __init__(self, seq):
-        self.composition_part = []
-        self.part_data = []
+        self.composition_part_data = []
+        self.phrase_part_data = []
         self.input_mode = nlib.INPUT_CLOSER
         self.seq = seq
 
         # Composition Part
-        for i in range(nlib.MAX_NORMAL_PART):
+        for i in range(nlib.MAX_COMPOSITION_PART):
             pdt = CompositionPartStock(seq.get_part(i+nlib.FIRST_COMPOSITION_PART), seq)
-            self.composition_part.append(pdt)
+            self.composition_part_data.append(pdt)
 
-        # Normal Part
+        # Phrase Part
         for i in range(nlib.MAX_NORMAL_PART):
             pdt = PhraseDataStock(seq.get_part(i+nlib.FIRST_NORMAL_PART), seq)
-            self.part_data.append(pdt)
+            self.phrase_part_data.append(pdt)
 
         # Damper Pedal Part
-        self.damper_part = DamperPartStock(seq.get_part(nlib.DAMPER_PEDAL_PART), seq)
+        self.damper_part_data = DamperPartStock(seq.get_part(nlib.DAMPER_PEDAL_PART), seq)
 
     def set_input_mode(self, md):
         self.input_mode = md
 
     def set_raw_phrase(self, part, text):
         if part >= nlib.MAX_NORMAL_PART: return False
-        return self.part_data[part].set_raw(text, self.input_mode)
+        return self.phrase_part_data[part].set_raw(text, self.input_mode)
 
     def set_raw_composition(self, part, text):
         if part >= nlib.MAX_COMPOSITION_PART: return False
-        return self.composition_part[part].set_raw(text)
+        return self.composition_part_data[part].set_raw(text)
 
     def set_recombined(self):
-        for cpart in self.composition_part:
+        for cpart in self.composition_part_data:
             cpart.set_recombined()
-        for part in self.part_data:
+        for part in self.phrase_part_data:
             part.set_recombined(self.input_mode)
-        self.damper_part.set_recombined()
+        self.damper_part_data.set_recombined()
