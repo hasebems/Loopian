@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 import time
 import lpnlib as nlib
-import elapse_part as sqp
+import elapse as elp
+import elapse_part as elpp
 import copy
 
 #------------------------------------------------------------------------------
@@ -40,7 +41,7 @@ class ElapseStack:
 
         self.sqobjs = []
         for i in range(nlib.MAX_PART_COUNT): # Part は、常に存在
-            obj = sqp.Part(self,md,i)
+            obj = elpp.Part(self,md,i)
             self.sqobjs.append(obj)
 
     def add_obj(self, obj):
@@ -57,10 +58,10 @@ class ElapseStack:
     def get_time(self):
         return self.crnt_time
 
-    def get_sqobj_count(self, type):
+    def get_sqobj_count(self, pri):
         count = 0
         for obj in self.sqobjs:
-            if obj.type == type: count += 1
+            if obj.pri == pri: count += 1
         return count
 
     def get_tick_for_onemsr(self):
@@ -75,7 +76,7 @@ class ElapseStack:
     def get_note(self, part_num):
         nt = []
         for obj in self.sqobjs:
-            if obj.type == 'Note' and obj.midi_ch == part_num:
+            if obj.pri == elp.PRI_NOTE and obj.midi_ch == part_num:
                 nt.append(obj)
         return nt
 
@@ -174,10 +175,10 @@ class ElapseStack:
 
             ## new measure
             sqobjs_copy = copy.copy(self.sqobjs)
-            elapse_obj = ''                          # for debug
+            elapse_obj = 'ElapseObj: '                # for debug
             for sqobj in sqobjs_copy:
                 sqobj.msrtop(self.crnt_measure)
-                elapse_obj += sqobj.who_I_am() + ',' # for debug
+                elapse_obj += str(sqobj.who_I_am()) + ',' # for debug
             print(elapse_obj)                        # for debug
 
         ## play seqplay_object

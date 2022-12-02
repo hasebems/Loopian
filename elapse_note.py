@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
-import elapse as ep
+import elapse as elp
 import lpnlib as nlib
 
 #------------------------------------------------------------------------------
 #   一音符の ElapseIF Obj.
 #   Note On時に生成され、MIDI を出力した後、Note Offを生成して destroy される
-class Note(ep.ElapseIF):
+class Note(elp.ElapseIF):
 
     def __init__(self, est, md, ev, key, txt):
-        super().__init__(est, md, 'Note')
+        super().__init__(est, md, elp.PRI_NOTE)
         self.midi_ch = 0
         self.note_num = ev[nlib.NOTE]
         self.velocity = ev[nlib.VEL]
@@ -61,10 +61,10 @@ class Note(ep.ElapseIF):
 #------------------------------------------------------------------------------
 #   ペダルの ElapseIF Obj.
 #   Pedal On時に生成され、MIDI を出力した後、Pedal Offを生成して destroy される
-class Damper(ep.ElapseIF):
+class Damper(elp.ElapseIF):
 
     def __init__(self, est, md, ev):
-        super().__init__(est, md, 'Damper')
+        super().__init__(est, md, elp.PRI_DMPR)
         self.midi_ch = 0
         self.cc_num = 64
         self.value = ev[nlib.VAL]

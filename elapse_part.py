@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 import lpnlib as nlib
-import elapse as sqp
+import elapse as elp
 import elapse_loop as phrlp
 
 #------------------------------------------------------------------------------
 #   起動時から存在し、決して destroy されない ElapseIF Obj.
-class Part(sqp.ElapseIF):
+class Part(elp.ElapseIF):
 
     def __init__(self, obj, md, num):
-        super().__init__(obj, md, 'Part', num)
+        super().__init__(obj, md, elp.PRI_PART, num)
         self.part_num = num
         self.first_measure_num = 0 # 新しい Phrase/Pattern が始まった絶対小節数
 

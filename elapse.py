@@ -1,14 +1,22 @@
 # -*- coding: utf-8 -*-
 
+# Timing Priority(pri)
+PRI_NONE = 1000
+PRI_PART = 100
+PRI_LOOP = 200
+PRI_CHORD = 300
+PRI_NOTE = 400
+PRI_DMPR = 500
+
 #------------------------------------------------------------------------------
 #   ElapseIF Obj. の Interface
 #   <Elapse> とは、再生用コマンドや、音楽の時間を扱う IF を持ったオブジェクト
 class ElapseIF:
 
-    def __init__(self, est, md, type='None', id=-1):
+    def __init__(self, est, md, pri=PRI_NONE, id=-1):
         self.est = est
         self.md = md
-        self.type = type
+        self.priority = pri
         self.id = id
         self.next_msr = 0
         self.next_tick = 0
@@ -16,9 +24,9 @@ class ElapseIF:
     # ElapseIF thread内でコール
     def who_I_am(self):
         if self.id >= 0:
-            return self.type + '-' + str(self.id)
+            return self.priority + self.id
         else:
-            return self.type
+            return self.priority
 
     def next(self):
         return self.next_msr, self.next_tick

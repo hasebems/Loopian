@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import lpnlib as nlib
-import elapse as ep
-import elapse_note as epn
+import elapse as elp
+import elapse_note as elpn
 import lpntxt as tx
 import copy
 
@@ -9,13 +9,13 @@ import copy
 #   １行分の Phrase/Composition を生成するための ElapseIF Obj.
 #   １周期が終わったら、destroy され、また新しいオブジェクトが Part によって作られる
 #   Loop 内のデータに基づき、Note Obj. を生成する
-class Loop(ep.ElapseIF):
+class Loop(elp.ElapseIF):
 
     # example
     LOOP_LENGTH = 3
 
-    def __init__(self, est, md, type, msr):
-        super().__init__(est, md, type)
+    def __init__(self, est, md, pri, msr):
+        super().__init__(est, md, pri)
         self.first_measure_num = msr
         self.whole_tick = 0
         self.destroy = False
@@ -43,7 +43,7 @@ class Loop(ep.ElapseIF):
 class PhraseLoop(Loop):
 
     def __init__(self, obj, md, msr, phr, ana, key, wt, pnum):
-        super().__init__(obj, md, 'PhrLoop', msr)
+        super().__init__(obj, md, elp.PRI_LOOP, msr)
         self.phr = copy.deepcopy(phr)
         self.ana = copy.deepcopy(ana)
         self.keynote = key
@@ -146,7 +146,7 @@ class PhraseLoop(Loop):
                 self.last_note = self._translate_note_com(root, tbl, ev[nlib.NOTE])
                 deb_txt = 'com:' + str(root)
             crntev[nlib.NOTE] = self.last_note
-        self.est.add_obj(epn.Note(self.est, self.md, crntev, self.keynote, deb_txt))
+        self.est.add_obj(elpn.Note(self.est, self.md, crntev, self.keynote, deb_txt))
 
 
     def _generate_event(self, tick):
@@ -165,7 +165,7 @@ class PhraseLoop(Loop):
             if next_tick < tick:
                 ev = self.phr[trace]
                 if ev[nlib.TYPE] == 'damper':# ev: ['damper', duration, tick, value]
-                    self.est.add_obj(epn.Damper(self.est, self.md, ev))
+                    self.est.add_obj(elpn.Damper(self.est, self.md, ev))
                 elif ev[nlib.TYPE] == 'note':# ev: ['note', tick, duration, note, velocity]
                     self._note_event(ev, next_tick)
             else:
@@ -194,7 +194,7 @@ class PhraseLoop(Loop):
 class CompositionLoop(Loop):
 
     def __init__(self, obj, md, msr, cmp, ana, key, wt):
-        super().__init__(obj, md, 'ComLoop', msr)
+        super().__init__(obj, md, elp.PRI_CHORD, msr)
         self.cmp = copy.deepcopy(cmp)
         self.ana = copy.deepcopy(ana)
         self.keynote = key
