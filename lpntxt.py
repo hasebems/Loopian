@@ -364,7 +364,7 @@ class TextParse:
     #------------------------------------------------------------------------------
     #   complement data for Composition
     def _fill_omitted_chord_data(chord_data):
-        ## ,| 重複による同音指示の補填
+        ## ,| 重複による同和音指示の補填
         fill1 = ''
         doremi = ''
         doremi_end_flag = False
@@ -394,38 +394,38 @@ class TextParse:
 
 
     def complement_brace(tx):
-        # [] のセットを抜き出し、中身を attached_brace/note_info に入れる
+        # {} のセットを抜き出し、中身を attached_brace/chord_info に入れる
         num = tx.find('{')
         tx = tx[num:].strip()
 
-        note_info = []
+        chord_info = []
         attached_brace = []
         while True:
             num = tx.find('}')
             if num == -1:
                 break
-            note_info.append(tx[1:num])
+            chord_info.append(tx[1:num])
             tx = tx[num+1:].strip()
             if len(tx) == 0:
                 break
             if tx[0:2] == '+{':
-                attached_brace.append(copy.copy(note_info))
-                note_info.clear()
+                attached_brace.append(copy.copy(chord_info))
+                chord_info.clear()
                 tx = tx[1:]
                 continue
             if tx[0:1] != '{':
                 break
 
         # 連結データ(attached_block)があった時の処理
-        if attached_brace and note_info:
-            attached_brace.append(note_info) # 最後の note_info を追加
-            note_info = TextParse._attached_to_noteinfo(attached_brace, '|')
+        if attached_brace and chord_info:
+            attached_brace.append(chord_info) # 最後の note_info を追加
+            chord_info = TextParse._attached_to_noteinfo(attached_brace, '|')
 
         exp = []
-        if len(note_info) != 0:
-            chord_flow_next = TextParse._fill_omitted_chord_data(note_info[0])
-            if len(note_info) == 2:
-                exp = note_info[1]
+        if len(chord_info) != 0:
+            chord_flow_next = TextParse._fill_omitted_chord_data(chord_info[0])
+            if len(chord_info) == 2:
+                exp = chord_info[1]
         else:
             return [], []
         return chord_flow_next, exp
