@@ -39,7 +39,7 @@ class SeqStack:
         self.fine_for_periodic = False
 
         self.sqobjs = []
-        for i in range(nlib.MAX_PART_COUNT): # Part は、static に存在
+        for i in range(nlib.MAX_PART_COUNT): # Part は、常に存在
             obj = sqp.Part(self,md,i)
             self.sqobjs.append(obj)
 
@@ -183,7 +183,7 @@ class SeqStack:
         ## play seqplay_object
         sqobjs_copy = copy.copy(self.sqobjs)
         for sqobj in sqobjs_copy:
-            sqobj.periodic(self.crnt_measure, self.crnt_tick_inmsr)
+                sqobj.periodic(self.crnt_measure, self.crnt_tick_inmsr)
 
         ## remove ended obj
         self._destroy_ended_obj()

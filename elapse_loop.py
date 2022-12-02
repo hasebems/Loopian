@@ -28,7 +28,6 @@ class Loop(ep.ElapseIF):
         elapsed_tick = (msr - self.first_measure_num)*self.tick_for_one_measure + tick
         if elapsed_tick >= self.whole_tick:
             self.destroy = True
-            return
 
     def destroy_me(self):
         return self.destroy
