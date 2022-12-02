@@ -14,8 +14,8 @@ T_END = '\033[0m'
 class Parsing:
     #   入力した文字列の解析
     #   一行単位で入力されるたびに生成される
-    def __init__(self, sqs, md, dt):
-        self.sqs = sqs
+    def __init__(self, est, md, dt):
+        self.est = est
         self.md = md
         self.gui = None
         self.input_part = 2 # Normal Part
@@ -50,7 +50,7 @@ class Parsing:
             if onpu_str.isdecimal():
                 onpu = int(onpu_str)
             if btnum >= 1 and onpu >= 1:
-                self.sqs.change_beat(btnum, onpu)
+                self.est.change_beat(btnum, onpu)
                 self.print_dialogue("Beat has changed!")
                 return True
             else:
@@ -89,7 +89,7 @@ class Parsing:
                     octave_letter = key_text[2:]
             if octave_letter.isdecimal():
                 oct = int(octave_letter)
-        self.sqs.change_key_oct(key, oct, key_text)
+        self.est.change_key_oct(key, oct, key_text)
         return True
 
     def change_oct(self, text, all):
@@ -111,14 +111,14 @@ class Parsing:
             for i, letter in enumerate(text):
                 if i < nlib.MAX_NORMAL_PART:
                     oct = generate_oct_number(letter)
-                    self.sqs.get_part(i+nlib.FIRST_NORMAL_PART).change_oct(oct, True)
+                    self.est.get_part(i+nlib.FIRST_NORMAL_PART).change_oct(oct, True)
         else:
             oct = generate_oct_number(text)
             if all:
                 for i in range(nlib.FIRST_NORMAL_PART, nlib.MAX_NORMAL_PART):
-                    self.sqs.get_part(i).change_oct(oct, True)
+                    self.est.get_part(i).change_oct(oct, True)
             else:
-                self.sqs.get_part(self.input_part+nlib.FIRST_NORMAL_PART).change_oct(oct, True)
+                self.est.get_part(self.input_part+nlib.FIRST_NORMAL_PART).change_oct(oct, True)
 
 
     def change_cc(self, cc_num, value):
@@ -126,7 +126,7 @@ class Parsing:
 #        if len(cc_list) > nlib.MAX_NORMAL_PART:
 #            del cc_list[nlib.MAX_NORMAL_PART:]
 #        for i, vol in enumerate(cc_list):
-#            self.sqs.get_part(i+nlib.FIRST_NORMAL_PART).change_cc(cc_num, int(vol))
+#            self.est.get_part(i+nlib.FIRST_NORMAL_PART).change_cc(cc_num, int(vol))
         self.md.send_control(0, cc_num, value)
 
     CONFIRM_MIDI_OUT_ID = -1
@@ -188,7 +188,7 @@ class Parsing:
         elif command == 'bpm':
             bpmnumlist = tx[1].strip().split()
             if bpmnumlist[0].isdecimal():
-                self.sqs.change_tempo(int(bpmnumlist[0]))
+                self.est.change_tempo(int(bpmnumlist[0]))
                 self.gendt.set_recombined()
                 self.print_dialogue("BPM has changed!")
             else:
@@ -229,22 +229,22 @@ class Parsing:
     def parse_sync_command(self, input_text):
         prm_text = input_text.strip()
         if prm_text == '':
-            self.sqs.get_part(self.input_part+nlib.FIRST_COMPOSITION_PART).sync()
-            self.sqs.get_part(self.input_part+nlib.FIRST_NORMAL_PART).sync()
+            self.est.get_part(self.input_part+nlib.FIRST_COMPOSITION_PART).sync()
+            self.est.get_part(self.input_part+nlib.FIRST_NORMAL_PART).sync()
             self.print_dialogue("Synchronized!")
         elif prm_text == 'all':
             for i in range(nlib.MAX_PART_COUNT):
-                self.sqs.get_part(i).sync()
+                self.est.get_part(i).sync()
             self.print_dialogue("All Part Synchronized!")
         elif prm_text == 'right':
             for i in range(nlib.MAX_LEFT_PART, nlib.MAX_LEFT_PART+nlib.MAX_RIGHT_PART):
-                self.sqs.get_part(nlib.FIRST_COMPOSITION_PART+i).sync()
-                self.sqs.get_part(nlib.FIRST_NORMAL_PART+i).sync()
+                self.est.get_part(nlib.FIRST_COMPOSITION_PART+i).sync()
+                self.est.get_part(nlib.FIRST_NORMAL_PART+i).sync()
             self.print_dialogue("Right Part Synchronized!")
         elif prm_text == 'left':
             for i in range(0, nlib.MAX_LEFT_PART):
-                self.sqs.get_part(nlib.FIRST_COMPOSITION_PART+i).sync()
-                self.sqs.get_part(nlib.FIRST_NORMAL_PART+i).sync()
+                self.est.get_part(nlib.FIRST_COMPOSITION_PART+i).sync()
+                self.est.get_part(nlib.FIRST_NORMAL_PART+i).sync()
             self.print_dialogue("Left Part Synchronized!")
         else:
             self.print_dialogue("what?")
@@ -265,7 +265,7 @@ class Parsing:
         if input_text[0:4] == 'play':
             arg = input_text.split()
             if len(arg) == 1:
-                well_done = self.sqs.start()
+                well_done = self.est.start()
                 if well_done:
                     self.print_dialogue("Phrase has started!")
                 else:
@@ -278,13 +278,13 @@ class Parsing:
 
     def letterS(self, input_text):
         if input_text[0:5] == 'start':
-            well_done = self.sqs.start()
+            well_done = self.est.start()
             if well_done:
                 self.print_dialogue("Phrase has started!")
             else:
                 self.print_dialogue("Unable to start!")
         elif input_text[0:4] == 'stop':
-            self.sqs.stop()
+            self.est.stop()
             self.print_dialogue("Stopped!")
         elif input_text[0:3] == 'set':
             self.parse_set_command(input_text[3:])
@@ -314,7 +314,7 @@ class Parsing:
 
     def letterF(self, input_text):
         if input_text[0:4] == "fine":
-            self.sqs.fine()
+            self.est.fine()
             self.print_dialogue('Will be ended!')
         else:
             self.print_dialogue("what?")

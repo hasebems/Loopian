@@ -8,7 +8,7 @@ import threading
 import lpngui
 import seqdt_stock as stk
 import lpncmd as ps
-import elapse_stack as sqs
+import elapse_stack as est
 import lpnlib as nlib
 import midi
 
@@ -36,7 +36,7 @@ def main():
     lp = Loop()
     log = nlib.Log()
     md = midi.Midi()
-    seq = sqs.SeqStack(md)
+    seq = est.ElapseStack(md)
     gendt = stk.SeqDataAllStock(seq)
     prs = ps.Parsing(seq, md, gendt)
     gui = lpngui.LpnGui(lp, prs, log)

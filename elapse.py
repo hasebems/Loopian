@@ -5,11 +5,13 @@
 #   <Elapse> とは、再生用コマンドや、音楽の時間を扱う IF を持ったオブジェクト
 class ElapseIF:
 
-    def __init__(self, obj, md, type='None', id=-1):
-        self.sqs = obj
+    def __init__(self, est, md, type='None', id=-1):
+        self.est = est
         self.md = md
         self.type = type
         self.id = id
+        self.next_msr = 0
+        self.next_tick = 0
 
     # ElapseIF thread内でコール
     def who_I_am(self):
@@ -17,6 +19,9 @@ class ElapseIF:
             return self.type + '-' + str(self.id)
         else:
             return self.type
+
+    def next(self):
+        return self.next_msr, self.next_tick
 
     def start(self):    # User による start/play 時にコールされる
         pass

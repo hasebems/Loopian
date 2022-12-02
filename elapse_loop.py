@@ -14,12 +14,12 @@ class Loop(ep.ElapseIF):
     # example
     LOOP_LENGTH = 3
 
-    def __init__(self, obj, md, type, msr):
-        super().__init__(obj, md, type)
+    def __init__(self, est, md, type, msr):
+        super().__init__(est, md, type)
         self.first_measure_num = msr
         self.whole_tick = 0
         self.destroy = False
-        self.tick_for_one_measure = self.sqs.get_tick_for_onemsr()
+        self.tick_for_one_measure = self.est.get_tick_for_onemsr()
 
     def msrtop(self,msr):
         pass
@@ -128,7 +128,7 @@ class PhraseLoop(Loop):
 
     def _note_event(self, ev, next_tick):
         crntev = copy.deepcopy(ev)
-        cmp_part = self.sqs.get_part(nlib.FIRST_COMPOSITION_PART+self.part_num-nlib.FIRST_NORMAL_PART)
+        cmp_part = self.est.get_part(nlib.FIRST_COMPOSITION_PART+self.part_num-nlib.FIRST_NORMAL_PART)
         deb_txt = 'non'
         if cmp_part != None and cmp_part.loop_obj != None:
             root, tbl = cmp_part.loop_obj.get_translation_tbl()
@@ -146,7 +146,7 @@ class PhraseLoop(Loop):
                 self.last_note = self._translate_note_com(root, tbl, ev[nlib.NOTE])
                 deb_txt = 'com:' + str(root)
             crntev[nlib.NOTE] = self.last_note
-        self.sqs.add_obj(epn.Note(self.sqs, self.md, crntev, self.keynote, deb_txt))
+        self.est.add_obj(epn.Note(self.est, self.md, crntev, self.keynote, deb_txt))
 
 
     def _generate_event(self, tick):
@@ -165,7 +165,7 @@ class PhraseLoop(Loop):
             if next_tick < tick:
                 ev = self.phr[trace]
                 if ev[nlib.TYPE] == 'damper':# ev: ['damper', duration, tick, value]
-                    self.sqs.add_obj(epn.Damper(self.sqs, self.md, ev))
+                    self.est.add_obj(epn.Damper(self.est, self.md, ev))
                 elif ev[nlib.TYPE] == 'note':# ev: ['note', tick, duration, note, velocity]
                     self._note_event(ev, next_tick)
             else:

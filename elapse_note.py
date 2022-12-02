@@ -7,8 +7,8 @@ import lpnlib as nlib
 #   Note On時に生成され、MIDI を出力した後、Note Offを生成して destroy される
 class Note(ep.ElapseIF):
 
-    def __init__(self, obj, md, ev, key, txt):
-        super().__init__(obj, md, 'Note')
+    def __init__(self, est, md, ev, key, txt):
+        super().__init__(est, md, 'Note')
         self.midi_ch = 0
         self.note_num = ev[nlib.NOTE]
         self.velocity = ev[nlib.VEL]
@@ -23,19 +23,19 @@ class Note(ep.ElapseIF):
     def _note_on(self):
         num = self.note_num + self.keynote
         self.note_num = nlib.note_limit(num, 0, 127)
-        self.md.set_fifo(self.sqs.get_time(), ['note', self.midi_ch, self.note_num, self.velocity])
+        self.md.set_fifo(self.est.get_time(), ['note', self.midi_ch, self.note_num, self.velocity])
         print('Note:', self.note_num, self.velocity, self.txt)
 
     def _note_off(self):
         self.destroy = True
         self.during_noteon = False
         # midi note off
-        self.md.set_fifo(self.sqs.get_time(), ['note', self.midi_ch, self.note_num, 0])
+        self.md.set_fifo(self.est.get_time(), ['note', self.midi_ch, self.note_num, 0])
 
     def periodic(self,msr,tick):
         if not self.during_noteon:
             self.during_noteon = True
-            tk = self.sqs.get_tick_for_onemsr()
+            tk = self.est.get_tick_for_onemsr()
             self.off_msr = msr
             self.off_tick = tick + self.duration
             while self.off_tick > tk:
@@ -63,8 +63,8 @@ class Note(ep.ElapseIF):
 #   Pedal On時に生成され、MIDI を出力した後、Pedal Offを生成して destroy される
 class Damper(ep.ElapseIF):
 
-    def __init__(self, obj, md, ev):
-        super().__init__(obj, md, 'Damper')
+    def __init__(self, est, md, ev):
+        super().__init__(est, md, 'Damper')
         self.midi_ch = 0
         self.cc_num = 64
         self.value = ev[nlib.VAL]
@@ -75,18 +75,18 @@ class Damper(ep.ElapseIF):
         self.off_tick = 0
 
     def _pedal_on(self):
-        self.md.set_fifo(self.sqs.get_time(), ['damper', self.midi_ch, self.cc_num, self.value])
+        self.md.set_fifo(self.est.get_time(), ['damper', self.midi_ch, self.cc_num, self.value])
 
     def _pedal_off(self):
         self.destroy = True
         self.during_pedal = False
         # midi damper pedal off
-        self.md.set_fifo(self.sqs.get_time(), ['damper', self.midi_ch, self.cc_num, 0])
+        self.md.set_fifo(self.est.get_time(), ['damper', self.midi_ch, self.cc_num, 0])
 
     def periodic(self,msr,tick):
         if not self.during_pedal:
             self.during_pedal = True
-            tk = self.sqs.get_tick_for_onemsr()
+            tk = self.est.get_tick_for_onemsr()
             self.off_msr = msr
             self.off_tick = tick + self.duration
             while self.off_tick > tk:

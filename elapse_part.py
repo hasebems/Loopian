@@ -27,7 +27,7 @@ class Part(sqp.ElapseIF):
         self.seqdt_part = gendt
 
     def _generate_loop(self,msr):
-        tick_for_onemsr = self.sqs.get_tick_for_onemsr()
+        tick_for_onemsr = self.est.get_tick_for_onemsr()
         self.whole_tick, elm, ana = self.seqdt_part.get_final()
 
         # その時の beat 情報で、whle_tick を loop_measure に換算
@@ -35,13 +35,13 @@ class Part(sqp.ElapseIF):
             (0 if self.whole_tick%tick_for_onemsr == 0 else 1)
 
         if self.part_num >= nlib.FIRST_NORMAL_PART:
-            self.loop_obj = phrlp.PhraseLoop(self.sqs, self.md, msr, elm, ana,  \
+            self.loop_obj = phrlp.PhraseLoop(self.est, self.md, msr, elm, ana,  \
                 self.keynote, self.whole_tick, self.part_num)
-            self.sqs.add_obj(self.loop_obj)
+            self.est.add_obj(self.loop_obj)
         else:
-            self.loop_obj = phrlp.CompositionLoop(self.sqs, self.md, msr, elm, ana, \
+            self.loop_obj = phrlp.CompositionLoop(self.est, self.md, msr, elm, ana, \
                 self.keynote, self.whole_tick)
-            self.sqs.add_obj_in_front(self.loop_obj)
+            self.est.add_obj_in_front(self.loop_obj)
 
     ## Seqplay thread内でコール
     def start(self):
@@ -77,7 +77,7 @@ class Part(sqp.ElapseIF):
                 # sync コマンドによる強制リセット
                 self.state_reserve = False
                 self.sync_next_msr_flag = False
-                self.sqs.del_obj(self.loop_obj)
+                self.est.del_obj(self.loop_obj)
                 new_loop(msr)
 
             else:
