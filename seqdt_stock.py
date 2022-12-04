@@ -151,7 +151,7 @@ class PhraseDataStock:
         self.part.update_phrase()
 
 
-    def get_final(self):
+    def get_final(self, msr):
         if self.generated == None: return 0,None,None
 
         # 6. randomized data
@@ -172,6 +172,8 @@ class PhraseDataStock:
 #   Damper の入力テキストの変換
 class DamperPartStock:
 
+    CHK_MARGIN = 40
+
     def __init__(self, pt, seq):
         self.seq = seq
         self.part = pt
@@ -185,29 +187,35 @@ class DamperPartStock:
     def set_recombined(self):
         pass
 
-    def get_final(self):
+    def _collect_cmp_part_event(self, pt, tick_change_point, msr):
+        if pt.loop_obj == None or \
+           (len(pt.loop_obj.cmp) == 1 and pt.loop_obj.cmp[0][2] == 'thru'):
+            return
+        if pt.loop_obj.ana != None and 'noped' in pt.loop_obj.ana:
+            return
+
+        cmpdt = pt.loop_obj.cmp
+        msr = msr - pt.first_measure_num
+        tick_change_point.append(self.CHK_MARGIN)    # 小節冒頭には必ずイベントを発生させる
+        for dt in cmpdt:
+            tick = dt[nlib.TICK]
+            print('tt>',msr,tick)
+            if self.tick_for_onemsr*msr <= tick and tick < self.tick_for_onemsr*(msr+1):
+                # コードイベントの CHK_MARGIN 後ろの tick を記録
+                tick = (tick + self.CHK_MARGIN)%self.tick_for_onemsr
+                tick_change_point.append(tick)
+
+
+    def get_final(self, msr):
         self.tick_for_onemsr = self.seq.get_tick_for_onemsr()
         
         # 全 Composition Part の Chord 情報を収集、マージ、ソートする
         tick_change_point = []
-        CHK_MARGIN = 40
         for i in range(nlib.FIRST_COMPOSITION_PART,
                        nlib.FIRST_COMPOSITION_PART+nlib.MAX_COMPOSITION_PART):
             pt = self.seq.get_part(i)
-            if pt.loop_obj == None or \
-               (len(pt.loop_obj.cmp) == 1 and pt.loop_obj.cmp[0][2] == 'thru'):
-                continue
-            if pt.loop_obj.ana != None and 'noped' in pt.loop_obj.ana:
-                continue
+            self._collect_cmp_part_event(pt, tick_change_point, msr)
 
-            cmpdt = pt.loop_obj.cmp
-            for dt in cmpdt:
-                tick_change_point.append(CHK_MARGIN)    # 小節冒頭には必ずイベントを発生させる
-                tick = dt[nlib.TICK]
-                if 0 <= tick and tick < self.tick_for_onemsr:
-                    # コードイベントの CHK_MARGIN 後ろの tick を記録
-                    tick = (tick + CHK_MARGIN)%self.tick_for_onemsr
-                    tick_change_point.append(tick)
         tick_change_point = list(set(tick_change_point)) # 重複した要素を排除して並び替え
         tick_change_point.sort()
 
@@ -216,14 +224,14 @@ class DamperPartStock:
         for i in range(len(tick_change_point)):
             ont = tick_change_point[i]                  # On Event
             if i==0 and len(tick_change_point) == 1:    # Off Event
-                oft = self.tick_for_onemsr - (CHK_MARGIN//2)
+                dur = self.tick_for_onemsr - (self.CHK_MARGIN//2) - ont
             elif i+1 < len(tick_change_point):
-                oft = tick_change_point[i+1] - (CHK_MARGIN//2)
-            else:
-                oft = self.tick_for_onemsr - (CHK_MARGIN//2)    
-            gendt.append(['damper',ont,oft,127])
-        if len(gendt) > 0:
-            print("Pedal Event: ", gendt)
+                dur = tick_change_point[i+1] - (self.CHK_MARGIN*3)//2 - ont
+            else:   # 一番最後
+                dur = self.tick_for_onemsr - (self.CHK_MARGIN//2) - ont
+            gendt.append(['damper', ont, dur, 127])
+        #if len(gendt) > 0:
+        #    print("Pedal Event: ", gendt)
 
         return self.tick_for_onemsr, gendt, None
 
@@ -275,7 +283,7 @@ class CompositionPartStock:
             tx.TextParse.recombine_to_chord_loop(self.complement, tick_for_onemsr, tick_for_onebeat)
         print('recombined:',self.generated)
 
-    def get_final(self):
+    def get_final(self, msr):
         return self.whole_tick, self.generated, self.exp
 
 #------------------------------------------------------------------------------

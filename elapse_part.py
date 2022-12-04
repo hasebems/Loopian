@@ -7,8 +7,8 @@ import elapse_loop as phrlp
 #   起動時から存在し、決して destroy されない ElapseIF Obj.
 class Part(elp.ElapseIF):
 
-    def __init__(self, obj, md, num):
-        super().__init__(obj, md, elp.PRI_PART, num)
+    def __init__(self, est, md, num):
+        super().__init__(est, md, elp.PRI_PART, num)
         self.part_num = num
         self.first_measure_num = 0 # 新しい Phrase/Pattern が始まった絶対小節数
 
@@ -17,7 +17,7 @@ class Part(elp.ElapseIF):
         self.keynote = 0
         self.base_note = nlib.DEFAULT_NOTE_NUMBER - 12*left_part
         self.loop_measure = 0   # whole_tick と同時生成
-        self.lp_elapsed_msr = 0    # loop 内の経過小節数
+        self.lp_elapsed_msr = 0    # loop 内の経過小節数 for GUI
         self.whole_tick = 0     # loop_measure と同時生成
         self.sync_next_msr_flag = False
         self.state_reserve = False
@@ -27,7 +27,7 @@ class Part(elp.ElapseIF):
         self.seqdt_part = gendt
 
     def _generate_loop(self, msr):
-        self.whole_tick, elm, ana = self.seqdt_part.get_final()
+        self.whole_tick, elm, ana = self.seqdt_part.get_final(msr)
 
         # その時の beat 情報で、whole_tick を loop_measure に換算
         tick_for_onemsr = self.est.get_tick_for_onemsr()
@@ -66,7 +66,10 @@ class Part(elp.ElapseIF):
             self._generate_loop(msr)
             self.lp_elapsed_msr = 1
 
-        if self.next_msr != msr or self.next_tick > tick:
+        if self.next_msr < msr or \
+            (self.next_msr == msr and self.next_tick <= tick):
+            pass
+        else:
             return
 
         #elapsed_msr = self.first_measure_num
@@ -99,18 +102,14 @@ class Part(elp.ElapseIF):
                 # 現在の Loop Obj が終了していない時
                 pass
 
-        elif self.whole_tick != 0:
-            if self.loop_measure != 0 and \
-              (msr - self.first_measure_num)%self.loop_measure == 0:
+        if self.loop_measure != 0:
+            if (msr - self.first_measure_num)%self.loop_measure == 0:
                 # 同じ Loop.Obj を生成する
+                self.first_measure_num = msr
                 self._generate_loop(msr)
                 self.lp_elapsed_msr = 1
             else:
                 self.lp_elapsed_msr += 1
-
-        else:
-            # Loop 途中で何も起きないとき
-            pass
 
 
     def destroy_me(self):

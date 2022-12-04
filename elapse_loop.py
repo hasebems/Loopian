@@ -154,7 +154,7 @@ class PhraseLoop(Loop):
                 self.last_note = self._translate_note_com(root, tbl, ev[nlib.NOTE])
                 deb_txt = 'com:' + str(root)
             crntev[nlib.NOTE] = self.last_note
-        self.est.add_obj(elpn.Note(self.est, self.md, crntev, self.keynote, deb_txt))
+        self.est.add_obj(elpn.Note(self.est, self.md, crntev, self.keynote, deb_txt, next_tick))
 
 
     def _generate_event(self, tick):
@@ -173,7 +173,7 @@ class PhraseLoop(Loop):
             if next_tick <= tick:
                 ev = self.phr[trace]
                 if ev[nlib.TYPE] == 'damper':# ev: ['damper', duration, tick, value]
-                    self.est.add_obj(elpn.Damper(self.est, self.md, ev))
+                    self.est.add_obj(elpn.Damper(self.est, self.md, ev, next_tick))
                 elif ev[nlib.TYPE] == 'note':# ev: ['note', tick, duration, note, velocity]
                     self._note_event(ev, next_tick)
             else:
