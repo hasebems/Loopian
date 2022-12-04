@@ -194,14 +194,16 @@ class DamperPartStock:
         for i in range(nlib.FIRST_COMPOSITION_PART,
                        nlib.FIRST_COMPOSITION_PART+nlib.MAX_COMPOSITION_PART):
             pt = self.seq.get_part(i)
-            if pt.loop_obj == None: continue
+            if pt.loop_obj == None or \
+               (len(pt.loop_obj.cmp) == 1 and pt.loop_obj.cmp[0][2] == 'thru'):
+                continue
+            if pt.loop_obj.ana != None and 'noped' in pt.loop_obj.ana:
+                continue
 
             cmpdt = pt.loop_obj.cmp
-            #search_tick = round(pt.loop_obj.elapsed_tick) - CHK_MARGIN
             for dt in cmpdt:
                 tick_change_point.append(CHK_MARGIN)    # 小節冒頭には必ずイベントを発生させる
                 tick = dt[nlib.TICK]
-                #if search_tick < tick and tick < search_tick + self.tick_for_onemsr:
                 if 0 <= tick and tick < self.tick_for_onemsr:
                     # コードイベントの CHK_MARGIN 後ろの tick を記録
                     tick = (tick + CHK_MARGIN)%self.tick_for_onemsr
@@ -220,7 +222,8 @@ class DamperPartStock:
             else:
                 oft = self.tick_for_onemsr - (CHK_MARGIN//2)    
             gendt.append(['damper',ont,oft,127])
-        print("Pedal Event: ", gendt)
+        if len(gendt) > 0:
+            print("Pedal Event: ", gendt)
 
         return self.tick_for_onemsr, gendt, None
 
@@ -235,7 +238,7 @@ class CompositionPartStock:
 
         self.raw = []
         self.complement = []
-        self.generated = ['chord',0,'thru']
+        self.generated = [nlib.NO_CHORD]
         self.exp = []
 
         self.whole_tick = 0

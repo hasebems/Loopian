@@ -26,13 +26,19 @@ class Part(elp.ElapseIF):
     def set_seqdt_part(self, gendt):
         self.seqdt_part = gendt
 
-    def _generate_loop(self,msr):
-        tick_for_onemsr = self.est.get_tick_for_onemsr()
+    def _generate_loop(self, msr):
         self.whole_tick, elm, ana = self.seqdt_part.get_final()
 
-        # その時の beat 情報で、whle_tick を loop_measure に換算
-        self.loop_measure = self.whole_tick//tick_for_onemsr + \
-            (0 if self.whole_tick%tick_for_onemsr == 0 else 1)
+        # その時の beat 情報で、whole_tick を loop_measure に換算
+        tick_for_onemsr = self.est.get_tick_for_onemsr()
+        self.loop_measure = int(self.whole_tick//tick_for_onemsr + \
+            (0 if self.whole_tick%tick_for_onemsr == 0 else 1))
+
+        self.next_msr = self.loop_measure + msr if self.loop_measure != 0 else msr+1
+        self.next_tick = 0
+        if self.whole_tick == 0:
+            self.state_reserve = True # 次小節冒頭で呼ばれるように
+            return
 
         if self.part_num >= nlib.FIRST_NORMAL_PART:
             self.loop_obj = phrlp.PhraseLoop(self.est, self.md, msr, elm, ana,  \
@@ -40,22 +46,30 @@ class Part(elp.ElapseIF):
             self.est.add_obj(self.loop_obj)
         else:
             self.loop_obj = phrlp.CompositionLoop(self.est, self.md, msr, elm, ana, \
-                self.keynote, self.whole_tick)
+                self.keynote, self.whole_tick, self.part_num)
             self.est.add_obj_in_front(self.loop_obj)
+
 
     ## Seqplay thread内でコール
     def start(self):
         self.first_measure_num = 0
-        self.md.send_control(0,7,100)  # dummy send
+        self.next_msr = 0
+        self.next_tick = 0
+        self.state_reserve = True
+        #self.md.send_control(0,7,100)  # dummy send
 
-    def msrtop(self,msr):
+
+    def periodic(self, msr, tick):
         def new_loop(msr):
             # 新たに Loop Obj.を生成
-            self._generate_loop(msr)
             self.first_measure_num = msr    # 計測開始の更新
+            self._generate_loop(msr)
             self.lp_elapsed_msr = 1
 
-        elapsed_msr = msr - self.first_measure_num
+        if self.next_msr != msr or self.next_tick > tick:
+            return
+
+        #elapsed_msr = self.first_measure_num
         if self.state_reserve:
             # 前小節にて phrase/pattern 指定された時
             if msr == 0:
@@ -68,7 +82,8 @@ class Part(elp.ElapseIF):
                 self.state_reserve = False
                 new_loop(msr)
 
-            elif self.loop_measure != 0 and elapsed_msr%self.loop_measure == 0:
+            elif self.loop_measure != 0 and \
+                (msr - self.first_measure_num)%self.loop_measure == 0:
                 # 前小節にて Loop Obj が終了した時
                 self.state_reserve = False
                 new_loop(msr)
@@ -85,7 +100,8 @@ class Part(elp.ElapseIF):
                 pass
 
         elif self.whole_tick != 0:
-            if self.loop_measure != 0 and elapsed_msr%self.loop_measure == 0:
+            if self.loop_measure != 0 and \
+              (msr - self.first_measure_num)%self.loop_measure == 0:
                 # 同じ Loop.Obj を生成する
                 self._generate_loop(msr)
                 self.lp_elapsed_msr = 1
@@ -96,8 +112,6 @@ class Part(elp.ElapseIF):
             # Loop 途中で何も起きないとき
             pass
 
-    #def periodic(self,msr,tick):
-    #    pass
 
     def destroy_me(self):
         return False    # 最後まで削除されない

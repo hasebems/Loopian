@@ -61,6 +61,7 @@ ARP_DT = 4
 #=====================
 # Chord Text Table
 #=====================
+NO_CHORD = ['chord',0,'thru']
 ROOT_NAME = ('I','II','III','IV','V','VI','VII')
 CHORD_SCALE = {  # ±2オクターブ分
     'thru':     [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],

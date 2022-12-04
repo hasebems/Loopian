@@ -16,17 +16,15 @@ class Loop(elp.ElapseIF):
 
     def __init__(self, est, md, pri, msr):
         super().__init__(est, md, pri)
-        self.first_measure_num = msr
+        self.first_msr_num = msr
         self.whole_tick = 0
         self.destroy = False
         self.tick_for_one_measure = self.est.get_tick_for_onemsr()
 
-    def msrtop(self,msr):
-        pass
-
     def periodic(self,msr,tick):
-        elapsed_tick = (msr - self.first_measure_num)*self.tick_for_one_measure + tick
+        elapsed_tick = (msr - self.first_msrnum)*self.tick_for_one_measure + tick
         if elapsed_tick >= self.whole_tick:
+            self.next_msr = nlib.FULL
             self.destroy = True
 
     def destroy_me(self):
@@ -42,20 +40,30 @@ class Loop(elp.ElapseIF):
 #------------------------------------------------------------------------------
 class PhraseLoop(Loop):
 
-    def __init__(self, obj, md, msr, phr, ana, key, wt, pnum):
-        super().__init__(obj, md, elp.PRI_LOOP, msr)
+    def __init__(self, est, md, msr, phr, ana, key, wt, pnum):
+        # est:  elapse stack class
+        # md:   midi
+        # msr:  current measure number
+        # phr:  phrase data
+        # ana:  musical analyse data
+        # key:  key
+        # wt:   whole tick
+        # pnum: part number(0-3)
+        super().__init__(est, md, elp.PRI_LOOP+pnum, msr)
         self.phr = copy.deepcopy(phr)
         self.ana = copy.deepcopy(ana)
         self.keynote = key
         self.part_num = pnum    # 親パートの番号
 
         self.play_counter = 0
-        self.next_tick = 0
+        self.next_tick_in_phrase = 0
         self.last_anaone = None
         self.last_note = nlib.NO_NOTE
 
         # for super's member
         self.whole_tick = wt
+        self.next_msr = msr
+
 
     def _identify_trans_option(self, dt_tick, nt):
         for anaone in self.ana:
@@ -162,7 +170,7 @@ class PhraseLoop(Loop):
                 next_tick = nlib.END_OF_DATA   # means sequence finished
                 break
             next_tick = self.phr[trace][nlib.TICK]
-            if next_tick < tick:
+            if next_tick <= tick:
                 ev = self.phr[trace]
                 if ev[nlib.TYPE] == 'damper':# ev: ['damper', duration, tick, value]
                     self.est.add_obj(elpn.Damper(self.est, self.md, ev))
@@ -175,40 +183,55 @@ class PhraseLoop(Loop):
         self.play_counter = trace
         return next_tick
 
+
     ## IF Function by ElapseIF Class
-    def periodic(self,msr,tick):
-        tk_onemsr = self.tick_for_one_measure
-        elapsed_tick = (msr - self.first_measure_num)*tk_onemsr + tick
-        if elapsed_tick >= self.whole_tick:
+    def periodic(self, msr, tick):
+        elapsed_tick = (msr - self.first_msr_num)*self.tick_for_one_measure + tick
+
+        if elapsed_tick > self.whole_tick:
+            self.next_msr = nlib.FULL
             self.destroy = True
             return
 
-        if elapsed_tick >= self.next_tick:
+        if elapsed_tick >= self.next_tick_in_phrase:
             nt = self._generate_event(elapsed_tick)
+            self.next_tick_in_phrase = nt
             if nt == nlib.END_OF_DATA:
+                self.next_msr = nlib.FULL
                 self.destroy = True
-            self.next_tick = nt
+            else:
+                self.next_tick = self.next_tick_in_phrase%self.tick_for_one_measure
+                self.next_msr = self.first_msr_num + self.next_tick_in_phrase//self.tick_for_one_measure
 
 
 #------------------------------------------------------------------------------
 class CompositionLoop(Loop):
 
-    def __init__(self, obj, md, msr, cmp, ana, key, wt):
-        super().__init__(obj, md, elp.PRI_CHORD, msr)
+    def __init__(self, est, md, msr, cmp, ana, key, wt, pnum):
+        # est:  elapse stack class
+        # md:   midi
+        # msr:  current measure number
+        # cmp:  composition data
+        # ana:  musical analyse data
+        # key:  key
+        # wt:   whole tick
+        # pnum: part number(0-3)
+        super().__init__(est, md, elp.PRI_CHORD+pnum, msr)
         self.cmp = copy.deepcopy(cmp)
         self.ana = copy.deepcopy(ana)
         self.keynote = key
 
         self.play_counter = 0
         self.elapsed_tick = 0
-        self.next_tick = 0
-        self.seqdt = ['chord',0,'thru']
+        self.next_tick_in_cmp = 0
+        self.seqdt = nlib.NO_CHORD
         self.chord_name = self.seqdt[2]
         self.root = 0
         self.translation_tbl = nlib.CHORD_SCALE['thru']
 
         # for super's member
         self.whole_tick = wt
+        self.next_msr = msr
 
     def get_ana(self):
         return self.ana
@@ -223,7 +246,7 @@ class CompositionLoop(Loop):
         self.chord_name = self.get_chord()
         if self.chord_name != '':
             self.root, self.translation_tbl = tx.TextParse.detect_chord_scale(self.chord_name)
-        print(self.chord_name)
+        print('Chord: ',self.chord_name)
 
     def _reset_note_tranlation(self):
         self.root = 0
@@ -243,7 +266,7 @@ class CompositionLoop(Loop):
                 next_tick = nlib.END_OF_DATA   # means sequence finished
                 break
             next_tick = self.cmp[trace][nlib.TICK]
-            if next_tick < tick:
+            if next_tick <= tick:
                 self.seqdt = self.cmp[trace]
                 self._prepare_note_translation()
             else:
@@ -256,13 +279,18 @@ class CompositionLoop(Loop):
     ## IF Function by ElapseIF Class
     def periodic(self, msr, tick):
         tk_onemsr = self.tick_for_one_measure
-        self.elapsed_tick = (msr - self.first_measure_num)*tk_onemsr + tick
+        self.elapsed_tick = (msr - self.first_msr_num)*tk_onemsr + tick
         if self.elapsed_tick >= self.whole_tick:
+            self.next_msr = nlib.FULL
             self.destroy = True
             return
 
-        if self.elapsed_tick >= self.next_tick:
+        if self.elapsed_tick >= self.next_tick_in_cmp:
             nt = self._generate_event(self.elapsed_tick)
+            self.next_tick_in_cmp = nt
             if nt == nlib.END_OF_DATA:
+                self.next_msr = nlib.FULL
                 self.destroy = True
-            self.next_tick = nt
+            else:
+                self.next_tick = self.next_tick_in_cmp%self.tick_for_one_measure
+                self.next_msr = self.first_msr_num + self.next_tick_in_cmp//self.tick_for_one_measure

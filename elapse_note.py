@@ -17,8 +17,7 @@ class Note(elp.ElapseIF):
         self.keynote = key
         self.during_noteon = False
         self.destroy = False
-        self.off_msr = 0
-        self.off_tick = 0
+        self.tick_for_onemsr = est.get_tick_for_onemsr()
 
     def _note_on(self):
         num = self.note_num + self.keynote
@@ -29,22 +28,25 @@ class Note(elp.ElapseIF):
     def _note_off(self):
         self.destroy = True
         self.during_noteon = False
+        self.next_msr = nlib.FULL
         # midi note off
         self.md.set_fifo(self.est.get_time(), ['note', self.midi_ch, self.note_num, 0])
 
-    def periodic(self,msr,tick):
+    def periodic(self, msr, tick):
         if not self.during_noteon:
             self.during_noteon = True
             tk = self.est.get_tick_for_onemsr()
-            self.off_msr = msr
-            self.off_tick = tick + self.duration
-            while self.off_tick > tk:
-                self.off_tick -= tk
-                self.off_msr += 1
+            msrcnt = 0
+            off_tick = tick + self.duration
+            while off_tick > tk:
+                off_tick -= tk
+                msrcnt += 1
             # midi note on
             self._note_on()
-        else:
-            if (msr == self.off_msr and tick > self.off_tick) or msr > self.off_msr:
+            self.next_msr = msr + msrcnt
+            self.next_tick = off_tick%self.tick_for_onemsr
+
+        elif (msr == self.next_msr and tick >= self.next_tick) or msr > self.next_msr:
                 self._note_off()
 
     def destroy_me(self):
@@ -71,8 +73,7 @@ class Damper(elp.ElapseIF):
         self.duration = ev[nlib.DUR]
         self.during_pedal = False
         self.destroy = False
-        self.off_msr = 0
-        self.off_tick = 0
+        self.tick_for_onemsr = est.get_tick_for_onemsr()
 
     def _pedal_on(self):
         self.md.set_fifo(self.est.get_time(), ['damper', self.midi_ch, self.cc_num, self.value])
@@ -80,6 +81,7 @@ class Damper(elp.ElapseIF):
     def _pedal_off(self):
         self.destroy = True
         self.during_pedal = False
+        self.next_msr = nlib.FULL
         # midi damper pedal off
         self.md.set_fifo(self.est.get_time(), ['damper', self.midi_ch, self.cc_num, 0])
 
@@ -87,15 +89,17 @@ class Damper(elp.ElapseIF):
         if not self.during_pedal:
             self.during_pedal = True
             tk = self.est.get_tick_for_onemsr()
-            self.off_msr = msr
-            self.off_tick = tick + self.duration
-            while self.off_tick > tk:
-                self.off_tick -= tk
-                self.off_msr += 1
+            msrcnt = 0
+            off_tick = tick + self.duration
+            while off_tick > tk:
+                off_tick -= tk
+                msrcnt += 1
             # midi control change on
             self._pedal_on()
+            self.next_msr = msr + msrcnt
+            self.next_tick = off_tick%self.tick_for_onemsr
         else:
-            if (msr == self.off_msr and tick > self.off_tick) or msr > self.off_msr:
+            if (msr == self.next_msr and tick > self.next_tick) or msr > self.next_msr:
                 self._pedal_off()
 
     def destroy_me(self):

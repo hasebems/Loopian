@@ -127,6 +127,38 @@ class ElapseStack:
         self.bpm = self.bpm_stock
 
 
+    def _insert_proper_locate(self, elapsed, sqobj):
+        msr, tick = sqobj.next()
+        for i in range(len(elapsed)):
+            msrx, tickx = elapsed[i].next()
+            if (msr == msrx and \
+                ((tick == tickx and elapsed[i].priority > sqobj.priority) or \
+                  tick < tickx)) or \
+                (msr < msrx):
+                elapsed.insert(i, sqobj)
+                return
+
+
+    def _pick_out_play_obj(self, crnt_msr, crnt_tick):
+        elapsed = []
+        for sqobj in self.sqobjs:
+            msr, tick = sqobj.next()
+            if (msr == crnt_msr and tick <= crnt_tick) or msr < crnt_msr:
+                # 現在のタイミングより前のイベントがあれば
+                if len(elapsed) == 0:
+                    elapsed.append(sqobj)
+                else:
+                    self._insert_proper_locate(elapsed, sqobj)
+        return elapsed
+
+
+    def _debug_disp(self):
+        elapse_obj = 'ElapseObj: '                # for debug
+        for sqobj in self.sqobjs:
+            elapse_obj += str(sqobj.who_I_am()) + ',' # for debug
+        print(elapse_obj)                        # for debug
+
+
     def periodic(self):     # seqplay thread
         ## check flags
         if self.play_for_periodic and not self.during_play:
@@ -172,19 +204,20 @@ class ElapseStack:
                     sqobj.fine()
                 self._destroy_ended_obj()
                 return
+            self._debug_disp()
 
-            ## new measure
-            sqobjs_copy = copy.copy(self.sqobjs)
-            elapse_obj = 'ElapseObj: '                # for debug
-            for sqobj in sqobjs_copy:
-                sqobj.msrtop(self.crnt_measure)
-                elapse_obj += str(sqobj.who_I_am()) + ',' # for debug
-            print(elapse_obj)                        # for debug
-
-        ## play seqplay_object
-        sqobjs_copy = copy.copy(self.sqobjs)
-        for sqobj in sqobjs_copy:
-                sqobj.periodic(self.crnt_measure, self.crnt_tick_inmsr)
+        unfinish_counter = 0
+        while True:
+            play_sqobjs = self._pick_out_play_obj(self.crnt_measure, self.crnt_tick_inmsr)
+            if len(play_sqobjs) == 0:
+                break
+            for obj in play_sqobjs:
+                obj.periodic(self.crnt_measure, self.crnt_tick_inmsr)
+            unfinish_counter += 1
+            if unfinish_counter > 100:
+                print("Error! Unable to finish obj. exist! No.: ", play_sqobjs[0].priority)
+                self._debug_disp()
+                while True: pass    # 無限ループ
 
         ## remove ended obj
         self._destroy_ended_obj()

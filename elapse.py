@@ -40,9 +40,6 @@ class ElapseIF:
     def fine(self):     # User による fine があった次の小節先頭でコールされる
         pass
 
-    def msrtop(self,msr):           # 小節先頭でコールされる
-        pass
-
     def periodic(self,msr,tick):    # 再生中、繰り返しコールされる
         pass
 

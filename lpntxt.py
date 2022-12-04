@@ -555,8 +555,8 @@ class TextParse:
                 mes_end= True
                 chord = chord[0:-1]
             if tick < tick_for_onemsr*msr:
-                adjust_tick = tick              # 途中拍で和音が変わる時、音が変わらない暫定対策
-                if tick != 0: adjust_tick -= 1  # 
+                adjust_tick = tick
+                #if tick != 0: adjust_tick -= 1  # 途中拍で和音が変わる時、音が変わらない暫定対策
                 if same_chord != chord:
                     same_chord = chord
                     rcmb.append(['chord', adjust_tick, chord])
