@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 
-# Timing Priority(pri)
+# Timing Priority(pri) 数値が小さいほど優先度が高い（同じtickなら先に再生される）
 PRI_NONE = 1000
 PRI_PART = 100
-PRI_LOOP = 200
-PRI_CHORD = 300
+PRI_CHORD = 200
+PRI_LOOP = 300
 PRI_NOTE = 400
 PRI_DMPR = 500
 
@@ -18,8 +18,8 @@ class ElapseIF:
         self.md = md
         self.priority = pri
         self.id = id
-        self.next_msr = 0
-        self.next_tick = 0
+        self.next_msr = 0   #   次に呼ばれる小節番号が保持される
+        self.next_tick = 0  #   次に呼ばれるTick数が保持される
 
     # ElapseIF thread内でコール
     def who_I_am(self):
@@ -28,7 +28,7 @@ class ElapseIF:
         else:
             return self.priority
 
-    def next(self):
+    def next(self):     # 次に呼ばれる小節番号、Tick数を返す
         return self.next_msr, self.next_tick
 
     def start(self):    # User による start/play 時にコールされる
