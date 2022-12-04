@@ -53,7 +53,7 @@
     - para  （コード変換の指定）
 
 
-## Dev.
+## Design
 
 ```mermaid
 classDiagram
@@ -63,20 +63,41 @@ Loop <|-- PhraseLoop
 Loop <|-- CompositionLoop
 ElapseIF <|-- Note
 ElapseIF <|-- Damper
-SeqStack o-- Part
-SeqStack o-- PhraseLoop
-SeqStack o-- CompositionLoop
-SeqStack o-- Note
-SeqStack o-- Damper
+ElapseStack o-- Part
+ElapseStack o-- PhraseLoop
+ElapseStack o-- CompositionLoop
+ElapseStack o-- Note
+ElapseStack o-- Damper
 SeqDataAllStock *-- PhraseDataStock
 SeqDataAllStock *-- DamperPartStock
 SeqDataAllStock *-- CompositionPartStock
-SeqDataAllStock <-- SeqStack
+SeqDataAllStock <-- ElapseStack
 ```
+
+### Elapse Object
+
+- 用語定義
+    - Elapse Object: 時間経過をもつオブジェクト
+    - ElapseIF Class: Elapse Object の最上位の抽象クラス、ほぼIF
+    - Elapse Stack Class: 全ての Elapse Object を集約し、周期に従いコールする処理を行う
+
+- 再生されるデータは全て Elapse Object の継承 Object が出力
+    - Elapse Object は全て ElapseIF Class から継承される
+    - 以下の Class が継承されている
+        - Part Class
+        - Loop Class(Phrase/Composition)
+        - Note/Pedal Class
+
+- Elapse Object は、Elapse Stack Class(EST) で管理される
+    - EST は Elapse Object をリストに繋げる
+    - periodic() で各 Elapse Object の periodic() をコールする
+        - 各 Elapse Object は、next_tick, next_msr で次回に呼ばれるタイミングを返す
+        - next_tick/next_msr の値に準じて、EST は順序通りに Elapse Object をコール
+
 
 ### 自動変換
 
-- データは以下の過程で内容を書き換えられていく
+- Noteデータは以下の過程で内容を書き換えられていく
     1. [raw/生] ユーザーが入力した生データ
     1. [complement/補填] 生データに足りないデータを補填したり、追加フレーズを繋げたデータ
     1. [recombined/再構成] SMF 的な、tick/note/velocity をセットにしたデータ
@@ -84,15 +105,18 @@ SeqDataAllStock <-- SeqStack
     1. [humanized/生演奏] velocity/duration を生演奏に近づけたデータ
     1. [randomized/乱数] random要素を加味したデータ
     1. [translated/変換] コードの反映
-- 上記のうち、最初の５つはユーザーによる入力時に行う処理、楽譜情報から離れない状態
-- 小節冒頭にこのデータが Loop Obj.にロードされる
-- 再生時、リアルタイムに最後の二つの処理が行われる
+- 上記のうち最初の５つは、ユーザーによる入力時に処理される(static)
+    - 小節冒頭にこのデータが Loop Obj.にロードされる
+- 再生中、リアルタイムに最後の二つの処理が行われる(dynamic)
 - 上記の各データが、他の要因で変更されるタイミングは以下
+    - phrase が入力されたら、最初からやり直し(set_raw())
+    - composition が入力されたら、「再構成」からやり直し(set_recombined())
     - bpm/beat/key が変わったら、「再構成」からやり直し
-    - 再生で Loop がひとまわりするたびに「乱数」からやり直し
-    - phrase が入力されたら、最初からやり直し
-    - composition が入力されたら、「再構成」からやり直し
+    - 再生中に Loop がひとまわりするたびに「乱数」からやり直し(get_final())
 - 実際の MIDI 出力はさらに、バッファに積まれ、latency の時間の後に出力される
+
+- Pedalデータは各パートの Loop 冒頭に以下の処理を行う
+
 
 
 ### Filter
@@ -122,12 +146,18 @@ SeqDataAllStock <-- SeqStack
 - アルペジオで連続して同じ音が出ないようにする -> 同音回避型和音変換対応　済
 - ベロシティが、周期的に変わる謎の現象 -> copy されていなかった不具合修正　済
 - | を小節区切り対応、 ,, 連続で同じものを補填する対応　済
-- 小節の先頭の音が、時々和音が変わらない音で出てしまう不具合　済
 - 左手用に、平行移動型の和音変換、Music Expressionへの追加(trans:para/parallel)　済
 - Composition を４つのパート独立に設定できる　済
 - 音価指定を階名の[]の中に組み入れる、音価用の[]をやめる　済
+- 各パートのイベントのタイミングを合わせる大幅な修正　済
 
+当面の対応
+- 小節の先頭の音が、時々和音が変わらない音で出てしまう不具合再び
 - Pedal On/Off の Music Expressionへの追加(noped)
+    - on/off の適切な位置
+    - 各小節の正しい位置で
+
+先の話
 - さらなる humanized アルゴリズムの追加
 - Load/Save機能、Auto Load機能
 
