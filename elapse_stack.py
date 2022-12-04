@@ -46,7 +46,6 @@ class ElapseStack:
 
     def add_obj(self, obj):
         self.sqobjs.append(obj)
-        #print(len(self.sqobjs))
 
     def del_obj(self, del_obj):
         if del_obj in self.sqobjs:
@@ -73,10 +72,10 @@ class ElapseStack:
         else:
             return None
 
-    def get_note(self, part_num):
+    def same_note(self, num):
         nt = []
         for obj in self.sqobjs:
-            if obj.pri == elp.PRI_NOTE and obj.midi_ch == part_num:
+            if obj.priority == elp.PRI_NOTE and obj.note_num == num:
                 nt.append(obj)
         return nt
 

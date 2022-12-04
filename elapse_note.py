@@ -15,36 +15,46 @@ class Note(elp.ElapseIF):
         self.duration = ev[nlib.DUR]
         self.txt = txt
         self.keynote = key
-        self.during_noteon = False
+        self.noteon_started = False
         self.destroy = False
         self.tick_for_onemsr = est.get_tick_for_onemsr()
+
+    def _search_same_note(self, note_num):
+        did = False
+        snts = self.est.same_note(note_num)
+        if len(snts) == 0: return did
+        for snt in snts:
+            if snt != self:
+                did = True
+                snt._note_off()
+        return did
 
     def _note_on(self):
         num = self.note_num + self.keynote
         self.note_num = nlib.note_limit(num, 0, 127)
+        nof = self._search_same_note(self.note_num)
         self.md.set_fifo(self.est.get_time(), ['note', self.midi_ch, self.note_num, self.velocity])
         print('Note:', self.note_num, self.velocity, self.txt)
 
     def _note_off(self):
         self.destroy = True
-        self.during_noteon = False
         self.next_msr = nlib.FULL
         # midi note off
         self.md.set_fifo(self.est.get_time(), ['note', self.midi_ch, self.note_num, 0])
 
     def periodic(self, msr, tick):
-        if not self.during_noteon:
-            self.during_noteon = True
-            tk = self.est.get_tick_for_onemsr()
+        if not self.noteon_started:
+            self.noteon_started = True
+            tk = self.tick_for_onemsr
             msrcnt = 0
             off_tick = tick + self.duration
-            while off_tick > tk:
+            while off_tick >= tk:
                 off_tick -= tk
                 msrcnt += 1
             # midi note on
             self._note_on()
             self.next_msr = msr + msrcnt
-            self.next_tick = off_tick%self.tick_for_onemsr
+            self.next_tick = off_tick
 
         elif (msr == self.next_msr and tick >= self.next_tick) or msr > self.next_msr:
                 self._note_off()
@@ -53,11 +63,11 @@ class Note(elp.ElapseIF):
         return self.destroy
 
     def stop(self):
-        if self.during_noteon:
+        if self.noteon_started:
             self._note_off()
 
     def fine(self):
-        if self.during_noteon:
+        if self.noteon_started:
             self._note_off()
 
 #------------------------------------------------------------------------------
@@ -71,7 +81,7 @@ class Damper(elp.ElapseIF):
         self.cc_num = 64
         self.value = ev[nlib.VAL]
         self.duration = ev[nlib.DUR]
-        self.during_pedal = False
+        self.pedal_started = False
         self.destroy = False
         self.tick_for_onemsr = est.get_tick_for_onemsr()
 
@@ -80,14 +90,13 @@ class Damper(elp.ElapseIF):
 
     def _pedal_off(self):
         self.destroy = True
-        self.during_pedal = False
         self.next_msr = nlib.FULL
         # midi damper pedal off
         self.md.set_fifo(self.est.get_time(), ['damper', self.midi_ch, self.cc_num, 0])
 
     def periodic(self,msr,tick):
-        if not self.during_pedal:
-            self.during_pedal = True
+        if not self.pedal_started:
+            self.pedal_started = True
             tk = self.est.get_tick_for_onemsr()
             msrcnt = 0
             off_tick = tick + self.duration
@@ -106,9 +115,9 @@ class Damper(elp.ElapseIF):
         return self.destroy
 
     def stop(self):
-        if self.during_pedal:
+        if self.pedal_started:
             self._pedal_off()
 
     def fine(self):
-        if self.during_pedal:
+        if self.pedal_started:
             self._pedal_off()
