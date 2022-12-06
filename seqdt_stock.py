@@ -172,7 +172,7 @@ class PhraseDataStock:
 #   Damper の入力テキストの変換
 class DamperPartStock:
 
-    CHK_MARGIN = 40
+    PDL_MARGIN_TICK = 60
 
     def __init__(self, pt, seq):
         self.seq = seq
@@ -196,13 +196,12 @@ class DamperPartStock:
 
         cmpdt = pt.loop_obj.cmp
         msr = msr - pt.first_measure_num
-        tick_change_point.append(self.CHK_MARGIN)    # 小節冒頭には必ずイベントを発生させる
+        tick_change_point.append(self.PDL_MARGIN_TICK)    # 小節冒頭には必ずイベントを発生させる
         for dt in cmpdt:
             tick = dt[nlib.TICK]
-            print('tt>',msr,tick)
             if self.tick_for_onemsr*msr <= tick and tick < self.tick_for_onemsr*(msr+1):
                 # コードイベントの CHK_MARGIN 後ろの tick を記録
-                tick = (tick + self.CHK_MARGIN)%self.tick_for_onemsr
+                tick = (tick + self.PDL_MARGIN_TICK)%self.tick_for_onemsr
                 tick_change_point.append(tick)
 
 
@@ -224,11 +223,11 @@ class DamperPartStock:
         for i in range(len(tick_change_point)):
             ont = tick_change_point[i]                  # On Event
             if i==0 and len(tick_change_point) == 1:    # Off Event
-                dur = self.tick_for_onemsr - (self.CHK_MARGIN//2) - ont
+                dur = self.tick_for_onemsr - (self.PDL_MARGIN_TICK//2) - ont
             elif i+1 < len(tick_change_point):
-                dur = tick_change_point[i+1] - (self.CHK_MARGIN*3)//2 - ont
+                dur = tick_change_point[i+1] - (self.PDL_MARGIN_TICK*3)//2 - ont
             else:   # 一番最後
-                dur = self.tick_for_onemsr - (self.CHK_MARGIN//2) - ont
+                dur = self.tick_for_onemsr - (self.PDL_MARGIN_TICK//2) - ont
             gendt.append(['damper', ont, dur, 127])
         #if len(gendt) > 0:
         #    print("Pedal Event: ", gendt)
