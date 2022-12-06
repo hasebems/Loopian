@@ -98,10 +98,9 @@ Phrase 追加
         - 基準音価は任意の数値が指定可能で、全音符の長さの何分の1かを示す数値となる
         - 基準音価(n:)を省略した場合、全て四分音符とみなす
 
-
 - 音楽表現
     - f,mf,mp,p,pp: 音量
-    - ped,noped: Pedal 指定（ped がデフォルト)
+
 
 
 Composition 指定
@@ -133,6 +132,7 @@ Composition 指定
         - thru : 全ての音
     - 音楽表現
         - para : 和音変換時、root に合わせて並行移動する 
+        - noped: Pedal Off指定
 
 
 入力環境コマンド
@@ -160,5 +160,8 @@ Composition 指定
     - 'set oct=0,0,-1,+1' : 4つのパートのオクターブを一度に設定できる
 - 'set input=fixed' : 階名を入力したときのオクターブ決定法
     - fixed は、入力する階名の位置は固定
-    - closer は、指示がない限り、前回に近い音程
+    - closer は、指示がない限り、前回に近い音程 (default)
+- 'set samenote=modeling' : 同音連打の動き方
+    - modeling は、モデリング音源向けで、note off は一度しか送らない（default）
+    - common は、一般的なMIDI音源向けで、note off は note on の数だけ送られる
 
