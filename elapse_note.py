@@ -16,6 +16,7 @@ class Note(elp.ElapseIF):
         self.txt = txt
         self.keynote = key
         self.noteon_started = False
+        self.noteoff_enable = True
         self.destroy = False
         self.tick_for_onemsr = est.get_tick_for_onemsr()
         self.start_tick = tick
@@ -41,7 +42,11 @@ class Note(elp.ElapseIF):
         self.destroy = True
         self.next_msr = nlib.FULL
         # midi note off
+        if self.noteoff_enable:
         self.md.set_fifo(self.est.get_time(), ['note', self.midi_ch, self.note_num, 0])
+
+    def cancel_noteoff(self):
+        self.noteoff_enable = False
 
     def periodic(self, msr, tick):
         if not self.noteon_started:

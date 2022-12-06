@@ -203,6 +203,16 @@ class Parsing:
                 self.print_dialogue("Input has changed!")
             else:
                 self.print_dialogue("what?")
+        elif command == 'samenote':
+            input_list = tx[1].strip()
+            if input_list == 'modeling':
+                self.est.set_pianoteq_mode(True)
+                self.print_dialogue("Input has changed!")
+            elif input_list == 'common':
+                self.est.set_pianoteq_mode(False)
+                self.print_dialogue("Input has changed!")
+            else:
+                self.print_dialogue("what?")
         else:
             self.print_dialogue("what?")
 

@@ -3,7 +3,6 @@ import time
 import lpnlib as nlib
 import elapse as elp
 import elapse_part as elpp
-import copy
 
 #------------------------------------------------------------------------------
 # Tempo 生成の考え方
@@ -38,6 +37,7 @@ class ElapseStack:
         self.play_for_periodic = False
         self.stop_for_periodic = False
         self.fine_for_periodic = False
+        self.pianoteq_mode = True
 
         self.sqobjs = []
         for i in range(nlib.MAX_PART_COUNT): # Part は、常に存在
@@ -222,7 +222,7 @@ class ElapseStack:
         self._destroy_ended_obj()
 
 
-    def change_tempo(self, tempo):     # command thread
+    def change_tempo(self, tempo):     # main thread
         self.bpm_stock = tempo
 
     def change_beat(self, btnum, onpu):    # beat: number of ticks of one measure
@@ -230,22 +230,25 @@ class ElapseStack:
         beat = ((nlib.DEFAULT_TICK_FOR_ONE_MEASURE/onpu)*btnum, btnum, onpu)
         self.stock_tick_for_onemsr = beat
 
-    def change_key_oct(self, key, oct, text):     # command thread
+    def change_key_oct(self, key, oct, text):     # main thread
         self.key_text = text
         for i in range(nlib.MAX_PART_COUNT):
             pt = self.get_part(i)
             pt.change_key(key)
             pt.change_oct(oct, False)
 
-    def start(self):     # command thread
+    def set_pianoteq_mode(self, md):
+        self.pianoteq_mode = md
+
+    def start(self):     # main thread
         self.play_for_periodic = True
         if self.during_play:
             return False
         else:
             return True
 
-    def stop(self):     # command thread
+    def stop(self):     # main thread
         self.stop_for_periodic = True
 
-    def fine(self):     # command thread
+    def fine(self):     # main thread
         self.fine_for_periodic = True
