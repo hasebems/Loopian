@@ -102,7 +102,7 @@ class Part(elp.ElapseIF):
                 # 現在の Loop Obj が終了していない時
                 pass
 
-        if self.loop_measure != 0:
+        elif self.loop_measure != 0:
             if (msr - self.first_measure_num)%self.loop_measure == 0:
                 # 同じ Loop.Obj を生成する
                 self.first_measure_num = msr
