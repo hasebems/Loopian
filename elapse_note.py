@@ -7,7 +7,7 @@ import lpnlib as nlib
 #   Note On時に生成され、MIDI を出力した後、Note Offを生成して destroy される
 class Note(elp.ElapseIF):
 
-    def __init__(self, est, md, ev, key, txt, tick):
+    def __init__(self, est, md, ev, key, txt, next_real):
         super().__init__(est, md, elp.PRI_NOTE)
         self.midi_ch = 0
         self.note_num = ev[nlib.NOTE]
@@ -19,22 +19,21 @@ class Note(elp.ElapseIF):
         self.noteoff_enable = True
         self.destroy = False
         self.tick_for_onemsr = est.get_tick_for_onemsr()
-        self.start_tick = tick
+        self.next_msr = next_real[0]
+        self.next_tick = next_real[1]
 
-    def _search_same_note(self, note_num):
-        did = False
+    def _cancel_same_noteoff(self, note_num):
         snts = self.est.same_note(note_num)
-        if len(snts) == 0: return did
+        if len(snts) == 0: return
         for snt in snts:
             if snt != self:
-                did = True
-                snt._note_off()
-        return did
+                snt.cancel_noteoff()
 
     def _note_on(self):
         num = self.note_num + self.keynote
         self.note_num = nlib.note_limit(num, 0, 127)
-        nof = self._search_same_note(self.note_num)
+        if self.est.pianoteq_mode:
+            self._cancel_same_noteoff(self.note_num)
         self.md.set_fifo(self.est.get_time(), ['note', self.midi_ch, self.note_num, self.velocity])
         print('Note:', self.note_num, self.velocity, self.txt)
 
@@ -43,26 +42,26 @@ class Note(elp.ElapseIF):
         self.next_msr = nlib.FULL
         # midi note off
         if self.noteoff_enable:
-        self.md.set_fifo(self.est.get_time(), ['note', self.midi_ch, self.note_num, 0])
+            self.md.set_fifo(self.est.get_time(), ['note', self.midi_ch, self.note_num, 0])
 
     def cancel_noteoff(self):
         self.noteoff_enable = False
 
     def periodic(self, msr, tick):
-        if not self.noteon_started:
-            self.noteon_started = True
-            tk = self.tick_for_onemsr
-            msrcnt = 0
-            off_tick = self.start_tick + self.duration
-            while off_tick >= tk:
-                off_tick -= tk
-                msrcnt += 1
-            # midi note on
-            self._note_on()
-            self.next_msr = msr + msrcnt
-            self.next_tick = off_tick
-
-        elif (msr == self.next_msr and tick >= self.next_tick) or msr > self.next_msr:
+        if (msr == self.next_msr and tick >= self.next_tick) or msr > self.next_msr:
+            if not self.noteon_started:
+                self.noteon_started = True
+                tk = self.tick_for_onemsr
+                msrcnt = 0
+                off_tick = self.next_tick + self.duration
+                while off_tick >= tk:
+                    off_tick -= tk
+                    msrcnt += 1
+                # midi note on
+                self._note_on()
+                self.next_msr += msrcnt
+                self.next_tick = off_tick
+            else:
                 self._note_off()
 
     def destroy_me(self):
@@ -81,7 +80,7 @@ class Note(elp.ElapseIF):
 #   Pedal On時に生成され、MIDI を出力した後、Pedal Offを生成して destroy される
 class Damper(elp.ElapseIF):
 
-    def __init__(self, est, md, ev, tick):
+    def __init__(self, est, md, ev, next_real):
         super().__init__(est, md, elp.PRI_DMPR)
         self.midi_ch = 0
         self.cc_num = 64
@@ -90,7 +89,8 @@ class Damper(elp.ElapseIF):
         self.pedal_started = False
         self.destroy = False
         self.tick_for_onemsr = est.get_tick_for_onemsr()
-        self.start_tick = tick
+        self.next_msr = next_real[0]
+        self.next_tick = next_real[1]
 
     def _pedal_on(self, tick, off_tick):
         self.md.set_fifo(self.est.get_time(), ['damper', self.midi_ch, self.cc_num, self.value])
@@ -103,20 +103,20 @@ class Damper(elp.ElapseIF):
         self.md.set_fifo(self.est.get_time(), ['damper', self.midi_ch, self.cc_num, 0])
 
     def periodic(self, msr, tick):
-        if not self.pedal_started:
-            self.pedal_started = True
-            tk = self.tick_for_onemsr
-            msrcnt = 0
-            off_tick = self.start_tick + self.duration
-            while off_tick >= tk:
-                off_tick -= tk
-                msrcnt += 1
-            # midi control change on
-            self._pedal_on(self.start_tick, off_tick)
-            self.next_msr = msr + msrcnt
-            self.next_tick = off_tick
-        else:
-            if (msr == self.next_msr and tick >= self.next_tick) or msr > self.next_msr:
+        if (msr == self.next_msr and tick >= self.next_tick) or msr > self.next_msr:
+            if not self.pedal_started:
+                self.pedal_started = True
+                tk = self.tick_for_onemsr
+                msrcnt = 0
+                off_tick = self.next_tick + self.duration
+                while off_tick >= tk:
+                    off_tick -= tk
+                    msrcnt += 1
+                # midi control change on
+                self._pedal_on(self.next_tick, off_tick)
+                self.next_msr += msrcnt
+                self.next_tick = off_tick
+            else:
                 self._pedal_off()
 
     def destroy_me(self):

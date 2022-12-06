@@ -134,7 +134,7 @@ class PhraseLoop(Loop):
         return proper_nt
 
 
-    def _note_event(self, ev, next_tick):
+    def _note_event(self, ev, next_tick, next_real):
         crntev = copy.deepcopy(ev)
         cmp_part = self.est.get_part(nlib.FIRST_COMPOSITION_PART+self.part_num-nlib.FIRST_NORMAL_PART)
         deb_txt = 'non'
@@ -154,10 +154,10 @@ class PhraseLoop(Loop):
                 self.last_note = self._translate_note_com(root, tbl, ev[nlib.NOTE])
                 deb_txt = 'com:' + str(root)
             crntev[nlib.NOTE] = self.last_note
-        self.est.add_obj(elpn.Note(self.est, self.md, crntev, self.keynote, deb_txt, next_tick))
+        self.est.add_obj(elpn.Note(self.est, self.md, crntev, self.keynote, deb_txt, next_real))
 
 
-    def _generate_event(self, tick):
+    def _generate_event(self, elapsed_tick):
         max_ev = len(self.phr)
         if max_ev == 0:
             # データを持っていない
@@ -170,12 +170,16 @@ class PhraseLoop(Loop):
                 next_tick = nlib.END_OF_DATA   # means sequence finished
                 break
             next_tick = self.phr[trace][nlib.TICK]
-            if next_tick <= tick:
+            if next_tick <= elapsed_tick:
                 ev = self.phr[trace]
+
+                msr = self.first_msr_num + self.next_tick_in_phrase//self.tick_for_one_measure
+                tick = self.next_tick_in_phrase%self.tick_for_one_measure
+                next_real = (msr,tick)
                 if ev[nlib.TYPE] == 'damper':# ev: ['damper', duration, tick, value]
-                    self.est.add_obj(elpn.Damper(self.est, self.md, ev, next_tick))
+                    self.est.add_obj(elpn.Damper(self.est, self.md, ev, next_real))
                 elif ev[nlib.TYPE] == 'note':# ev: ['note', tick, duration, note, velocity]
-                    self._note_event(ev, next_tick)
+                    self._note_event(ev, next_tick, next_real)
             else:
                 break
             trace += 1
