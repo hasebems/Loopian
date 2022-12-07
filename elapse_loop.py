@@ -16,13 +16,21 @@ class Loop(elp.ElapseIF):
 
     def __init__(self, est, md, pri, msr):
         super().__init__(est, md, pri)
+        self.destroy = False
         self.first_msr_num = msr
         self.whole_tick = 0
-        self.destroy = False
         self.tick_for_one_measure = self.est.get_tick_for_onemsr()
 
-    def periodic(self,msr,tick):
-        elapsed_tick = (msr - self.first_msrnum)*self.tick_for_one_measure + tick
+    def calc_srtick(self, msr, tick):
+        return (msr - self.first_msr_num)*self.tick_for_one_measure + tick
+
+    def gen_msr_tick(self, srtick):
+        tick = srtick%self.tick_for_one_measure
+        msr = self.first_msr_num + srtick//self.tick_for_one_measure
+        return msr, tick
+
+    def periodic(self, msr, tick):
+        elapsed_tick = self.calc_srtick(msr, tick)
         if elapsed_tick >= self.whole_tick:
             self.next_msr = nlib.FULL
             self.destroy = True
@@ -158,7 +166,9 @@ class PhraseLoop(Loop):
 
 
     def _generate_event(self, elapsed_tick):
-        max_ev = len(self.phr)
+        max_ev = 0 
+        if self.phr != None:
+            max_ev = len(self.phr)
         if max_ev == 0:
             # データを持っていない
             return nlib.END_OF_DATA
@@ -173,9 +183,7 @@ class PhraseLoop(Loop):
             if next_tick <= elapsed_tick:
                 ev = self.phr[trace]
 
-                msr = self.first_msr_num + self.next_tick_in_phrase//self.tick_for_one_measure
-                tick = self.next_tick_in_phrase%self.tick_for_one_measure
-                next_real = (msr,tick)
+                next_real = self.gen_msr_tick(self.next_tick_in_phrase)
                 if ev[nlib.TYPE] == 'damper':# ev: ['damper', duration, tick, value]
                     self.est.add_obj(elpn.Damper(self.est, self.md, ev, next_real))
                 elif ev[nlib.TYPE] == 'note':# ev: ['note', tick, duration, note, velocity]
@@ -190,8 +198,7 @@ class PhraseLoop(Loop):
 
     ## IF Function by ElapseIF Class
     def periodic(self, msr, tick):
-        elapsed_tick = (msr - self.first_msr_num)*self.tick_for_one_measure + tick
-
+        elapsed_tick = self.calc_srtick(msr, tick)
         if elapsed_tick > self.whole_tick:
             self.next_msr = nlib.FULL
             self.destroy = True
@@ -204,8 +211,7 @@ class PhraseLoop(Loop):
                 self.next_msr = nlib.FULL
                 self.destroy = True
             else:
-                self.next_tick = self.next_tick_in_phrase%self.tick_for_one_measure
-                self.next_msr = self.first_msr_num + self.next_tick_in_phrase//self.tick_for_one_measure
+                self.next_msr, self.next_tick = self.gen_msr_tick(self.next_tick_in_phrase)
 
 
 #------------------------------------------------------------------------------
@@ -228,20 +234,24 @@ class CompositionLoop(Loop):
         self.play_counter = 0
         self.elapsed_tick = 0
         self.next_tick_in_cmp = 0
-        self.seqdt = nlib.NO_CHORD
-        self.chord_name = self.seqdt[2]
-        self.root = 0
-        self.translation_tbl = nlib.CHORD_SCALE['thru']
 
         # for super's member
         self.whole_tick = wt
         self.next_msr = msr
 
+        self._reset_note_tranlation()
+
+    def _reset_note_tranlation(self):
+        self.seqdt = nlib.NO_CHORD
+        self.chord_name = self.seqdt[nlib.CHORD]
+        self.root = 0
+        self.translation_tbl = nlib.CHORD_SCALE['thru']
+
     def get_ana(self):
         return self.ana
 
     def get_chord(self):
-        return self.seqdt[2]
+        return self.seqdt[nlib.CHORD]
 
     def get_translation_tbl(self):
         return self.root, self.translation_tbl
@@ -252,12 +262,10 @@ class CompositionLoop(Loop):
             self.root, self.translation_tbl = tx.TextParse.detect_chord_scale(self.chord_name)
         print('Chord: ',self.chord_name)
 
-    def _reset_note_tranlation(self):
-        self.root = 0
-        self.translation_tbl = nlib.CHORD_SCALE['thru']
-
     def _generate_event(self, tick):
-        max_ev = len(self.cmp)
+        max_ev = 0
+        if self.cmp != None:
+            max_ev = len(self.cmp)
         if max_ev == 0:
             # データを持っていない
             self._reset_note_tranlation()
@@ -282,8 +290,7 @@ class CompositionLoop(Loop):
 
     ## IF Function by ElapseIF Class
     def periodic(self, msr, tick):
-        tk_onemsr = self.tick_for_one_measure
-        self.elapsed_tick = (msr - self.first_msr_num)*tk_onemsr + tick
+        self.elapsed_tick = self.calc_srtick(msr, tick)
         if self.elapsed_tick >= self.whole_tick:
             self.next_msr = nlib.FULL
             self.destroy = True
@@ -291,10 +298,15 @@ class CompositionLoop(Loop):
 
         if self.elapsed_tick >= self.next_tick_in_cmp:
             nt = self._generate_event(self.elapsed_tick)
-            self.next_tick_in_cmp = nt
             if nt == nlib.END_OF_DATA:
-                self.next_msr = nlib.FULL
-                self.destroy = True
+                # Composition Loop はイベントが終わっても、コード情報が終了するまで
+                # Loop が存在するようにしておく
+                rest_tick = self.whole_tick - self.next_tick_in_cmp
+                if rest_tick < self.tick_for_one_measure:
+                    self.next_tick = rest_tick
+                else:
+                    self.next_tick = self.tick_for_one_measure
+                self.next_tick_in_cmp = self.whole_tick
             else:
-                self.next_tick = self.next_tick_in_cmp%self.tick_for_one_measure
-                self.next_msr = self.first_msr_num + self.next_tick_in_cmp//self.tick_for_one_measure
+                self.next_tick_in_cmp = nt
+                self.next_msr, self.next_tick = self.gen_msr_tick(self.next_tick_in_cmp)

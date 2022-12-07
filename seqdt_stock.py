@@ -189,7 +189,8 @@ class DamperPartStock:
 
     def _collect_cmp_part_event(self, pt, tick_change_point, msr):
         if pt.loop_obj == None or \
-           (len(pt.loop_obj.cmp) == 1 and pt.loop_obj.cmp[0][2] == 'thru'):
+           (len(pt.loop_obj.cmp) == 1 and 
+             (pt.loop_obj.cmp[0][nlib.CHORD] == 'thru' or pt.loop_obj.cmp[0][nlib.CHORD] == '')):
             return
         if pt.loop_obj.ana != None and 'noped' in pt.loop_obj.ana:
             return
