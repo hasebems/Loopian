@@ -38,6 +38,7 @@ class Part(elp.ElapseIF):
         self.next_tick = 0
         if self.whole_tick == 0:
             self.state_reserve = True # 次小節冒頭で呼ばれるように
+            self.loop_obj = None
             return
 
         if self.part_num >= nlib.FIRST_NORMAL_PART:
