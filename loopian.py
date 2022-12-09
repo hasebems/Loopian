@@ -36,7 +36,7 @@ def main(): # main thread
     est = elp.ElapseStack(md)
     gendt = stk.SeqDataAllStock(est)
     prs = ps.Parsing(est, md, gendt)
-    gui = lpngui.LpnGui(lp, prs, log)
+    gui = lpngui.LpnGui(lp, prs, log, est)
 
     md_job = threading.Thread(target=midi_periodic, args=(lp, md))
     md_job.start()
@@ -44,7 +44,7 @@ def main(): # main thread
     ev_job.start()
 
     prs.midi_setting(prs.CONFIRM_MIDI_OUT_ID)
-    gui.loop(est)
+    gui.loop()
     log.save_file()
 
     ev_job.join()

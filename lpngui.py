@@ -341,6 +341,11 @@ class LpnGuiText:
         # Blit the text.
         screen.blit(self.txt_surface, (self.rect.x+10, self.rect.y+7))
 
+# Callback func     別スレッドから呼ばれる
+def update_measure(gui, pt, total_msr):
+    num = pt-nlib.FIRST_NORMAL_PART
+    gui.loop_msr[num] = total_msr
+    gui.loop_rst[num] = True
 
 # Assembly All GUI parts
 class LpnGui:
@@ -366,7 +371,7 @@ class LpnGui:
     LAMP_INTERVAL = 40
     PART_INTERVAL = 40
 
-    def __init__(self, loop_enable, cmd, log):
+    def __init__(self, loop_enable, cmd, log, est):
         pg.init()
         self.screen = pg.display.set_mode((self.SURFACE_X_SZ, self.SURFACE_Y_SZ))
         pg.display.set_caption("Loopian")    # タイトル文字を指定
@@ -376,6 +381,7 @@ class LpnGui:
         self.cmd = cmd
         self.cmd.set_gui(self)
         self.log = log
+        self.est = est
 
         # コマンド入力＆スクロール
         self.font = pg.font.Font(None, 28)   # フォントの設定
@@ -391,6 +397,16 @@ class LpnGui:
         self.beatBox =  LpnGuiText(self.COLUMN4_X, self.LINE2_Y)
         XPOSI = [self.COLUMN1_X, self.COLUMN2_X, self.COLUMN3_X, self.COLUMN4_X]
         self.partBox = [LpnGuiText(XPOSI[i], self.LINE3_Y) for i in range(nlib.MAX_NORMAL_PART)]
+
+        # Part 毎の表示のための変数初期化
+        self.loop_msr = [0 for _ in range(nlib.MAX_NORMAL_PART)]      # 別スレッドで書き込み
+        self.loop_msr_cnt = [1 for _ in range(nlib.MAX_NORMAL_PART)]
+        self.loop_rst = [False for _ in range(nlib.MAX_NORMAL_PART)]  # 別スレッドで書き込み
+        for i in range(nlib.MAX_NORMAL_PART):
+            # Callback 関数のセット
+            pt = est.get_part(i+nlib.FIRST_NORMAL_PART)
+            pt.set_callback(update_measure, self)
+        self.old_msr = -1
 
         # Title
         font = pg.font.SysFont(FONTS[136], 32)
@@ -412,21 +428,35 @@ class LpnGui:
             self.raw_time += 100
         return self._100ms_time
 
-    def _update_display(self, current_time, seq):
+    def if_change_to_newmsr(self, msr, tick):
+        # 小節が変わった時、各パートの小節番号も増やす
+        if msr != self.old_msr and tick > 0:
+            for i in range(nlib.MAX_NORMAL_PART):
+                if self.loop_rst[i]:
+                    self.loop_msr_cnt[i] = 1
+                    self.loop_rst[i] = False
+                else:
+                    self.loop_msr_cnt[i] += 1
+            self.old_msr = msr
+
+    def _update_display(self, current_time):
         self.inputBox.update(current_time)
         self.scroll_box.update()
+        seq = self.est
 
         self.bpmBox.set_text('bpm: ' + str(seq.bpm))
         msr, beat, tick, count = seq.get_tick()
         self.beatBox.set_text(str(msr+1) + ' : ' + str(beat+1) + ' : ' + str(tick))
         self.keyBox.set_text('key: ' + seq.key_text)
         self.timeSigBox.set_text('beat: ' + str(seq.beat[0]) + '/' + str(seq.beat[1]))
+        self.if_change_to_newmsr(msr, tick)
 
         PART_TXT = ['L1:','L2:','R1:','R2:']
         for i in range(nlib.MAX_NORMAL_PART):
             beat_str = '---'
             chord_name = ''
-            a,b = seq.get_part(i+nlib.FIRST_NORMAL_PART).get_loop_info()
+            b = self.loop_msr[i]
+            a = self.loop_msr_cnt[i]
             if b!=0:
                 beat_str = str(int(a)) + '/' + str(int(b))
                 lpobj = seq.get_part(i+nlib.FIRST_COMPOSITION_PART).loop_obj
@@ -455,7 +485,7 @@ class LpnGui:
             self.partBox[i].draw(self.screen)
 
 
-    def loop(self, seq):
+    def loop(self):
         clock = pg.time.Clock()
         while self.loop_enable.running:
             clock.tick(30)     # 30FPS
@@ -469,6 +499,6 @@ class LpnGui:
                     self.loop_enable.running = False
                     return
 
-            self._update_display(current_time, seq)
+            self._update_display(current_time)
             self._draw()
             pg.display.update()

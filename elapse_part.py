@@ -17,14 +17,23 @@ class Part(elp.ElapseIF):
         self.keynote = 0
         self.base_note = nlib.DEFAULT_NOTE_NUMBER - 12*left_part
         self.loop_measure = 0   # whole_tick と同時生成
-        self.lp_elapsed_msr = 0    # loop 内の経過小節数 for GUI
         self.whole_tick = 0     # loop_measure と同時生成
         self.sync_next_msr_flag = False
         self.state_reserve = False
         self.seqdt_part = None
+        self.cb_handler = None
+        self.handler_owner = None
 
     def set_seqdt_part(self, gendt):
         self.seqdt_part = gendt
+
+    def set_callback(self, func, gui):
+        self.cb_handler = func
+        self.handler_owner = gui
+
+    def update_loop_for_gui(self):
+        if self.cb_handler != None:
+            self.cb_handler(self.handler_owner, self.part_num, self.loop_measure)    # Callback
 
     def _generate_loop(self, msr):
         self.whole_tick, elm, ana = self.seqdt_part.get_final(msr)
@@ -41,6 +50,7 @@ class Part(elp.ElapseIF):
             self.loop_obj = None
             return
 
+        self.update_loop_for_gui()
         if self.part_num >= nlib.FIRST_NORMAL_PART:
             self.loop_obj = phrlp.PhraseLoop(self.est, self.md, msr, elm, ana,  \
                 self.keynote, self.whole_tick, self.part_num)
@@ -65,7 +75,6 @@ class Part(elp.ElapseIF):
             # 新たに Loop Obj.を生成
             self.first_measure_num = msr    # 計測開始の更新
             self._generate_loop(msr)
-            self.lp_elapsed_msr = 1
 
         if self.next_msr < msr or \
             (self.next_msr == msr and self.next_tick <= tick):
@@ -108,10 +117,6 @@ class Part(elp.ElapseIF):
                 # 同じ Loop.Obj を生成する
                 self.first_measure_num = msr
                 self._generate_loop(msr)
-                self.lp_elapsed_msr = 1
-            else:
-                self.lp_elapsed_msr += 1
-
 
     def destroy_me(self):
         return False    # 最後まで削除されない
@@ -121,10 +126,6 @@ class Part(elp.ElapseIF):
 
     #def fine(self):
     #    self.stop()
-
-    ## GUI thread内でコール
-    def get_loop_info(self):
-        return self.lp_elapsed_msr, self.loop_measure
 
     def change_key(self, key):  # 0-11
         self.keynote = key
