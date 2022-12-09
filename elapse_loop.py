@@ -301,12 +301,8 @@ class CompositionLoop(Loop):
             if nt == nlib.END_OF_DATA:
                 # Composition Loop はイベントが終わっても、コード情報が終了するまで
                 # Loop が存在するようにしておく
-                rest_tick = self.whole_tick - self.next_tick_in_cmp
-                if rest_tick < self.tick_for_one_measure:
-                    self.next_tick = rest_tick
-                else:
-                self.next_tick = self.tick_for_one_measure
                 self.next_tick_in_cmp = self.whole_tick
+                self.next_tick = self.tick_for_one_measure
             else:
                 self.next_tick_in_cmp = nt
                 self.next_msr, self.next_tick = self.gen_msr_tick(self.next_tick_in_cmp)
