@@ -70,7 +70,7 @@ class Part(elp.ElapseIF):
         #self.md.send_control(0,7,100)  # dummy send
 
 
-    def periodic(self, msr, tick):
+    def process(self, msr, tick):
         def new_loop(msr):
             # 新たに Loop Obj.を生成
             self.first_measure_num = msr    # 計測開始の更新

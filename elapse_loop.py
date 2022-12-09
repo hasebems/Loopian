@@ -21,7 +21,7 @@ class Loop(elp.ElapseIF):
         self.whole_tick = 0
         self.tick_for_one_measure = self.est.get_tick_for_onemsr()
 
-    def calc_srtick(self, msr, tick):
+    def calc_serial_tick(self, msr, tick):
         return (msr - self.first_msr_num)*self.tick_for_one_measure + tick
 
     def gen_msr_tick(self, srtick):
@@ -29,8 +29,8 @@ class Loop(elp.ElapseIF):
         msr = self.first_msr_num + srtick//self.tick_for_one_measure
         return msr, tick
 
-    def periodic(self, msr, tick):
-        elapsed_tick = self.calc_srtick(msr, tick)
+    def process(self, msr, tick):
+        elapsed_tick = self.calc_serial_tick(msr, tick)
         if elapsed_tick >= self.whole_tick:
             self.next_msr = nlib.FULL
             self.destroy = True
@@ -197,8 +197,8 @@ class PhraseLoop(Loop):
 
 
     ## IF Function by ElapseIF Class
-    def periodic(self, msr, tick):
-        elapsed_tick = self.calc_srtick(msr, tick)
+    def process(self, msr, tick):
+        elapsed_tick = self.calc_serial_tick(msr, tick)
         if elapsed_tick > self.whole_tick:
             self.next_msr = nlib.FULL
             self.destroy = True
@@ -289,8 +289,8 @@ class CompositionLoop(Loop):
         return next_tick
 
     ## IF Function by ElapseIF Class
-    def periodic(self, msr, tick):
-        self.elapsed_tick = self.calc_srtick(msr, tick)
+    def process(self, msr, tick):
+        self.elapsed_tick = self.calc_serial_tick(msr, tick)
         if self.elapsed_tick >= self.whole_tick:
             self.next_msr = nlib.FULL
             self.destroy = True
@@ -305,7 +305,7 @@ class CompositionLoop(Loop):
                 if rest_tick < self.tick_for_one_measure:
                     self.next_tick = rest_tick
                 else:
-                    self.next_tick = self.tick_for_one_measure
+                self.next_tick = self.tick_for_one_measure
                 self.next_tick_in_cmp = self.whole_tick
             else:
                 self.next_tick_in_cmp = nt

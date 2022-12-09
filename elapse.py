@@ -40,8 +40,9 @@ class ElapseIF:
     def fine(self):     # User による fine があった次の小節先頭でコールされる
         pass
 
-    def periodic(self,msr,tick):    # 再生中、繰り返しコールされる
-        pass
+    def process(self,msr,tick):    # 再生 msr/tick に達したらコールされる
+        self.next_msr = msr + 1
+        self.next_tick = 0
 
     def destroy_me(self):   # 自クラスが役割を終えた時に True を返す
         return False

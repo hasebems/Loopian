@@ -11,8 +11,8 @@ import elapse_part as elpp
 #   また、本 class 内に rit. 機構を持つ
 #
 class ElapseStack:
-    #   開始時に生成され、periodic() がコマンド入力とは別スレッドで、定期的に呼ばれる。
-    #   そのため、change_tempo, play, stop 受信時はフラグのみを立て、periodic()
+    #   開始時に生成され、process() がコマンド入力とは別スレッドで、定期的に呼ばれる。
+    #   そのため、change_tempo, play, stop 受信時はフラグのみを立て、process()
     #   で実処理を行う。
     def __init__(self, md):
         self.md = md
@@ -207,11 +207,13 @@ class ElapseStack:
 
         unfinish_counter = 0
         while True:
+            # 現measure/tick より前のイベントを持つ obj を拾い出し、リストに入れて返す
             play_sqobjs = self._pick_out_play_obj(self.crnt_measure, self.crnt_tick_inmsr)
             if len(play_sqobjs) == 0:
                 break
+            # 再生 obj. をリスト順にコール
             for obj in play_sqobjs:
-                obj.periodic(self.crnt_measure, self.crnt_tick_inmsr)
+                obj.process(self.crnt_measure, self.crnt_tick_inmsr)
             unfinish_counter += 1
             if unfinish_counter > 100:
                 print("Error! Unable to finish obj. exist! No.: ", play_sqobjs[0].priority)

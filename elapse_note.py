@@ -47,7 +47,7 @@ class Note(elp.ElapseIF):
     def cancel_noteoff(self):
         self.noteoff_enable = False
 
-    def periodic(self, msr, tick):
+    def process(self, msr, tick):
         if (msr == self.next_msr and tick >= self.next_tick) or msr > self.next_msr:
             if not self.noteon_started:
                 self.noteon_started = True
@@ -102,7 +102,7 @@ class Damper(elp.ElapseIF):
         # midi damper pedal off
         self.md.set_fifo(self.est.get_time(), ['damper', self.midi_ch, self.cc_num, 0])
 
-    def periodic(self, msr, tick):
+    def process(self, msr, tick):
         if (msr == self.next_msr and tick >= self.next_tick) or msr > self.next_msr:
             if not self.pedal_started:
                 self.pedal_started = True
