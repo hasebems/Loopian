@@ -89,7 +89,9 @@ CHORD_SCALE = {  # ±2オクターブ分
     '_sus4':    [0, 5, 7],
     '_7sus4':   [0, 5, 7, 10],
     '_ion':     [0, 2, 3, 4, 5, 7, 9, 11], # Ionian(with Blues)
+    '_dor':     [0, 2, 3, 5, 6, 7, 9, 10], # Dorian(with Blues)
     '_lyd':     [0, 2, 3, 4, 6, 7, 9, 11], # Lydian(With Blues)
+    '_mxl':     [0, 2, 3, 4, 5, 7, 9, 10], # Mixolydian(With Blues)
     '_aeo':     [0, 2, 3, 5, 6, 7, 8, 10], # Aeolian(with Blues)
     'diatonic': [0, 2, 4, 5, 7, 9, 11],
     'dorian':   [0, 2, 3, 5, 7, 9, 10],
