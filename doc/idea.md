@@ -116,7 +116,8 @@ SeqDataAllStock <-- ElapseStack
 - 実際の MIDI 出力はさらに、バッファに積まれ、latency の時間の後に出力される
 
 - Pedalデータは各パートの Loop 冒頭に以下の処理を行う
-
+    - コード情報があれば、ペダルを踏む
+    - コード情報がない、あるいは noped 指定の場合はペダルを踏まない
 
 
 ### Filter
@@ -137,10 +138,12 @@ SeqDataAllStock <-- ElapseStack
         - フレーズの平均音高より離れていると、velocity は強くなる
 - Translation Filter
     - Common
+        - テーブルを通した一番近い音に変更
     - Arpeggio
         - 連続して同じ音が出ない
         - 四分音符未満の長さに適用
     - Parallel
+        - 音程全体を、ルート音の音高分だけ平行移動する
 
 ### 次にやること
 - アルペジオで連続して同じ音が出ないようにする -> 同音回避型和音変換対応　済
@@ -150,21 +153,21 @@ SeqDataAllStock <-- ElapseStack
 - Composition を４つのパート独立に設定できる　済
 - 音価指定を階名の[]の中に組み入れる、音価用の[]をやめる　済
 - 各パートのイベントのタイミングを合わせる大幅な修正　済
+- Pedal On/Off の Music Expressionへの追加(noped)　済
 
 当面の対応
-- 小節の先頭の音が、時々和音が変わらない音で出てしまう不具合再び
-- Pedal On/Off の Music Expressionへの追加(noped)
-    - on/off の適切な位置
-    - 各小節の正しい位置で
+- なし
 
 先の話
+- rit. -> Fine
+- 現在のループをひとまとめで取っておき、簡単な指示で呼び出し可能とする
 - さらなる humanized アルゴリズムの追加
 - Load/Save機能、Auto Load機能
 
 ## loopian 計画
 - loopian を使った動画制作
 - loopian::device によるリアルタイム演奏
-- GUI/MIDI以外を rust に書き換える
+- rust に書き換える
 
 ### 動画作成
 - QuickTime Player で新規画面収録
