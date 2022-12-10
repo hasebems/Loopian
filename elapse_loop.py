@@ -150,7 +150,7 @@ class PhraseLoop(Loop):
             root, tbl = cmp_part.loop_obj.get_translation_tbl()
             ana = cmp_part.loop_obj.get_ana()
             option = self._identify_trans_option(next_tick, ev[nlib.NOTE])
-            if ana == 'para':
+            if 'para' in ana:
                 tgt_nt = ev[nlib.NOTE]+root
                 if root > 5: tgt_nt -= 12
                 self.last_note = self._translate_note_com(root, tbl, tgt_nt)
