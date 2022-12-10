@@ -28,12 +28,10 @@ def convert_exp2vel(exp_text):
     return vel
 
 
-def convert_doremi_closer(doremi, last_pitch):
-    last_note = last_pitch
-    while last_note >= 12:
-        last_note -= 12
-    while last_note < 0:
-        last_note += 12
+def convert_doremi_closer(doremi, last_nt):
+    last_doremi = last_nt
+    while last_doremi >= 12: last_doremi -= 12
+    while last_doremi < 0:   last_doremi += 12
 
     if len(doremi) == 0: return nlib.NO_NOTE
     oct_pitch = 0
@@ -66,21 +64,19 @@ def convert_doremi_closer(doremi, last_pitch):
 
     base_pitch = 0
     if oct_pitch == 0:      # +/- が書かれていない場合
-        diff = base_note - last_note
+        diff = base_note - last_doremi
         if diff < 0: diff += 12
-        if diff > 6:
-            base_pitch = last_pitch+diff-12
-        else:
-            base_pitch = last_pitch+diff     
+        if diff > 6: base_pitch = last_nt+diff-12
+        else:        base_pitch = last_nt+diff     
 
     elif oct_pitch > 0:     # + 書かれている場合
-        while base_note < last_pitch: base_note += 12
-        if oct_pitch > 12: base_note += (oct_pitch-12)
+        while base_note - last_nt >= 12:           base_note -= 12
+        while base_note - last_nt <= oct_pitch-12: base_note += 12
         base_pitch = base_note
 
     else:                   # - 書かれている場合
-        while base_note > last_pitch: base_note -= 12
-        if oct_pitch < -12: base_note -= (oct_pitch+12)
+        while base_note - last_nt <= -12:          base_note += 12
+        while base_note - last_nt >= oct_pitch+12: base_note -= 12
         base_pitch = base_note
 
     return base_pitch
