@@ -16,8 +16,8 @@ class Part(elp.ElapseIF):
         left_part = 1-(num%nlib.FIRST_NORMAL_PART)//nlib.MAX_LEFT_PART # left なら 1, でなければ 0
         self.keynote = 0
         self.base_note = nlib.DEFAULT_NOTE_NUMBER - 12*left_part
-        self.loop_measure = 0   # whole_tick と同時生成
-        self.whole_tick = 0     # loop_measure と同時生成
+        self.max_loop_msr = 0   # whole_tick と同時生成
+        self.whole_tick = 0     # max_loop_msr と同時生成
         self.sync_next_msr_flag = False
         self.state_reserve = False
         self.seqdt_part = None
@@ -33,18 +33,16 @@ class Part(elp.ElapseIF):
 
     def update_loop_for_gui(self):
         if self.cb_handler != None:
-            self.cb_handler(self.handler_owner, self.part_num, self.loop_measure)    # Callback
+            self.cb_handler(self.handler_owner, self.part_num, self.max_loop_msr)    # Callback
 
     def _generate_loop(self, msr):
         self.whole_tick, elm, ana = self.seqdt_part.get_final(msr)
 
         # その時の beat 情報で、whole_tick を loop_measure に換算
         tick_for_onemsr = self.est.get_tick_for_onemsr()
-        self.loop_measure = int(self.whole_tick//tick_for_onemsr + \
+        self.max_loop_msr = int(self.whole_tick//tick_for_onemsr + \
             (0 if self.whole_tick%tick_for_onemsr == 0 else 1))
 
-        self.next_msr = self.loop_measure + msr if self.loop_measure != 0 else msr+1
-        self.next_tick = 0
         if self.whole_tick == 0:
             self.state_reserve = True # 次小節冒頭で呼ばれるように
             self.loop_obj = None
@@ -76,13 +74,6 @@ class Part(elp.ElapseIF):
             self.first_measure_num = msr    # 計測開始の更新
             self._generate_loop(msr)
 
-        if self.next_msr < msr or \
-            (self.next_msr == msr and self.next_tick <= tick):
-            pass
-        else:
-            return
-
-        #elapsed_msr = self.first_measure_num
         if self.state_reserve:
             # 前小節にて phrase/pattern 指定された時
             if msr == 0:
@@ -90,18 +81,18 @@ class Part(elp.ElapseIF):
                 self.state_reserve = False
                 new_loop(msr)
 
-            elif self.loop_measure == 0:
+            elif self.max_loop_msr == 0:
                 # データのない状態で start し、今回初めて指定された時
                 self.state_reserve = False
                 new_loop(msr)
 
-            elif self.loop_measure != 0 and \
-                (msr - self.first_measure_num)%self.loop_measure == 0:
+            elif self.max_loop_msr != 0 and \
+                (msr - self.first_measure_num)%self.max_loop_msr == 0:
                 # 前小節にて Loop Obj が終了した時
                 self.state_reserve = False
                 new_loop(msr)
 
-            elif self.loop_measure != 0 and self.sync_next_msr_flag:
+            elif self.max_loop_msr != 0 and self.sync_next_msr_flag:
                 # sync コマンドによる強制リセット
                 self.state_reserve = False
                 self.sync_next_msr_flag = False
@@ -110,13 +101,17 @@ class Part(elp.ElapseIF):
 
             else:
                 # 現在の Loop Obj が終了していない時
+                # state_reserve は持ち越す
                 pass
 
-        elif self.loop_measure != 0:
-            if (msr - self.first_measure_num)%self.loop_measure == 0:
+        elif self.max_loop_msr != 0:
+            if (msr - self.first_measure_num)%self.max_loop_msr == 0:
                 # 同じ Loop.Obj を生成する
-                self.first_measure_num = msr
-                self._generate_loop(msr)
+                new_loop(msr)
+
+        # 毎小節の頭で process() がコール
+        self.next_msr = msr + 1
+
 
     def destroy_me(self):
         return False    # 最後まで削除されない
