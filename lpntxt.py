@@ -472,12 +472,19 @@ class TextParse:
         exps = []
         vel = nlib.END_OF_DATA
         for exp in splited_txt:
-            vel = convert_exp2vel(exp)
-            if vel == nlib.END_OF_DATA:
+            vel_temp = convert_exp2vel(exp)
+            if vel_temp == nlib.END_OF_DATA:
                 exps.append(exp)
+            else: vel = vel_temp
         if vel == nlib.END_OF_DATA:
             vel = nlib.DEFAULT_VEL
         return vel, exps
+
+
+    def _trans_dur(real_dur, exp):
+        if 'stacc' in exp:
+            return real_dur/2    
+        return real_dur
 
 
     def _add_note(generated, tick, notes, real_dur, velocity=100):
@@ -522,7 +529,8 @@ class TextParse:
                     real_dur = tick_for_onemsr*msr-tick
                 else:
                     real_dur = math.floor(dur * nlib.DEFAULT_TICK_FOR_ONE_MEASURE / base_note)
-                TextParse._add_note(rcmb, tick, notes, real_dur, expvel)
+                note_dur = TextParse._trans_dur(real_dur, others)
+                TextParse._add_note(rcmb, tick, notes, note_dur, expvel)
                 tick += real_dur #int(dur * nlib.DEFAULT_TICK_FOR_ONE_MEASURE / base_note)
             if mes_end:     # 小節線があった場合
                 tick = msr*tick_for_onemsr
