@@ -19,7 +19,6 @@ class Loop(elp.ElapseIF):
         self.destroy = False
         self.first_msr_num = msr
         self.whole_tick = 0
-        self.tick_for_one_measure = self.est.get_tick_for_onemsr()
 
     def calc_serial_tick(self, msr, tick):
         return (msr - self.first_msr_num)*self.tick_for_one_measure + tick
@@ -142,7 +141,7 @@ class PhraseLoop(Loop):
         return proper_nt
 
 
-    def _note_event(self, ev, next_tick, next_real):
+    def _note_event(self, ev, next_tick, crnt_msr_tick):
         crntev = copy.deepcopy(ev)
         cmp_part = self.est.get_part(nlib.FIRST_COMPOSITION_PART+self.part_num-nlib.FIRST_NORMAL_PART)
         deb_txt = 'non'
@@ -162,7 +161,7 @@ class PhraseLoop(Loop):
                 self.last_note = self._translate_note_com(root, tbl, ev[nlib.NOTE])
                 deb_txt = 'com:' + str(root)
             crntev[nlib.NOTE] = self.last_note
-        self.est.add_obj(elpn.Note(self.est, self.md, crntev, self.keynote, deb_txt, next_real))
+        self.est.add_obj(elpn.Note(self.est, self.md, crntev, self.keynote, deb_txt, crnt_msr_tick))
 
 
     def _generate_event(self, elapsed_tick):
@@ -183,11 +182,11 @@ class PhraseLoop(Loop):
             if next_tick <= elapsed_tick:
                 ev = self.phr[trace]
 
-                next_real = self.gen_msr_tick(self.next_tick_in_phrase)
+                crnt_msr_tick = self.gen_msr_tick(self.next_tick_in_phrase)
                 if ev[nlib.TYPE] == 'damper':# ev: ['damper', duration, tick, value]
-                    self.est.add_obj(elpn.Damper(self.est, self.md, ev, next_real))
+                    self.est.add_obj(elpn.Damper(self.est, self.md, ev, crnt_msr_tick))
                 elif ev[nlib.TYPE] == 'note':# ev: ['note', tick, duration, note, velocity]
-                    self._note_event(ev, next_tick, next_real)
+                    self._note_event(ev, next_tick, crnt_msr_tick)
             else:
                 break
             trace += 1

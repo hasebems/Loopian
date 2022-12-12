@@ -7,7 +7,7 @@ import lpnlib as nlib
 #   Note On時に生成され、MIDI を出力した後、Note Offを生成して destroy される
 class Note(elp.ElapseIF):
 
-    def __init__(self, est, md, ev, key, txt, next_real):
+    def __init__(self, est, md, ev, key, txt, crnt_msr_tick):
         super().__init__(est, md, elp.PRI_NOTE)
         self.midi_ch = 0
         self.note_num = ev[nlib.NOTE]
@@ -18,9 +18,8 @@ class Note(elp.ElapseIF):
         self.noteon_started = False
         self.noteoff_enable = True
         self.destroy = False
-        self.tick_for_onemsr = est.get_tick_for_onemsr()
-        self.next_msr = next_real[0]
-        self.next_tick = next_real[1]
+        self.next_msr = crnt_msr_tick[0]     # for Note On
+        self.next_tick = crnt_msr_tick[1]    # for Note On
 
     def _cancel_same_noteoff(self, note_num):
         snts = self.est.same_note(note_num)
@@ -51,14 +50,15 @@ class Note(elp.ElapseIF):
         if (msr == self.next_msr and tick >= self.next_tick) or msr > self.next_msr:
             if not self.noteon_started:
                 self.noteon_started = True
-                tk = self.tick_for_onemsr
+                # midi note on
+                self._note_on()
+
+                tk = self.tick_for_one_measure
                 msrcnt = 0
                 off_tick = self.next_tick + self.duration
                 while off_tick >= tk:
                     off_tick -= tk
                     msrcnt += 1
-                # midi note on
-                self._note_on()
                 self.next_msr += msrcnt
                 self.next_tick = off_tick
             else:
@@ -88,7 +88,6 @@ class Damper(elp.ElapseIF):
         self.duration = ev[nlib.DUR]
         self.pedal_started = False
         self.destroy = False
-        self.tick_for_onemsr = est.get_tick_for_onemsr()
         self.next_msr = next_real[0]
         self.next_tick = next_real[1]
 
@@ -106,7 +105,7 @@ class Damper(elp.ElapseIF):
         if (msr == self.next_msr and tick >= self.next_tick) or msr > self.next_msr:
             if not self.pedal_started:
                 self.pedal_started = True
-                tk = self.tick_for_onemsr
+                tk = self.tick_for_one_measure
                 msrcnt = 0
                 off_tick = self.next_tick + self.duration
                 while off_tick >= tk:

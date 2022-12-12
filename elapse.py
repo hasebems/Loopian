@@ -20,6 +20,7 @@ class ElapseIF:
         self.id = id
         self.next_msr = 0   #   次に呼ばれる小節番号が保持される
         self.next_tick = 0  #   次に呼ばれるTick数が保持される
+        self.tick_for_one_measure = self.est.get_tick_for_onemsr()
 
     # ElapseIF thread内でコール
     def who_I_am(self):
