@@ -100,6 +100,7 @@ Phrase 追加
 
 - 音楽表現
     - f,mf,mp,p,pp: 音量
+    - stacc: 音価を半分にする
 
 
 

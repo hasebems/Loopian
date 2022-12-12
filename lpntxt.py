@@ -482,9 +482,12 @@ class TextParse:
 
 
     def _trans_dur(real_dur, exp):
+        MIN_GAP_TICK = 40
         if 'stacc' in exp:
-            return real_dur/2    
-        return real_dur
+            return real_dur/2
+        if real_dur > MIN_GAP_TICK:
+            return real_dur-MIN_GAP_TICK
+        else: return real_dur
 
 
     def _add_note(generated, tick, notes, real_dur, velocity=100):
