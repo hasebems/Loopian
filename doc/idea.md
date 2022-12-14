@@ -176,7 +176,7 @@ SeqDataAllStock <-- ElapseStack
     - DAWの出力も確認
 - 録音設定 : オプションから BlackHole 2ch を選択
 - Audio MIDI -> オーディオ装置 -> 「複数出力装置」選択 -> マスター装置: BlackHole 2ch
-- iMovieに入れるが、YouTubeではなく、ファイル出力指定にする
+- iMovieに入れるが、YouTubeではなく、ファイル出力指定にする(1080p 60)
 - 紹介文
 Loopian is a real-time loop sequencer that describes notes by text.
 It is designed to be played primarily in Piano tones.
