@@ -176,6 +176,7 @@ class Log:
         self.log_text.append(add_str)
 
     def save_file(self):
+        if len(self.log_text) <= 1: return  # 何もなければセーブしない
         self.log_text.append('<<End Log>>')
         date = datetime.datetime.now()
         date_list = str(date).split('.')
