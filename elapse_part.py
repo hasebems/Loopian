@@ -33,6 +33,7 @@ class Part(elp.ElapseIF):
 
     def update_loop_for_gui(self):
         if self.cb_handler != None:
+            #print('Update:',self.whole_tick)
             self.cb_handler(self.handler_owner, self.part_num, self.max_loop_msr)    # Callback
 
     def _generate_loop(self, msr):
@@ -43,12 +44,12 @@ class Part(elp.ElapseIF):
         self.max_loop_msr = int(self.whole_tick//tick_for_onemsr + \
             (0 if self.whole_tick%tick_for_onemsr == 0 else 1))
 
+        self.update_loop_for_gui()
         if self.whole_tick == 0:
             self.state_reserve = True # 次小節冒頭で呼ばれるように
             self.loop_obj = None
             return
 
-        self.update_loop_for_gui()
         if self.part_num >= nlib.FIRST_NORMAL_PART:
             self.loop_obj = phrlp.PhraseLoop(self.est, self.md, msr, elm, ana,  \
                 self.keynote, self.whole_tick, self.part_num)

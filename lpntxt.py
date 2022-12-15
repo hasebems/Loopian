@@ -150,6 +150,7 @@ class TextParse:
     #   Phrase の省略されたノートを補填せよ
     def _fill_note_data1(nd):
         # ,| のみの入力による、休符指示の補填
+        if len(nd) == 0: return '' # [] のとき
         fill = ''
         doremi = 'x'
         doremi_end_flag = True
