@@ -108,38 +108,50 @@ Composition 指定
 ----------------------------
 
 - {*chord*}{*musical expression*} : Composition の書式
-    - *chord*: chordを小節ごとにカンマで区切って時系列で記述
+    - *chord*: コードを小節ごとにカンマで区切って時系列で記述
     - *musical expression*: 音楽表現
-    - {I||IV|V} : １小節ごとに I -> I -> IV -> V と和音が変わる
-        - 複数小節を同じchordにしたい場合、'|'のみ記述
-        - 同小節内で和音を変える場合、拍ごとに','で区切る。複数拍を同じchordにしたい場合、','のみ記述
+        - {*musical expression*} は省略可能
     - {} : 全データ削除
-    - +{I} : 最初に + を付けることで、今まで入力したchordの後ろに、新しい小節を連結できる。
-        - + を使って複数のchordを連結する場合、音楽表現の省略は、最初のデータに従う
+    - +{I} : 最初に + を付けることで、今まで入力したコードの後ろに、新しい小節を連結できる。
+        - + を使って複数のコードを連結する場合、音楽表現の省略は、最初のデータに従う
 
 
-- Detail of description
-    - chord
-        - O : original phrase
-        - I : d=m=s（Iの和音)
-            - ローマ数字: I, II, III, IV, V, VI, VII
-        - I# : di=mi=si (数字の後に # を付けると半音高いコードになる。b は半音）
-        - V : s=t=r (Ⅴの和音)
-        - VIm : l=d=m (m: minor)
-        - IVM7 : f=l=d=m (M7: major7th)
-        - IIIm7-5 : m=s=ta=r (m7-5: minor7th -5th)
-        - diatonic : d=r=m=f=s=l=t (Diatonic Scale)
-        - lydian : d=r=m=fi=s=l=t (Lydian Scale)
-        - thru : 全ての音
-    - 音楽表現
-        - para : 和音変換時、root に合わせて並行移動する 
-        - noped: Pedal Off指定
+- 長さの指定方法
+    - '|' '/' : 小節区切り。区切りが連続するとコードがないとみなす
+    - {I||IV|V} : １小節ごとに I -> I -> IV -> V とコードが変わる
+        - 複数小節を同じコードにしたい場合、'|'のみ記述
+        - 同小節内でコードを変える場合、拍ごとに','で区切る。複数拍を同じコードにしたい場合、'.' で伸ばす
+        - ',,' のように何も記さずにカンマを続けた場合、その拍にコードがないとみなす
+    - コード情報とピアノの Pedal 情報はリンクしている
+        - コードが空白、あるいは 'thru' 指定の場合、ペダルは踏まれない
+        - コードが変わるごとにペダルが踏まれる
+        - 小節が変わるごとにペダルが踏まれる
+
+
+- コード記述方法
+    - O : original phrase
+    - I : d=m=s（Iの和音)
+        - ローマ数字: I, II, III, IV, V, VI, VII
+    - I# : di=mi=si (数字の後に # を付けると半音高いコードになる。b は半音）
+    - V : s=t=r (Ⅴの和音)
+    - VIm : l=d=m (m: minor)
+    - IVM7 : f=l=d=m (M7: major7th)
+    - IIIm7-5 : m=s=ta=r (m7-5: minor7th -5th)
+    - diatonic : d=r=m=f=s=l=t (Diatonic Scale)
+    - lydian : d=r=m=fi=s=l=t (Lydian Scale)
+    - Iion : Iを主音としたイオニアン(Ionian)
+    - thru : 全ての音
+
+
+- 音楽表現
+    - para : 和音変換時、root に合わせて並行移動する 
+    - noped: Pedal Off指定
 
 
 入力環境コマンド
 ----------------
 
-- 'right 1' 'left 1' : 右手２パート、左手２パートの４パートを指定可能
+- 'right1' 'left1' : 右手２パート、左手２パートの４パートを指定可能
 - 'all' : 全パートの入力モードになる
 - 'midi 1' : MIDI PORT 1 を選択
 - 'panic' : 今鳴っている音を消音する
