@@ -582,6 +582,7 @@ class TextParse:
                 tick += tick_for_onebeat*dur
             if dur == btcnt:
                 tick = tick_for_onemsr*msr
+                same_chord = 'x'
                 msr += 1
             read_ptr += 1  # out from repeat
 
