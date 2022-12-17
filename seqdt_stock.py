@@ -173,6 +173,9 @@ class PhraseDataStock:
 class DamperPartStock:
 
     PDL_MARGIN_TICK = 60
+    PDL_OFF = -1
+    PDL_ON = 1
+    NO_EV = 0
 
     def __init__(self, pt, seq):
         self.seq = seq
@@ -185,53 +188,73 @@ class DamperPartStock:
         return True
 
     def set_recombined(self):
-        pass
+        return
 
-    def _collect_cmp_part_event(self, pt, tick_change_point, msr):
+    def _collect_cmp_part_event(self, pt, msr, btick):
+        ped_beat_map = [self.NO_EV for _ in range(self.tick_for_onemsr//btick)]
+
+        # Pedal Event とは関係ないパートか？
         if pt.loop_obj == None or \
            (len(pt.loop_obj.cmp) == 1 and 
              (pt.loop_obj.cmp[0][nlib.CHORD] == 'thru' or pt.loop_obj.cmp[0][nlib.CHORD] == '')):
-            return
+            return ped_beat_map
         if pt.loop_obj.ana != None and 'noped' in pt.loop_obj.ana:
-            return
+            return ped_beat_map
 
         cmpdt = pt.loop_obj.cmp
-        msr = msr - pt.first_measure_num
-        tick_change_point.append(self.PDL_MARGIN_TICK)    # 小節冒頭には必ずイベントを発生させる
+        loopmsr = msr - pt.first_measure_num
         for dt in cmpdt:
+            ped = dt[nlib.CHORD]
             tick = dt[nlib.TICK]
-            if self.tick_for_onemsr*msr <= tick and tick < self.tick_for_onemsr*(msr+1):
-                # コードイベントの CHK_MARGIN 後ろの tick を記録
-                tick = (tick + self.PDL_MARGIN_TICK)%self.tick_for_onemsr
-                tick_change_point.append(tick)
+            if self.tick_for_onemsr*loopmsr <= tick and tick < self.tick_for_onemsr*(loopmsr+1):
+                tick_in_onemsr = tick - self.tick_for_onemsr*loopmsr
+                #tick = (tick + self.PDL_MARGIN_TICK)%self.tick_for_onemsr
+                if ped == 'thru' or ped == '':
+                    ped_beat_map[int(tick_in_onemsr//btick)] = self.PDL_OFF
+                else:
+                    ped_beat_map[int(tick_in_onemsr//btick)] = self.PDL_ON
+        return ped_beat_map
 
 
     def get_final(self, msr):
+        def pedal_ev(ont,dur):
+            return ['damper', ont*btick+self.PDL_MARGIN_TICK, dur*btick-self.PDL_MARGIN_TICK, 127]
+
         self.tick_for_onemsr = self.seq.get_tick_for_onemsr()
-        
-        # 全 Composition Part の Chord 情報を収集、マージ、ソートする
-        tick_change_point = []
+        beat_cnt = self.seq.beat[0]
+        btick = self.tick_for_onemsr//beat_cnt
+
+        # 全 Composition Part の Chord 情報を収集、マージする
+        # 拍数のリストを作り、PedalイベントのMapを作る
+        ped_beat_map = [self.NO_EV for _ in range(beat_cnt)] # -1:off, 0:none, 1:on
         for i in range(nlib.FIRST_COMPOSITION_PART,
                        nlib.FIRST_COMPOSITION_PART+nlib.MAX_COMPOSITION_PART):
             pt = self.seq.get_part(i)
-            self._collect_cmp_part_event(pt, tick_change_point, msr)
+            pbm = self._collect_cmp_part_event(pt, msr, btick)
+            for j in range(beat_cnt):
+                if pbm[j] == self.PDL_ON:
+                    ped_beat_map[j] = self.PDL_ON
+                elif pbm[j] == self.PDL_OFF:
+                    if ped_beat_map[j] == 0: ped_beat_map[j] = self.PDL_OFF
+                else: pass # pbm[j] == 0 のときは、ped_beat_map はそのまま
+        print('Pdl Map:',ped_beat_map)
 
-        tick_change_point = list(set(tick_change_point)) # 重複した要素を排除して並び替え
-        tick_change_point.sort()
-
-        # Chord 変化情報から Pedal 情報を生成
+        # Chord 変化情報から Pedal Seq.を生成
         gendt = []                         
-        for i in range(len(tick_change_point)):
-            ont = tick_change_point[i]                  # On Event
-            if i==0 and len(tick_change_point) == 1:    # Off Event
-                dur = self.tick_for_onemsr - (self.PDL_MARGIN_TICK//2) - ont
-            elif i+1 < len(tick_change_point):
-                dur = tick_change_point[i+1] - (self.PDL_MARGIN_TICK*3)//2 - ont
-            else:   # 一番最後
-                dur = self.tick_for_onemsr - (self.PDL_MARGIN_TICK//2) - ont
-            gendt.append(['damper', ont, dur, 127])
-        #if len(gendt) > 0:
-        #    print("Pedal Event: ", gendt)
+        ontmg = -1
+        for bc in range(beat_cnt):
+            if ped_beat_map[bc] == self.PDL_ON:
+                if ontmg > 0:
+                    gendt.append(pedal_ev(ontmg,bc-ontmg))
+                ontmg = bc                    
+            elif ped_beat_map[bc] == self.PDL_OFF:
+                if ontmg >= 0:
+                    gendt.append(pedal_ev(ontmg,bc-ontmg))
+                    ontmg = -1 # Event Reset
+            if bc == beat_cnt-1: # 最後の拍の場合
+                if ontmg == bc: gendt.append(pedal_ev(ontmg,1))
+                elif ontmg >= 0: gendt.append(pedal_ev(ontmg,beat_cnt-ontmg))
+        print('Pedal:',gendt)
 
         return self.tick_for_onemsr, gendt, None
 

@@ -251,7 +251,7 @@ class TextParse:
 
 
     def _fill_omitted_note_data(note_data):
-        ## ,| 重複による同音指示の補填
+        ## ,| 重複による休符指示の補填
         fill = TextParse._fill_note_data1(note_data)
 
         # スペース削除し、',' 区切りでリスト化
@@ -360,19 +360,22 @@ class TextParse:
 
     #------------------------------------------------------------------------------
     #   complement data for Composition
-    def _fill_omitted_chord_data(chord_data):
-        ## ,| 重複による同和音指示の補填
-        fill1 = ''
-        doremi = ''
-        doremi_end_flag = False
-        for i in range(len(chord_data)):
-            ltr = chord_data[i]
+    def _fill_omitted_chord_data(cd):
+        NO_CHORD = 'thru'
+        ## ,| 重複による和音無し指示の補填
+        if len(cd) == 0: return '' # {} のとき
+        fill = ''
+        doremi = NO_CHORD
+        doremi_end_flag = True
+        for i in range(len(cd)):
+            ltr = cd[i]
             if ltr == ',':
-                fill1 += doremi + ','
+                fill += doremi + ','
+                doremi = NO_CHORD
                 doremi_end_flag = True
             elif ltr == '|' or ltr == '/':
-                fill1 += doremi + '|,'
-                #doremi = ''
+                fill += doremi + '|,'
+                doremi = NO_CHORD
                 doremi_end_flag = True
             else:
                 if doremi_end_flag:
@@ -381,10 +384,10 @@ class TextParse:
                     doremi += ltr
                 doremi_end_flag = False
         if doremi != '':
-            fill1 += doremi
+            fill += doremi
 
         # スペース削除し、',' 区切りでリスト化
-        chord_flow = re.split('[,]', fill1)
+        chord_flow = re.split('[,]', fill)
         while '' in chord_flow:  # 何も入ってない要素を削除
             chord_flow.remove('')
         return chord_flow
@@ -545,32 +548,40 @@ class TextParse:
 
 
     #------------------------------------------------------------------------------
-    #   recombine: chord データを内部データに再構築せよ
+    #   recombine: chord 入力をイベントデータに再構築せよ
+    def divide_chord_info(chord, btcnt):
+        dur = 1
+        if len(chord) == 0: return chord, dur
+        last_letter = chord[-1]
+        if last_letter == '|' or last_letter == 'o':
+            dur = btcnt
+            chord = chord[0:-1]
+        else:
+            while len(chord) >= 1 and chord[-1] == '.':
+                dur += 1
+                chord = chord[0:-1]
+        return chord, dur
+
     def recombine_to_chord_loop(complement, tick_for_onemsr, tick_for_onebeat):
         if complement is None or len(complement) == 0:
             return 0, []
 
+        btcnt = int(tick_for_onemsr//tick_for_onebeat)
         tick = 0
         msr = 1
         read_ptr = 0
         rcmb = []
-        same_chord = ''
+        same_chord = 'x'
         note_cnt = len(complement)
         while read_ptr < note_cnt:
-            mes_end = False
-            chord = complement[read_ptr]
-            if chord[-1] == '|':
-                mes_end= True
-                chord = chord[0:-1]
+            chord, dur = TextParse.divide_chord_info(complement[read_ptr], btcnt)
             if tick < tick_for_onemsr*msr:
-                adjust_tick = tick
-                #if tick != 0: adjust_tick -= 1  # 途中拍で和音が変わる時、音が変わらない暫定対策
                 if same_chord != chord:
                     same_chord = chord
-                    rcmb.append(['chord', adjust_tick, chord])
-                tick += tick_for_onebeat
-            if mes_end:
-                tick = msr*tick_for_onemsr
+                    rcmb.append(['chord', tick, chord])
+                tick += tick_for_onebeat*dur
+            if dur == btcnt:
+                tick = tick_for_onemsr*msr
                 msr += 1
             read_ptr += 1  # out from repeat
 
