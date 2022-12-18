@@ -191,7 +191,7 @@ class DamperPartStock:
         return
 
     def _collect_cmp_part_event(self, pt, msr, btick):
-        ped_beat_map = [self.NO_EV for _ in range(self.tick_for_onemsr//btick)]
+        ped_beat_map = [self.NO_EV for _ in range(int(self.tick_for_onemsr//btick))]
 
         # Pedal Event とは関係ないパートか？
         if pt.loop_obj == None or \
