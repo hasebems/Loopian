@@ -244,7 +244,7 @@ class DamperPartStock:
         ontmg = -1
         for bc in range(beat_cnt):
             if ped_beat_map[bc] == self.PDL_ON:
-                if ontmg > 0:
+                if ontmg >= 0:
                     gendt.append(pedal_ev(ontmg,bc-ontmg))
                 ontmg = bc                    
             elif ped_beat_map[bc] == self.PDL_OFF:
