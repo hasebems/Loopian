@@ -154,6 +154,7 @@ SeqDataAllStock <-- ElapseStack
 - 音価指定を階名の[]の中に組み入れる、音価用の[]をやめる　済
 - 各パートのイベントのタイミングを合わせる大幅な修正　済
 - Pedal On/Off の Music Expressionへの追加(noped)　済
+- ',",q,hによる冒頭の音価設定　済
 
 当面の対応
 - なし
@@ -171,13 +172,16 @@ SeqDataAllStock <-- ElapseStack
 
 ### 動画作成
 - QuickTime Player で新規画面収録
-- 画面サイズ 896 * 504
+- 単体: 画面サイズ 896 * 504
+  Pianoteq8付きサイズ 1600 * 900
 - オーディオ出力 : 複数出力装置（BlackHole & xxxのスピーカー）
     - DAWの出力も確認
 - 録音設定 : オプションから BlackHole 2ch を選択
 - Audio MIDI -> オーディオ装置 -> 「複数出力装置」選択 -> マスター装置: BlackHole 2ch
 - iMovieに入れるが、YouTubeではなく、ファイル出力指定にする(1080p 60)
 - 紹介文
+Live Coding by Loopian & Pianoteq8
+
 Loopian is a real-time loop sequencer that describes notes by text.
 It is designed to be played primarily in Piano tones.
 Usages:
@@ -191,3 +195,5 @@ Loopian は、テキストで音符を指定するリアルタイムループシ
     - Live Coding 風にリアルタイムにテキストを入力して音楽を生成
     - ループベースのフレーズをリアルタイムに変容させるパフォーマンス、インタラクティブアートなどへの応用
     - 音楽教育における、移動ドによるソルミゼーション実践
+
+#livecoding  #midi  #piano  #python  #pianoteq

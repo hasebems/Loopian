@@ -5,7 +5,7 @@ import lpntxt as tx
 import copy
 
 #------------------------------------------------------------------------------
-#   Phrase の入力テキストの変換
+#   Phrase Data Stock Class: Init()
 class PhraseDataStock:
 
     def __init__(self, objs, seq):
@@ -24,6 +24,8 @@ class PhraseDataStock:
         self.note_value = 0     # 音価
 
 
+#------------------------------------------------------------------------------
+#   Analyzed 情報の生成
     def _basic_analysis(generated):
         # make beat analysis data: 
         #       [   note count,           : in same tick
@@ -68,7 +70,7 @@ class PhraseDataStock:
                 total_tick = ana[nlib.TICK]
                 last_note = nlib.REST       # arp にならない
                 last_cnt = 0
-            elif ana[nlib.DUR] >= 480:      # 今回、四分音符以上なら arp にならない
+            elif ana[nlib.DUR] >= nlib.DEFAULT_TICK_FOR_QUARTER: # 今回、四分音符以上なら arp にならない
                 total_tick = ana[nlib.TICK]
                 last_note = nlib.REST
                 last_cnt = 0
@@ -84,8 +86,8 @@ class PhraseDataStock:
             # 条件の確認と、ana への情報追加
             if option == 'para':
                 ana.append(['para'])
-            elif last_note <= 127 and last_cnt == 1 and \
-               crnt_note <= 127 and crnt_cnt == 1 and \
+            elif last_note <= nlib.MAX_NOTE_NUM and last_cnt == 1 and \
+               crnt_note <= nlib.MAX_NOTE_NUM and crnt_cnt == 1 and \
                crnt_note-last_note > -10 and crnt_note-last_note < 10:
                 # 過去＆現在：単音、ノート適正、差が10半音以内
                 ana.append(['arp', crnt_note-last_note])
@@ -108,6 +110,8 @@ class PhraseDataStock:
         return PhraseDataStock._arp_translation(beat_analysis, option)
 
 
+#------------------------------------------------------------------------------
+#   Phrase の入力テキストの変換
     def set_raw(self, text, imd):
         # 1. raw
         if text[0] == '+' and self.raw != None:
