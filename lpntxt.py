@@ -434,18 +434,41 @@ class TextParse:
     #------------------------------------------------------------------------------
     #   recombine data: カンマで区切られた階名単位のテキストを解析せよ
     def _add_dur_info(nt):
-        dur = 1
-        if len(nt) > 0 and nt[-1] == 'o':
+        dur = nlib.KEEP
+        dur_cnt = 1
+        if len(nt) > 0 and nt[-1] == 'o': # 最後にo
             nt = nt[0:-1]
             dur = nlib.FULL
-        else:
+        else:   # 最後に複数の "." or "~"
             ext_str = nt
             while len(ext_str) > 0 and (ext_str[-1] == '.' or ext_str[-1] == '~'):
-                dur += 1
+                dur_cnt += 1
                 ext_str = ext_str[0:-1]
-            if len(ext_str) == 0: dur -= 1  # '.~' しか存在しなかった
-            nt = ext_str 
-        return nt, dur
+            if len(ext_str) == 0: dur_cnt -= 1  # '.~' しか存在しなかった
+            nt = ext_str
+
+        if len(nt) > 0:
+            triplet = 0
+            idx = 1
+            fst_ltr = nt[0]
+            if fst_ltr == '3' or fst_ltr == '5':
+                triplet = int(fst_ltr)
+                fst_ltr = nt[1]
+            if fst_ltr == '`': dur = nlib.CANCEL
+            elif fst_ltr == "\'":
+                if nt[0:2] == "\'\"":
+                    dur = 60
+                    idx = 2
+                else: dur = 240
+            elif fst_ltr == '\"': dur = 120
+            elif fst_ltr == 'q': dur = 480
+            elif fst_ltr == 'h': dur = 960
+            else: idx = 0
+            if triplet != 0:
+                dur = int(dur*2//triplet)
+                idx = 2
+            nt = nt[idx:]
+        return nt, [dur_cnt, dur]
 
 
     def _cnv_note_to_pitch(keynote, note_text, last_note, input_mode):
@@ -455,18 +478,19 @@ class TextParse:
             else: # input_mode == nlib.INPUT_FIXED:
                 return convert_doremi_fixed(nx)
 
-        end = False
+        mes_end = False
         if note_text[-1] == '|':   # 小節最後のイベント
             note_text = note_text[0:-1]
-            end = True
-        note_text, dur = TextParse._add_dur_info(note_text)
+            mes_end = True
+        note_text, dur_info = TextParse._add_dur_info(note_text)    # dur_info[cnt, dur]
+
         nlists = note_text.replace(' ', '').split('=')  # 和音検出
         bpchs = []
         for nx in nlists:
             doremi = convert_doremi(nx, last_note)
             base_pitch = keynote + doremi if doremi <= nlib.MAX_NOTE_NUM else doremi
             bpchs.append(base_pitch)
-        return bpchs, end, dur, doremi
+        return bpchs, mes_end, dur_info, doremi
 
 
     #------------------------------------------------------------------------------
@@ -525,20 +549,36 @@ class TextParse:
         tick = 0
         msr = 1
         read_ptr = 0
+        base_dur = nlib.CANCEL
         rcmb = []
         note_cnt = len(complement[0])
         while read_ptr < note_cnt:
-            notes, mes_end, dur, nt = \
-                TextParse._cnv_note_to_pitch(keynote, complement[0][read_ptr], last_nt, imd)
+            note_text = complement[0][read_ptr]
+            notes, mes_end, dur_info, nt = \
+                TextParse._cnv_note_to_pitch(keynote, note_text, last_nt, imd)  # dur_info[cnt, dur]
+
             if nt <= nlib.MAX_NOTE_NUM: last_nt = nt    # 次回の音程の上下判断のため
             if tick < tick_for_onemsr*msr:
-                if dur == nlib.FULL:   # o があった場合
-                    real_dur = tick_for_onemsr*msr-tick
-                else:
-                    real_dur = math.floor(dur * nlib.DEFAULT_TICK_FOR_ONE_MEASURE / base_note)
+                # 音価 real_dur 確定処理
+                real_dur = nlib.DEFAULT_TICK_FOR_QUARTER
+                use_base = False
+                if dur_info[1] == nlib.FULL: real_dur = tick_for_onemsr*msr-tick    # o があった場合
+                elif dur_info[1] == nlib.CANCEL:                                    # ` があった場合
+                    use_base = True
+                    base_dur = nlib.CANCEL
+                elif dur_info[1] == nlib.KEEP:                                      # 音価指定のない時
+                    if base_dur != nlib.CANCEL: real_dur = base_dur*dur_info[0]
+                    else: use_base = True
+                else:                                                               # 音価指定のある時
+                    base_dur = dur_info[1]
+                    real_dur = base_dur*dur_info[0]
+                if use_base: real_dur = math.floor(dur_info[0] * nlib.DEFAULT_TICK_FOR_ONE_MEASURE / base_note)
                 note_dur = TextParse._trans_dur(real_dur, others)
+
+                # Note 情報の追加
                 TextParse._add_note(rcmb, tick, notes, note_dur, expvel)
-                tick += real_dur #int(dur * nlib.DEFAULT_TICK_FOR_ONE_MEASURE / base_note)
+                tick += real_dur
+
             if mes_end:     # 小節線があった場合
                 tick = msr*tick_for_onemsr
                 msr += 1
