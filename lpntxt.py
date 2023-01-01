@@ -593,7 +593,7 @@ class TextParse:
         dur = 1
         if len(chord) == 0: return chord, dur
         last_letter = chord[-1]
-        if last_letter == '|' or last_letter == 'o':
+        if last_letter == '|':
             dur = btcnt
             chord = chord[0:-1]
         else:
