@@ -433,7 +433,14 @@ class TextParse:
 
     #------------------------------------------------------------------------------
     #   recombine data: カンマで区切られた階名単位のテキストを解析せよ
-    def _add_dur_info(nt):
+    def _add_dur_info(one_nt):
+        nt_temp = one_nt
+        excnt = 0
+        while nt_temp[0] == '+' or nt_temp[0] == '-': # +,- 表記を後で後ろに持っていく
+            nt_temp = nt_temp[1:]
+            excnt += 1
+
+        nt = copy.copy(nt_temp) # +,- が削除された状態
         dur = nlib.KEEP
         dur_cnt = 1
         if len(nt) > 0 and nt[-1] == 'o': # 最後にo
@@ -468,6 +475,8 @@ class TextParse:
                 dur = int(dur*2//triplet)
                 idx = 2
             nt = nt[idx:]
+
+        if excnt != 0: nt = one_nt[0:excnt] + nt    # +,- を戻す
         return nt, [dur_cnt, dur]
 
 
@@ -484,7 +493,7 @@ class TextParse:
             mes_end = True
         note_text, dur_info = TextParse._add_dur_info(note_text)    # dur_info[cnt, dur]
 
-        nlists = note_text.replace(' ', '').split('=')  # 和音検出
+        nlists = re.split('[=_]',note_text.replace(' ', ''))    # 同時発音
         bpchs = []
         for nx in nlists:
             doremi = convert_doremi(nx, last_note)
