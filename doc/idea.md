@@ -4,17 +4,24 @@
 
 - text command による loop sequencer
 - 音色はピアノを想定し、ミニマルな音楽を指向する
-- command は一行単位で入力
+- script は一行単位で入力
 - 移動ド(d,r,m..)による階名指定
 - コード(I,II..)指定で、入力に変化を与えながらループ再生
 - 自動にピアノの表現を付加
 - BPM, Key, 拍子(Beat)などの基本的な音楽指示が可能
+- Loopian全体像
+    - Loopian::app : アプリケーション
+    - Loopian::dev : PCに接続する専用ハード
+    - Loopian::script : スクリプト言語
+    - Loopian::tg
+    - Loopian::txt
 
 ## what you can do
 
 - Live Coding
-- Musical Education
+- A part of Musical Performance
 - Loop Sequencer
+- Musical Education
 - Dynamic Easy Listening
 - Interactive Art(with Device)
 
@@ -37,7 +44,7 @@
 
 - ユーザーは、Phrase入力（ [] で入力）と、Composition入力（{}で入力）の二つの入力ができる
 - Phrase入力の考え方
-    - User は、ノート番号とタイミング、簡易な表情指示(Music Expression)を入力
+    - User は、ノート番号と音価、簡易な表情指示(Music Expression)を入力
     - exp.engine は、簡易な表情指示からベロシティ、微妙なタイミング、dulation、ペダル情報を自動生成
 - Composition入力と、自動和音変換
     - Composition で指定された和音に従って、Phrase 入力の音は自動変換される
@@ -93,6 +100,19 @@ SeqDataAllStock <-- ElapseStack
     - periodic() で各 Elapse Object の periodic() をコールする
         - 各 Elapse Object は、next_tick, next_msr で次回に呼ばれるタイミングを返す
         - next_tick/next_msr の値に準じて、EST は順序通りに Elapse Object をコール
+
+
+### Text Parse処理の考え方
+
+- 入力文字一覧
+    - 括弧、カンマ: []{}(),
+    - 複数音符を跨ぐ指定子: <,>,/,|,*,:
+    - 一音符内の指定子: (1:-,+)(2:',",q,h,3,`)(3:d,r,m,f,s,l,t,x)(3':i,a)(4:^,%)(5:.,~,o)
+        - 3と3'のみ =,_ で繋いで同時発音を表現
+        - 1は、2の後に置いても機能する
+    - まだ使われていない文字: w,e,r,y,u,p,a,j,k,z,c,v,b,n,?,;,\,&,$,
+    - 一和音内の指定子: (1:I,V)(2:#/b)(3:[table name])(4:.)
+    - 同じ意味に使う文字 : 小節(/,|)、同時(=,_)、タイ(.,~)
 
 
 ### 自動変換
@@ -157,7 +177,7 @@ SeqDataAllStock <-- ElapseStack
 - ',",q,hによる冒頭の音価設定　済
 
 当面の対応
-- なし
+- 特定のタイミングだけ強くしたり、弱くする music exp.表記追加
 
 先の話
 - rit. -> Fine
@@ -167,7 +187,7 @@ SeqDataAllStock <-- ElapseStack
 
 ## loopian 計画
 - loopian を使った動画制作
-- loopian::device によるリアルタイム演奏
+- loopian::dev によるリアルタイム演奏
 - rust に書き換える
 
 ### 動画作成
@@ -196,4 +216,4 @@ Loopian は、テキストで音符を指定するリアルタイムループシ
     - ループベースのフレーズをリアルタイムに変容させるパフォーマンス、インタラクティブアートなどへの応用
     - 音楽教育における、移動ドによるソルミゼーション実践
 
-#livecoding  #midi  #piano  #python  #pianoteq
+tag: #livecoding  #midi  #piano  #python  #pianoteq
