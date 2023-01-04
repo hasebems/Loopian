@@ -480,7 +480,21 @@ class TextParse:
         return nt, [dur_cnt, dur]
 
 
-    def _cnv_note_to_pitch(keynote, note_text, last_note, input_mode):
+    def _gen_diff_vel(note_text):
+        diff_vel = 0
+        lst_ltr = note_text[-1]
+        while lst_ltr == '^':
+            diff_vel += 10
+            note_text = note_text[:-1]
+            lst_ltr = note_text[-1]
+        while lst_ltr == '%':
+            diff_vel -= 30
+            note_text = note_text[:-1]
+            lst_ltr = note_text[-1]
+        return note_text, diff_vel
+
+
+    def _break_up_nt_dur_vel(keynote, note_text, last_note, input_mode):
         def convert_doremi(nx, last_note):
             if input_mode == nlib.INPUT_CLOSER:
                 return convert_doremi_closer(nx, last_note)
@@ -492,14 +506,15 @@ class TextParse:
             note_text = note_text[0:-1]
             mes_end = True
         note_text, dur_info = TextParse._add_dur_info(note_text)    # dur_info[cnt, dur]
+        note_text, diff_vel = TextParse._gen_diff_vel(note_text)
 
         nlists = re.split('[=_]',note_text.replace(' ', ''))    # 同時発音
-        bpchs = []
+        base_pchs = []
         for nx in nlists:
             doremi = convert_doremi(nx, last_note)
             base_pitch = keynote + doremi if doremi <= nlib.MAX_NOTE_NUM else doremi
-            bpchs.append(base_pitch)
-        return bpchs, mes_end, dur_info, doremi
+            base_pchs.append(base_pitch)
+        return base_pchs, mes_end, dur_info, diff_vel, doremi
 
 
     #------------------------------------------------------------------------------
@@ -584,8 +599,8 @@ class TextParse:
 
         while read_ptr < note_cnt:
             note_text = complement[0][read_ptr]
-            notes, mes_end, dur_info, nt = \
-                TextParse._cnv_note_to_pitch(keynote, note_text, last_nt, imd)  # dur_info[cnt, dur]
+            notes, mes_end, dur_info, diff_vel, nt = \
+                TextParse._break_up_nt_dur_vel(keynote, note_text, last_nt, imd)  # dur_info[cnt, dur]
 
             if nt <= nlib.MAX_NOTE_NUM: last_nt = nt    # 次回の音程の上下判断のため
             tick_for_mesend = tick_for_onemsr*msr
@@ -593,8 +608,13 @@ class TextParse:
                 real_dur, base_dur = TextParse._get_real_dur(base_dur, base_note, dur_info, tick_for_mesend-tick)
                 note_dur = TextParse._trans_dur(real_dur, exp_others)
 
+                # Velocity
+                last_vel = expvel + diff_vel
+                if last_vel > 127: last_vel = 127
+                elif last_vel < 1: last_vel = 1
+
                 # Note 情報の追加
-                TextParse._add_note(rcmb, tick, notes, note_dur, expvel)
+                TextParse._add_note(rcmb, tick, notes, note_dur, last_vel)
                 tick += real_dur
 
             if mes_end:     # 小節線があった場合
