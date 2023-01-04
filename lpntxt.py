@@ -644,7 +644,6 @@ class TextParse:
     def detect_chord_scale(chord):
         root = 0
         letter = chord[0]
-        dtbl = nlib.CHORD_SCALE['diatonic']
         if letter == 'I' or letter == 'V':
             root_cnt = 0
             root_str = ''
@@ -665,7 +664,7 @@ class TextParse:
             # ローマ数字の文字列から root を求める
             try:
                 ofs = nlib.ROOT_NAME.index(root_str)
-                root += dtbl[ofs]
+                root += nlib.CHORD_SCALE['diatonic'][ofs]
             except ValueError as error:
                 root = 0
             
@@ -674,5 +673,6 @@ class TextParse:
             else:
                 chord = '_'
 
-        chord_scale_tbl = nlib.CHORD_SCALE.get(chord, dtbl)
-        return root, chord_scale_tbl
+        chord_scale_tbl = nlib.CHORD_SCALE.get(chord, nlib.CHORD_SCALE['Err'])
+        chord_err = True if len(chord_scale_tbl) == 1 else False
+        return root, chord_scale_tbl, chord_err

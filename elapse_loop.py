@@ -250,15 +250,16 @@ class CompositionLoop(Loop):
         return self.ana
 
     def get_chord(self):
-        return self.seqdt[nlib.CHORD]
+        return self.chord_name
 
     def get_translation_tbl(self):
         return self.root, self.translation_tbl
 
     def _prepare_note_translation(self):
-        self.chord_name = self.get_chord()
+        self.chord_name = self.seqdt[nlib.CHORD]
         if self.chord_name != '':
-            self.root, self.translation_tbl = tx.TextParse.detect_chord_scale(self.chord_name)
+            self.root, self.translation_tbl, chord_err = tx.TextParse.detect_chord_scale(self.chord_name)
+            if chord_err: self.chord_name = 'Error!'
         print('Chord: ',self.chord_name)
 
     def _generate_event(self, tick):
