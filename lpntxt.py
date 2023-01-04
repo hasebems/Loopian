@@ -488,7 +488,7 @@ class TextParse:
             note_text = note_text[:-1]
             lst_ltr = note_text[-1]
         while lst_ltr == '%':
-            diff_vel -= 30
+            diff_vel -= 20
             note_text = note_text[:-1]
             lst_ltr = note_text[-1]
         return note_text, diff_vel
