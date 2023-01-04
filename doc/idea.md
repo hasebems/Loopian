@@ -180,9 +180,10 @@ SeqDataAllStock <-- ElapseStack
 - 各パートのイベントのタイミングを合わせる大幅な修正　済
 - Pedal On/Off の Music Expressionへの追加(noped)　済
 - ',",q,hによる冒頭の音価設定　済
+- 特定のタイミングだけ強くしたり、弱くする phrase 表記追加　済
 
 当面の対応
-- 特定のタイミングだけ強くしたり、弱くする phrase 表記追加
+- なし
 
 先の話
 - rit. -> Fine
