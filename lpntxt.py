@@ -527,6 +527,26 @@ class TextParse:
         else: return real_dur
 
 
+    def _get_real_dur(base_dur, base_note, dur_info, rest_tick):
+        real_dur = nlib.DEFAULT_TICK_FOR_QUARTER
+        use_base = False
+        if dur_info[1] == nlib.FULL:            # o があった場合
+            real_dur = rest_tick
+        elif dur_info[1] == nlib.CANCEL:        # ` があった場合
+            use_base = True
+            base_dur = nlib.CANCEL
+        elif dur_info[1] == nlib.KEEP:          # 音価指定のない時
+            if base_dur != nlib.CANCEL: real_dur = base_dur*dur_info[0]
+            else: use_base = True
+        else:                                   # 音価指定のある時
+            base_dur = dur_info[1]
+            real_dur = base_dur*dur_info[0]
+
+        if use_base:
+            real_dur = math.floor(dur_info[0] * nlib.DEFAULT_TICK_FOR_ONE_MEASURE / base_note)
+        return real_dur, base_dur
+
+
     def _add_note(generated, tick, notes, real_dur, velocity=100):
         if len(notes) != 0:
             for note in notes:
@@ -553,7 +573,7 @@ class TextParse:
         if complement is None or len(complement[0]) == 0:
             return 0, [], []
 
-        expvel, others = TextParse._cnv_exp(complement[1])
+        expvel, exp_others = TextParse._cnv_exp(complement[1])
         last_nt = 5 # d-t が同じオクターブで始まる値
         tick = 0
         msr = 1
@@ -561,28 +581,17 @@ class TextParse:
         base_dur = nlib.CANCEL
         rcmb = []
         note_cnt = len(complement[0])
+
         while read_ptr < note_cnt:
             note_text = complement[0][read_ptr]
             notes, mes_end, dur_info, nt = \
                 TextParse._cnv_note_to_pitch(keynote, note_text, last_nt, imd)  # dur_info[cnt, dur]
 
             if nt <= nlib.MAX_NOTE_NUM: last_nt = nt    # 次回の音程の上下判断のため
-            if tick < tick_for_onemsr*msr:
-                # 音価 real_dur 確定処理
-                real_dur = nlib.DEFAULT_TICK_FOR_QUARTER
-                use_base = False
-                if dur_info[1] == nlib.FULL: real_dur = tick_for_onemsr*msr-tick    # o があった場合
-                elif dur_info[1] == nlib.CANCEL:                                    # ` があった場合
-                    use_base = True
-                    base_dur = nlib.CANCEL
-                elif dur_info[1] == nlib.KEEP:                                      # 音価指定のない時
-                    if base_dur != nlib.CANCEL: real_dur = base_dur*dur_info[0]
-                    else: use_base = True
-                else:                                                               # 音価指定のある時
-                    base_dur = dur_info[1]
-                    real_dur = base_dur*dur_info[0]
-                if use_base: real_dur = math.floor(dur_info[0] * nlib.DEFAULT_TICK_FOR_ONE_MEASURE / base_note)
-                note_dur = TextParse._trans_dur(real_dur, others)
+            tick_for_mesend = tick_for_onemsr*msr
+            if tick < tick_for_mesend:
+                real_dur, base_dur = TextParse._get_real_dur(base_dur, base_note, dur_info, tick_for_mesend-tick)
+                note_dur = TextParse._trans_dur(real_dur, exp_others)
 
                 # Note 情報の追加
                 TextParse._add_note(rcmb, tick, notes, note_dur, expvel)
@@ -593,7 +602,7 @@ class TextParse:
                 msr += 1
             read_ptr += 1  # out from repeat
 
-        return tick, rcmb, others
+        return tick, rcmb, exp_others
 
 
     #------------------------------------------------------------------------------
