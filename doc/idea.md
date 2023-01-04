@@ -1,6 +1,7 @@
 # Loopian developping memo
 
-## what's this
+## Outline
+### what's this
 
 - text command による loop sequencer
 - 音色はピアノを想定し、ミニマルな音楽を指向する
@@ -16,7 +17,7 @@
     - Loopian::tg
     - Loopian::txt
 
-## what you can do
+### what you can do
 
 - Live Coding
 - A part of Musical Performance
@@ -61,6 +62,7 @@
 
 
 ## Design
+### Class diagram
 
 ```mermaid
 classDiagram
@@ -107,32 +109,35 @@ SeqDataAllStock <-- ElapseStack
 - 入力文字一覧
     - 括弧、カンマ: []{}(),
     - 複数音符を跨ぐ指定子: <,>,/,|,*,:
-    - 一音符内の指定子: (1:-,+)(2:',",q,h,3,`)(3:d,r,m,f,s,l,t,x)(3':i,a)(4:^,%)(5:.,~,o)
-        - 3と3'のみ =,_ で繋いで同時発音を表現
+    - 一音符内の指定子: (1:-,+)(2:',",q,h,3,5,`)(3:d,r,m,f,s,l,t,x)(3':i,a)(4:^,%)(5:.,~,o)
+        - 3と3'を合わせたものは =,_ で繋いで同時発音を表現できる
         - 1は、2の後に置いても機能する
     - まだ使われていない文字: w,e,r,y,u,p,a,j,k,z,c,v,b,n,?,;,\,&,$,
     - 一和音内の指定子: (1:I,V)(2:#/b)(3:[table name])(4:.)
     - 同じ意味に使う文字 : 小節(/,|)、同時(=,_)、タイ(.,~)
 
 
-### 自動変換
+### 入力から再生までの変換の流れ
 
-- Noteデータは以下の過程で内容を書き換えられていく
-    1. [raw/生] ユーザーが入力した生データ
-    1. [complement/補填] 生データに足りないデータを補填したり、追加フレーズを繋げたデータ
-    1. [recombined/再構成] SMF 的な、tick/note/velocity をセットにしたデータ
-    1. [analyzed/分析] コード変換時に自然な変換をするための分析データ
-    1. [humanized/生演奏] velocity/duration を生演奏に近づけたデータ
-    1. [randomized/乱数] random要素を加味したデータ
-    1. [translated/変換] コードの反映
-- 上記のうち最初の５つは、ユーザーによる入力時に処理される(static)
-    - 小節冒頭にこのデータが Loop Obj.にロードされる
+|変換順|name|名前|説明|変更タイミング|他原因|
+|-|-|-|-|-|-|
+|1|raw|生|ユーザーが入力した生データ|入力時(static)||
+|2|complement|補填|生データに補填、追加したデータ|入力時||
+|3|recombined|再構成|SMF的な、tick/note/velocity をセットにしたデータ|入力時|composition/bpm/beat/key|
+|4|analyzed|分析|コード変換時に自然な変換をするための分析データ|入力時||
+|5|humanized|生演奏|velocity/duration を生演奏に近づけたデータ|入力時||
+||||◆ここまでのデータが次のLoop先頭でロード◆|||
+|6|randomized|分散|変化量を分散したデータ|Loop頭(dynamic)||
+|7|translated|変換|コードの反映|再生時(dynamic)||
+
+
+- 上記のうち最初の５つは、ユーザーによるphrase入力時に処理される(static)
 - 再生中、リアルタイムに最後の二つの処理が行われる(dynamic)
 - 上記の各データが、他の要因で変更されるタイミングは以下
     - phrase が入力されたら、最初からやり直し(set_raw())
     - composition が入力されたら、「再構成」からやり直し(set_recombined())
     - bpm/beat/key が変わったら、「再構成」からやり直し
-    - 再生中に Loop がひとまわりするたびに「乱数」からやり直し(get_final())
+    - 再生中に Loop がひとまわりするたびに「分散」処理を行う(get_final())
 - 実際の MIDI 出力はさらに、バッファに積まれ、latency の時間の後に出力される
 
 - Pedalデータは各パートの Loop 冒頭に以下の処理を行う
@@ -143,7 +148,7 @@ SeqDataAllStock <-- ElapseStack
 ### Filter
 
 - [raw] を指定しない限り、勝手に exp.engine によるフィルタがかけられる
-- Humanization Filter
+- Humanization Filter(5.humanizedで適用)
     - 強拍/弱拍(linear) -> velocity [実装済み]
         - bpm が高いほど強調(bpm:72-180)
     - 時間間隔(Non-linear) -> velocity/duration
@@ -156,7 +161,7 @@ SeqDataAllStock <-- ElapseStack
         - 両密度とも高いとき、少し強め
     - 音高平均との差(linear) -> velocity
         - フレーズの平均音高より離れていると、velocity は強くなる
-- Translation Filter
+- Translation Filter(7.translatedで適用)
     - Common
         - テーブルを通した一番近い音に変更
     - Arpeggio
@@ -177,7 +182,7 @@ SeqDataAllStock <-- ElapseStack
 - ',",q,hによる冒頭の音価設定　済
 
 当面の対応
-- 特定のタイミングだけ強くしたり、弱くする music exp.表記追加
+- 特定のタイミングだけ強くしたり、弱くする phrase 表記追加
 
 先の話
 - rit. -> Fine
