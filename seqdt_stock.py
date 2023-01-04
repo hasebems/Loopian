@@ -199,8 +199,7 @@ class DamperPartStock:
 
         # Pedal Event とは関係ないパートか？
         if pt.loop_obj == None or \
-           (len(pt.loop_obj.cmp) == 1 and 
-             (pt.loop_obj.cmp[0][nlib.CHORD] == 'thru' or pt.loop_obj.cmp[0][nlib.CHORD] == '')):
+           (len(pt.loop_obj.cmp) == 1 and pt.loop_obj.cmp[0][nlib.CHORD] == ''):
             return ped_beat_map
         if pt.loop_obj.ana != None and 'noped' in pt.loop_obj.ana:
             return ped_beat_map
