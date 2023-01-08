@@ -444,11 +444,12 @@ class LpnGui:
         self.scroll_box.update()
         seq = self.est
 
-        self.bpmBox.set_text('bpm: ' + str(seq.bpm))
+        self.bpmBox.set_text('bpm: ' + str(seq.get_bpm()))
         msr, beat, tick, count = seq.get_tick()
         self.beatBox.set_text(str(msr+1) + ' : ' + str(beat+1) + ' : ' + str(tick))
         self.keyBox.set_text('key: ' + seq.key_text)
-        self.timeSigBox.set_text('beat: ' + str(seq.beat[0]) + '/' + str(seq.beat[1]))
+        bt = seq.get_beat()
+        self.timeSigBox.set_text('beat: ' + str(bt[0]) + '/' + str(bt[1]))
         self.if_change_to_newmsr(msr, tick)
 
         PART_TXT = ['L1:','L2:','R1:','R2:']

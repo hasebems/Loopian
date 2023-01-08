@@ -10,26 +10,76 @@ import elapse_part as elpp
 #   2. 次に Tempo が変わるまで、その時間との差から、現在の tick を算出する
 #   また、本 class 内に rit. 機構を持つ
 #
+class TickGenerator:
+
+    def __init__(self, tick_for_onemsr, bpm):
+        self.tick_for_onemsr = tick_for_onemsr
+        self.bpm = bpm
+        self.beat = [4,4]
+
+        self.origin_time = 0        # start 時の絶対時間
+        self.bpm_start_time = 0     # tempo/beat が変わった時点の絶対時間、tick 計測の開始時間
+        self.bpm_start_tick = 0     # tempo が変わった時点の tick, beat が変わったとき0clear
+        self.beat_start_msr = 0     # beat が変わった時点の経過小節数
+        self.crnt_measure = -1      # start からの小節数（最初の小節からイベントを出すため、-1初期化)
+        self.crnt_tick_inmsr = 0    # 現在の小節内の tick 数
+        self.crnt_time = 0          # 現在の時刻
+
+    def get_tick(self): # for GUI
+        tick_for_beat = nlib.DEFAULT_TICK_FOR_ONE_MEASURE/self.beat[1]  # 一拍のtick数
+        tick_inmsr = self.crnt_tick_inmsr
+        count = self.tick_for_onemsr//tick_for_beat
+        beat = tick_inmsr//tick_for_beat
+        tick = tick_inmsr%tick_for_beat
+        return int(self.crnt_measure),int(beat),int(tick),int(count)
+
+    def _calc_current_tick(self, crnt_time):
+        diff_time = crnt_time - self.bpm_start_time
+        elapsed_tick = (480*self.bpm*diff_time)/60
+        return elapsed_tick + self.bpm_start_tick
+
+    def change_beat_event(self, tick_for_onemsr, beat):
+        self.tick_for_onemsr = tick_for_onemsr
+        self.beat = beat
+        self.beat_start_msr = self.crnt_measure
+        self.bpm_start_time = self.crnt_time
+        self.bpm_start_tick = 0
+
+    def change_bpm_event(self, bpm):
+        self.bpm = bpm
+        self.bpm_start_tick = self._calc_current_tick(self.crnt_time)
+        self.bpm_start_time = self.crnt_time  # Get current time
+
+    def calc_tick(self, crnt_time):
+        self.crnt_time = crnt_time
+        tick_beat_starts = self._calc_current_tick(self.crnt_time)
+        self.crnt_measure = tick_beat_starts//self.tick_for_onemsr + self.beat_start_msr
+        self.crnt_tick_inmsr = tick_beat_starts%self.tick_for_onemsr
+
+    def play(self, crnt_time):
+        self.bpm_start_time = self.origin_time = crnt_time  # Get current time
+        self.bpm_start_tick = 0
+        self.beat_start_msr = 0
+
+    def get_crnt_msr_tick(self):
+        return self.crnt_measure, self.crnt_tick_inmsr
+
+    def get_tick_for_onemsr(self):
+        return self.tick_for_onemsr
+
+    def get_bpm(self):
+        return self.bpm
+
+    def get_beat(self):
+        return self.beat
+
 class ElapseStack:
     #   開始時に生成され、process() がコマンド入力とは別スレッドで、定期的に呼ばれる。
     #   そのため、change_tempo, play, stop 受信時はフラグのみを立て、process()
     #   で実処理を行う。
     def __init__(self, md):
         self.md = md
-
-        self.origin_time = 0        # start 時の絶対時間
-        self.bpm_start_time = 0     # tempo/beat が変わった時点の絶対時間、tick 計測の開始時間
-        self.bpm_start_tick = 0     # tempo が変わった時点の tick, beat が変わったとき0clear
-        self.beat_start_msr = 0     # beat が変わった時点の経過小節数
-        self.elapsed_time = 0       # start からの経過時間
-        self.crnt_measure = -1      # start からの小節数（最初の小節からイベントを出すため、-1初期化)
-        self.crnt_tick_inmsr = 0    # 現在の小節内の tick 数
-        self.crnt_time = 0       # 現在の時刻
-
-        self.bpm = 120
         self.bpm_stock = 120
-        self.beat = [4,4]
-        self.tick_for_onemsr = nlib.DEFAULT_TICK_FOR_ONE_MEASURE # 1920
         self.stock_tick_for_onemsr = [nlib.DEFAULT_TICK_FOR_ONE_MEASURE,4,4]
         self.key_text = 'C'
 
@@ -39,6 +89,7 @@ class ElapseStack:
         self.fine_for_periodic = False
         self.pianoteq_mode = True
 
+        self.tick_gen = TickGenerator(nlib.DEFAULT_TICK_FOR_ONE_MEASURE, self.bpm_stock)
         self.sqobjs = []
         for i in range(nlib.MAX_PART_COUNT): # Part は、常に存在
             obj = elpp.Part(self,md,i)
@@ -54,8 +105,11 @@ class ElapseStack:
     def add_obj_in_front(self, obj):    # Part の直後に挿入
         self.sqobjs.insert(nlib.MAX_PART_COUNT, obj)
 
-    def get_time(self):
-        return self.crnt_time
+    def get_time(self): # for Note
+        return self.tick_gen.crnt_time
+
+    def get_tick(self): # for GUI
+        return self.tick_gen.get_tick()
 
     def get_sqobj_count(self, pri):
         count = 0
@@ -64,7 +118,13 @@ class ElapseStack:
         return count
 
     def get_tick_for_onemsr(self):
-        return self.tick_for_onemsr
+        return self.tick_gen.get_tick_for_onemsr()
+
+    def get_bpm(self):
+        return self.tick_gen.get_bpm()
+
+    def get_beat(self):
+        return self.tick_gen.get_beat()
 
     def get_part(self, number):
         if number < nlib.MAX_PART_COUNT:
@@ -79,24 +139,8 @@ class ElapseStack:
                 nt.append(obj)
         return nt
 
-    def get_tick(self): # for GUI
-        tick_for_beat = nlib.DEFAULT_TICK_FOR_ONE_MEASURE/self.beat[1]  # 一拍のtick数
-        tick_inmsr = self.crnt_tick_inmsr
-        count = self.tick_for_onemsr//tick_for_beat
-        beat = tick_inmsr//tick_for_beat
-        tick = tick_inmsr%tick_for_beat
-        return int(self.crnt_measure),int(beat),int(tick),int(count)
-
-    def _calc_current_tick(self, crnt_time):
-        diff_time = crnt_time - self.bpm_start_time
-        elapsed_tick = (480*self.bpm*diff_time)/60
-        return elapsed_tick + self.bpm_start_tick
-
-    def _play(self):
-        self.bpm_start_time = self.origin_time = time.time()  # Get current time
-        self.bpm_start_tick = 0
-        self.beat_start_msr = 0
-        self.elapsed_time = 0
+    def _play(self, crnt_time):
+        self.tick_gen.play(crnt_time)
 
     def _destroy_ended_obj(self):
         maxsq = len(self.sqobjs)
@@ -112,20 +156,6 @@ class ElapseStack:
             maxsq = len(self.sqobjs)
             #print('Destroyed!')
 
-    def _change_beat_event(self):
-        # change beat event があった
-        self.beat_start_msr = self.crnt_measure
-        self.bpm_start_time = self.crnt_time
-        self.bpm_start_tick = 0
-        self.tick_for_onemsr = self.stock_tick_for_onemsr[0]
-        self.beat = self.stock_tick_for_onemsr[1:3]
-
-    def _change_bpm_event(self):
-        self.bpm_start_tick = self._calc_current_tick(self.crnt_time)
-        self.bpm_start_time = self.crnt_time  # Get current time
-        self.bpm = self.bpm_stock
-
-
     def _insert_proper_locate(self, elapsed, sqobj):
         msr, tick = sqobj.next()
         for i in range(len(elapsed)):
@@ -136,7 +166,6 @@ class ElapseStack:
                 (msr < msrx):
                 elapsed.insert(i, sqobj)
                 return
-
 
     def _pick_out_play_obj(self, crnt_msr, crnt_tick):
         elapsed = []
@@ -150,7 +179,6 @@ class ElapseStack:
                     self._insert_proper_locate(elapsed, sqobj)
         return elapsed
 
-
     def _debug_disp(self):
         elapse_obj = 'ElapseObj: '                # for debug
         for sqobj in self.sqobjs:
@@ -159,10 +187,12 @@ class ElapseStack:
 
 
     def periodic(self):     # seqplay thread
+        crnt_time = time.time()
+
         ## check flags
         if self.play_for_periodic and not self.during_play:
             self.play_for_periodic = False
-            self._play()
+            self._play(crnt_time)
             self.during_play = True
             for sqobj in self.sqobjs:
                 sqobj.start()
@@ -179,21 +209,19 @@ class ElapseStack:
             return
 
         ## detect tick and measure
-        self.crnt_time = time.time()
-        tick_beat_starts = self._calc_current_tick(self.crnt_time)
-        self.elapsed_time = self.crnt_time - self.origin_time
-        former_msr = self.crnt_measure
-        self.crnt_measure = tick_beat_starts//self.tick_for_onemsr + self.beat_start_msr
-        self.crnt_tick_inmsr = tick_beat_starts%self.tick_for_onemsr
+        former_msr, former_tick = self.tick_gen.get_crnt_msr_tick()
+        self.tick_gen.calc_tick(crnt_time)
+        crnt_measure, crnt_tick_inmsr = self.tick_gen.get_crnt_msr_tick()
 
         ## new measure or not
-        if former_msr != self.crnt_measure:
+        if former_msr != crnt_measure:
             # 小節を跨いだ場合
-            if self.stock_tick_for_onemsr[0] is not self.tick_for_onemsr:
-                self._change_beat_event()
+            if self.stock_tick_for_onemsr[0] is not self.tick_gen.get_tick_for_onemsr():
+                self.tick_gen.change_beat_event(self.stock_tick_for_onemsr[0], self.stock_tick_for_onemsr[1:3])
 
-            if self.bpm != self.bpm_stock:
-                self._change_bpm_event()
+            if self.tick_gen.get_bpm() != self.bpm_stock:
+                self.bpm = self.bpm_stock
+                self.tick_gen.change_bpm_event(self.bpm)
 
             if self.fine_for_periodic:
                 # fine event
@@ -208,12 +236,12 @@ class ElapseStack:
         unfinish_counter = 0
         while True:
             # 現measure/tick より前のイベントを持つ obj を拾い出し、リストに入れて返す
-            play_sqobjs = self._pick_out_play_obj(self.crnt_measure, self.crnt_tick_inmsr)
+            play_sqobjs = self._pick_out_play_obj(crnt_measure, crnt_tick_inmsr)
             if len(play_sqobjs) == 0:
                 break
             # 再生 obj. をリスト順にコール
             for obj in play_sqobjs:
-                obj.process(self.crnt_measure, self.crnt_tick_inmsr)
+                obj.process(crnt_measure, crnt_tick_inmsr)
             unfinish_counter += 1
             if unfinish_counter > 100:
                 print("Error! Unable to finish obj. exist! No.: ", play_sqobjs[0].priority)
@@ -222,7 +250,6 @@ class ElapseStack:
 
         ## remove ended obj
         self._destroy_ended_obj()
-
 
     def change_tempo(self, tempo):     # main thread
         self.bpm_stock = tempo

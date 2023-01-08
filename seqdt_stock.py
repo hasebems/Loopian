@@ -224,7 +224,7 @@ class DamperPartStock:
             return ['damper', ont*btick+self.PDL_MARGIN_TICK, dur*btick-self.PDL_MARGIN_TICK, 127]
 
         self.tick_for_onemsr = self.seq.get_tick_for_onemsr()
-        beat_cnt = self.seq.beat[0]
+        beat_cnt = self.seq.get_beat()[1]
         btick = self.tick_for_onemsr//beat_cnt
 
         # 全 Composition Part の Chord 情報を収集、マージする
