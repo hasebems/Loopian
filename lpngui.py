@@ -444,7 +444,7 @@ class LpnGui:
         self.scroll_box.update()
         seq = self.est
 
-        self.bpmBox.set_text('bpm: ' + str(seq.get_bpm()))
+        self.bpmBox.set_text('bpm: ' + str(int(seq.get_bpm())))
         msr, beat, tick, count = seq.get_tick()
         self.beatBox.set_text(str(msr+1) + ' : ' + str(beat+1) + ' : ' + str(tick))
         self.keyBox.set_text('key: ' + seq.key_text)
