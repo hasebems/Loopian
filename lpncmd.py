@@ -338,6 +338,11 @@ class Parsing:
                     self.print_dialogue("Changed current part to right " + str(part) + ".")
                     self.input_part = part + 1
                     self.gui.change_part(self.input_part)
+        elif input_text[0:3] == "rit":
+            self.est.ritacl()
+            self.print_dialogue('rit. has started!')
+        else:
+            self.print_dialogue("what?")
 
     def letterQm(self, input_text):
         self.print_dialogue("what?")

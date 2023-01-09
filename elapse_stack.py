@@ -25,6 +25,9 @@ class TickGenerator:
         self.crnt_tick_inmsr = 0    # 現在の小節内の tick 数
         self.crnt_time = 0          # 現在の時刻
 
+        self.ritacl_state = False
+        self.ritacl_next_bpm = bpm
+
     def get_tick(self): # for GUI
         tick_for_beat = nlib.DEFAULT_TICK_FOR_ONE_MEASURE/self.beat[1]  # 一拍のtick数
         tick_inmsr = self.crnt_tick_inmsr
@@ -32,6 +35,45 @@ class TickGenerator:
         beat = tick_inmsr//tick_for_beat
         tick = tick_inmsr%tick_for_beat
         return int(self.crnt_measure),int(beat),int(tick),int(count)
+
+    def _calc_current_tick_ritacl(self, crnt_time):
+        start_time = crnt_time - self.bpm_start_time
+        time_to0 = self.t0_time - start_time
+        total_tick = self.t0_addup_tick - time_to0*time_to0*self.delta_tps/2
+        if total_tick < 0: print('Stopped!')
+        return total_tick + self.bpm_start_tick
+
+    def calc_tick_ritacl(self, crnt_time):
+        tick_from_ritacl_starts = self._calc_current_tick_ritacl(crnt_time)
+        if self.tick_for_onemsr < tick_from_ritacl_starts:
+            # End ritacl
+            self.ritacl_state = False
+            self.crnt_measure = self.beat_start_msr + 1
+            self.crnt_tick_inmsr = 0
+
+            self.beat_start_msr = self.crnt_measure
+            self.bpm_start_time = crnt_time
+            self.bpm_start_tick = 0
+        else:
+            self.crnt_tick_inmsr = tick_from_ritacl_starts
+
+    def ritacl_evt(self, start_time, ratio, next_bpm=0, till=1):
+        # ratio: 0:   1secで tempo を 0
+        #        50:  1secで tempo を 50%(1/2)
+        #        100: 何もしない
+        #        200: 1secで tempo を 200%(2倍)
+        if ratio == 100: return
+        else: self.delta_tps = (self.bpm - self.bpm*ratio/100)*8
+        self.t0_time = self.bpm*8/self.delta_tps # tempo0 time
+        self.t0_addup_tick = (self.delta_tps/2)*self.t0_time*self.t0_time  # tempo0積算Tick
+
+        self.ritacl_state = True
+        self.ritacl_next_bpm = next_bpm
+
+        self.beat_start_msr = self.crnt_measure
+        self.bpm_start_time = start_time
+        self.bpm_start_tick = self.crnt_tick_inmsr
+        print("t0_time: ",self.t0_time)
 
     def _calc_current_tick(self, crnt_time):
         diff_time = crnt_time - self.bpm_start_time
@@ -52,9 +94,12 @@ class TickGenerator:
 
     def calc_tick(self, crnt_time):
         self.crnt_time = crnt_time
-        tick_beat_starts = self._calc_current_tick(self.crnt_time)
-        self.crnt_measure = tick_beat_starts//self.tick_for_onemsr + self.beat_start_msr
-        self.crnt_tick_inmsr = tick_beat_starts%self.tick_for_onemsr
+        if self.ritacl_state:
+            self.calc_tick_ritacl(crnt_time)
+        else:
+            tick_from_beat_starts = self._calc_current_tick(self.crnt_time)
+            self.crnt_measure = tick_from_beat_starts//self.tick_for_onemsr + self.beat_start_msr
+            self.crnt_tick_inmsr = tick_from_beat_starts%self.tick_for_onemsr
 
     def play(self, crnt_time):
         self.bpm_start_time = self.origin_time = crnt_time  # Get current time
@@ -73,6 +118,7 @@ class TickGenerator:
     def get_beat(self):
         return self.beat
 
+
 class ElapseStack:
     #   開始時に生成され、process() がコマンド入力とは別スレッドで、定期的に呼ばれる。
     #   そのため、change_tempo, play, stop 受信時はフラグのみを立て、process()
@@ -88,6 +134,7 @@ class ElapseStack:
         self.stop_for_periodic = False
         self.fine_for_periodic = False
         self.pianoteq_mode = True
+        self.ritacl_evt = False
 
         self.tick_gen = TickGenerator(nlib.DEFAULT_TICK_FOR_ONE_MEASURE, self.bpm_stock)
         self.sqobjs = []
@@ -200,6 +247,7 @@ class ElapseStack:
         if self.stop_for_periodic:
             self.stop_for_periodic = False
             self.during_play = False
+            self.ritacl_evt = False
             for sqobj in self.sqobjs:
                 sqobj.stop()
             self._destroy_ended_obj()
@@ -207,6 +255,11 @@ class ElapseStack:
         if not self.during_play:
             #self.block.no_running()
             return
+
+        # rit. or accel. event
+        if self.ritacl_evt:
+            self.ritacl_evt = False
+            self.tick_gen.ritacl_evt(crnt_time, 70)
 
         ## detect tick and measure
         former_msr, former_tick = self.tick_gen.get_crnt_msr_tick()
@@ -275,6 +328,9 @@ class ElapseStack:
             return False
         else:
             return True
+
+    def ritacl(self):   # main thread
+        self.ritacl_evt = True
 
     def stop(self):     # main thread
         self.stop_for_periodic = True
