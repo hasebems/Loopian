@@ -103,9 +103,9 @@ class TickGenerator:
 
     def change_bpm_event(self, bpm):
         self.rit_state = False
-        self.bpm = bpm
         self.bpm_start_tick = self._calc_current_tick(self.crnt_time)
         self.bpm_start_time = self.crnt_time  # Get current time
+        self.bpm = bpm
 
     def calc_tick(self, crnt_time):
         self.crnt_time = crnt_time
@@ -291,8 +291,7 @@ class ElapseStack:
                 self.tick_gen.change_beat_event(self.stock_tick_for_onemsr[0], self.stock_tick_for_onemsr[1:3])
 
             if self.tick_gen.get_bpm() != self.bpm_stock:
-                self.bpm = self.bpm_stock
-                self.tick_gen.change_bpm_event(self.bpm)
+                self.tick_gen.change_bpm_event(self.bpm_stock)
 
             if self.fine_for_periodic:
                 # fine event
