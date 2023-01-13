@@ -338,8 +338,21 @@ class Parsing:
                     self.print_dialogue("Changed current part to right " + str(part) + ".")
                     self.input_part = part + 1
                     self.gui.change_part(self.input_part)
-        elif input_text[0:3] == "rit":
-            self.est.ritacl()
+        elif input_text[0:4] == "rit.":
+            if '/' in input_text[4:]:
+                rit_prm = input_text[4:].split('/')
+                nxt_msr_txt = rit_prm[1]
+                strength_txt = rit_prm[0]
+            else:
+                strength_txt = input_text[4:]
+                nxt_msr_txt = ''
+            strength_value = 1
+            next_tempo = 0 # 元と同じテンポ
+            if strength_txt == 'poco': strength_value = 0
+            elif strength_txt == 'molto': strength_value = 2
+            if nxt_msr_txt == 'fine': next_tempo = -1
+            elif nxt_msr_txt.isdecimal(): next_tempo = int(nxt_msr_txt)
+            self.est.ritacl(strength_value, next_tempo) # 0(poco)/1/2(molto), -1(fine)/0(same)/tempo
             self.print_dialogue('rit. has started!')
         else:
             self.print_dialogue("what?")

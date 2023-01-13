@@ -170,6 +170,19 @@ SeqDataAllStock <-- ElapseStack
     - Parallel
         - 音程全体を、ルート音の音高分だけ平行移動する
 
+
+### Tempo 生成の考え方
+
+- ElapseStack Class 内で動作する TickGenerator Class にてテンポ生成を行う
+    1. Tempo 変化時の絶対時間とその時点の tick を記録
+    2. 次に Tempo が変わるまで、その時間との差から、現在の tick を算出する
+
+- この Class 内に rit. 機構を持つ
+    - rit. は基本的にテンポを一定比率で落としていく
+    - rit. 終了は次（の次）の小節の頭
+    - テンポが一定比率で落ちる場合、Tickは２次関数的に減っていく
+
+
 ### 次にやること
 - アルペジオで連続して同じ音が出ないようにする -> 同音回避型和音変換対応　済
 - ベロシティが、周期的に変わる謎の現象 -> copy されていなかった不具合修正　済
@@ -181,12 +194,13 @@ SeqDataAllStock <-- ElapseStack
 - Pedal On/Off の Music Expressionへの追加(noped)　済
 - ',",q,hによる冒頭の音価設定　済
 - 特定のタイミングだけ強くしたり、弱くする phrase 表記追加　済
+- rit. の種類実装
+- rit. -> Fine
 
 当面の対応
-- なし
+- rust化
 
 先の話
-- rit. -> Fine
 - 現在のループをひとまとめで取っておき、簡単な指示で呼び出し可能とする
 - さらなる humanized アルゴリズムの追加
 - Load/Save機能、Auto Load機能
@@ -214,6 +228,9 @@ Usages:
     - Generating music by entering text in real-time in the style of Live Coding
     - Loop-based phrase transformations in real-time for performance, interactive art, etc.
     - Solmization practice in music education with movable-do
+
+Loopian github:
+https://github.com/hasebems/Loopian
 
 Loopian は、テキストで音符を指定するリアルタイムループシーケンサです。
 主に Piano 音色で演奏されることを前提に開発しています。

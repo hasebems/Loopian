@@ -61,8 +61,14 @@ loopian は、Live Coding などで使うために開発している、テキス
 - 'play' 'start' : シーケンス開始
 - 'fine' : この小節の最後でシーケンス終了
 - 'stop' : 直ちにシーケンス終了
+- 'rit.' : テンポをだんだん遅くして、次の小節の頭で元のテンポ
+    - rit.poco   : rit.の遅さが弱い
+    - rit.molto  : rit.の遅さが強い
+    - rit./fine  : rit.の次の小節の頭の拍を再生して終了
+    - rit.molto/fine
+    - rit./120   : rit.の次の小節をテンポ120で開始
 - 'sync' : 次の小節の頭で、ループ先頭に戻る
-    - sync       : そのパートのみ
+    - sync       : そのパート(Phrase,Composition)のみ
     - sync right : 右手パート(right1/2)
     - sync left  : 左手パート(left1/2)
     - sync all   : 全パート

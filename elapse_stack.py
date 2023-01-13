@@ -26,7 +26,6 @@ class TickGenerator:
         self.crnt_time = 0          # 現在の時刻
 
         self.rit_state = False
-        self.rit_next_bpm = bpm
         self.minus_bpm_for_gui = 0
         self.last_addup_tick = 0
         self.last_addup_time = 0
@@ -46,7 +45,7 @@ class TickGenerator:
         time_to0 = self.t0_time - start_time
         self.minus_bpm_for_gui = self.delta_tps*start_time/8
         if self.bpm - self.minus_bpm_for_gui > MINIMUM_TEMPO:
-            addup_tick = self.t0_addup_tick - time_to0*time_to0*self.delta_tps/2
+            addup_tick = self.t0_addup_tick - time_to0*time_to0*self.delta_tps/2    # 積算Tickの算出
             self.last_addup_tick = addup_tick
             self.last_addup_time = crnt_time
         else:
@@ -62,14 +61,13 @@ class TickGenerator:
             self.crnt_measure = self.beat_start_msr + 1
             self.crnt_tick_inmsr = 0
 
-            self.bpm = self.rit_next_bpm
             self.beat_start_msr = self.crnt_measure
             self.bpm_start_time = crnt_time
             self.bpm_start_tick = 0
         else:
             self.crnt_tick_inmsr = tick_from_rit_starts
 
-    def rit_evt(self, start_time, ratio, next_bpm=0):
+    def rit_evt(self, start_time, ratio):
         # ratio  0:   tempo 停止
         #        50:  1secで tempo を 50%(1/2)
         #        100: 何もしない
@@ -79,13 +77,9 @@ class TickGenerator:
         self.t0_addup_tick = (self.delta_tps/2)*self.t0_time*self.t0_time  # tempo0積算Tick
 
         self.rit_state = True
-        if next_bpm == 0: self.rit_next_bpm = self.bpm
-        else:             self.rit_next_bpm = next_bpm
-
         self.beat_start_msr = self.crnt_measure
         self.bpm_start_time = start_time
         self.bpm_start_tick = self.crnt_tick_inmsr
-        print("t0_time: ",self.t0_time)
     #=================================
 
     def _calc_current_tick(self, crnt_time):
@@ -153,6 +147,7 @@ class ElapseStack:
         self.fine_for_periodic = False
         self.pianoteq_mode = True
         self.ritacl_evt = False
+        self.ritacl_stock = 0
 
         self.tick_gen = TickGenerator(nlib.DEFAULT_TICK_FOR_ONE_MEASURE, self.bpm_stock)
         self.sqobjs = []
@@ -250,7 +245,6 @@ class ElapseStack:
             elapse_obj += str(sqobj.who_I_am()) + ',' # for debug
         print(elapse_obj)                        # for debug
 
-
     def periodic(self):     # seqplay thread
         crnt_time = time.time()
 
@@ -277,7 +271,7 @@ class ElapseStack:
         # rit. or accel. event
         if self.ritacl_evt:
             self.ritacl_evt = False
-            self.tick_gen.rit_evt(crnt_time, 70)
+            self.tick_gen.rit_evt(crnt_time, self.ritacl_stock)
 
         ## detect tick and measure
         former_msr, former_tick = self.tick_gen.get_crnt_msr_tick()
@@ -347,7 +341,17 @@ class ElapseStack:
         else:
             return True
 
-    def ritacl(self):   # main thread
+    def ritacl(self, strength, next_tempo):   # main thread
+        # strength: 0/1/2,  next_tempo: -1(fine)/0/tempo
+        ratio_tbl = [90, 75, 60]
+        if strength > 2: strength = 1
+        self.ritacl_stock = ratio_tbl[strength]
+        if next_tempo == 0:
+            self.bpm_stock = self.tick_gen.get_bpm()
+        elif next_tempo == -1:
+            self.bpm_stock = 0
+        else:
+            self.bpm_stock = next_tempo
         self.ritacl_evt = True
 
     def stop(self):     # main thread
