@@ -154,5 +154,6 @@ cython_debug/
 .DS_Store
 /log
 /log_good
-/doc/design.pptx
-/doc/loopian_logo.ai
+/doc/*.pptx
+/doc/*.ai
+/doc/*.xlsx
