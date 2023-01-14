@@ -308,12 +308,11 @@ class TextParse:
     #------------------------------------------------------------------------------
     #   recognize [] set
     def complement_bracket(tx):
-        # [] のセットを抜き出し、中身を attached_bracket/note_info に入れる
+        # [] のセットを抜き出し、中身を note_info に入れる
         num = tx.find('[')
         tx = tx[num:].strip()
 
         note_info = []
-        attached_bracket = []
         while True:
             num = tx.find(']')
             if num == -1: # 見つからなかった時
@@ -322,18 +321,8 @@ class TextParse:
             tx = tx[num+1:].strip()
             if len(tx) == 0:
                 break
-            if tx[0:2] == '+[':
-                attached_bracket.append(copy.copy(note_info))
-                note_info.clear()
-                tx = tx[1:]
-                continue
             if tx[0] != '[':
                 break
-
-        # 連結データ(attached_block)があった時の処理
-        if attached_bracket and note_info:
-            attached_bracket.append(note_info) # 最後の note_info を追加
-            note_info = TextParse._attached_to_noteinfo(attached_bracket, '|')
 
         # [] の数が 1 の時は中身を補填
         bracket_num = len(note_info)
@@ -365,26 +354,27 @@ class TextParse:
         ## ,| 重複による和音無し指示の補填
         if len(cd) == 0: return '' # {} のとき
         fill = ''
-        doremi = NO_CHORD
-        doremi_end_flag = True
+        chord = NO_CHORD
+        last_chord = NO_CHORD
+        chord_end_flag = True
         for i in range(len(cd)):
             ltr = cd[i]
-            if ltr == ',':
-                fill += doremi + ','
-                doremi = NO_CHORD
-                doremi_end_flag = True
-            elif ltr == '|' or ltr == '/':
-                fill += doremi + '|,'
-                doremi = NO_CHORD
-                doremi_end_flag = True
-            else:
-                if doremi_end_flag:
-                    doremi = ltr
+            if ltr == ',' or ltr == '|' or ltr == '/':
+                if chord == '.': chord = last_chord
+                else:            last_chord = chord
+                if ltr == '|' or ltr == '/': chord += '|'
+                fill += chord + ','
+                chord = NO_CHORD
+                chord_end_flag = True
+            else: # chord 指定
+                if chord_end_flag:
+                    chord = ltr
                 else:
-                    doremi += ltr
-                doremi_end_flag = False
-        if doremi != '':
-            fill += doremi
+                    chord += ltr
+                chord_end_flag = False
+        if chord != '':
+            if chord == '.': chord = last_chord
+            fill += chord
 
         # スペース削除し、',' 区切りでリスト化
         chord_flow = re.split('[,]', fill)
@@ -394,12 +384,11 @@ class TextParse:
 
 
     def complement_brace(tx):
-        # {} のセットを抜き出し、中身を attached_brace/chord_info に入れる
+        # {} のセットを抜き出し、中身を chord_info に入れる
         num = tx.find('{')
         tx = tx[num:].strip()
 
         chord_info = []
-        attached_brace = []
         while True:
             num = tx.find('}')
             if num == -1:
@@ -408,18 +397,8 @@ class TextParse:
             tx = tx[num+1:].strip()
             if len(tx) == 0:
                 break
-            if tx[0:2] == '+{':
-                attached_brace.append(copy.copy(chord_info))
-                chord_info.clear()
-                tx = tx[1:]
-                continue
             if tx[0:1] != '{':
                 break
-
-        # 連結データ(attached_block)があった時の処理
-        if attached_brace and chord_info:
-            attached_brace.append(chord_info) # 最後の note_info を追加
-            chord_info = TextParse._attached_to_noteinfo(attached_brace, '|')
 
         exp = []
         if len(chord_info) != 0:
