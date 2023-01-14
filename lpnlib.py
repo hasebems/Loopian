@@ -92,11 +92,11 @@ CHORD_SCALE = {  # ±2オクターブ分
     '_m7-5':    [0, 3, 6, 10],
     '_sus4':    [0, 5, 7],
     '_7sus4':   [0, 5, 7, 10],
-    '_ion':     [0, 2, 3, 4, 5, 7, 9, 11], # Ionian(with Blues)
-    '_dor':     [0, 2, 3, 5, 6, 7, 9, 10], # Dorian(with Blues)
-    '_lyd':     [0, 2, 3, 4, 6, 7, 9, 11], # Lydian(With Blues)
-    '_mix':     [0, 2, 3, 4, 5, 7, 9, 10], # Mixolydian(With Blues)
-    '_aeo':     [0, 2, 3, 5, 6, 7, 8, 10], # Aeolian(with Blues)
+    '_ion':     [0, 2, 4, 5, 7, 9, 11], # Ionian
+    '_dor':     [0, 2, 3, 5, 7, 9, 10], # Dorian
+    '_lyd':     [0, 2, 4, 6, 7, 9, 11], # Lydian
+    '_mix':     [0, 2, 4, 5, 7, 9, 10], # Mixolydian
+    '_aeo':     [0, 2, 3, 5, 7, 8, 10], # Aeolian
     'diatonic': [0, 2, 4, 5, 7, 9, 11],
     'dorian':   [0, 2, 3, 5, 7, 9, 10],
     'lydian':   [0, 2, 4, 6, 7, 9, 11],
@@ -104,6 +104,7 @@ CHORD_SCALE = {  # ±2オクターブ分
     'aeolian':  [0, 2, 3, 5, 7, 8, 10],
     'comdim':   [0, 2, 3, 5, 6, 8, 9, 11],
     'pentatonic':[0, 2, 4, 7, 9],
+    'blues':    [0, 3, 5, 6, 7, 10],
     'Err':      [0],
     'none':     [1000, 1001]  # if more than 127, no sound by limit
 }
