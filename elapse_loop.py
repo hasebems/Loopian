@@ -84,7 +84,7 @@ class PhraseLoop(Loop):
         nty = nlib.DEFAULT_NOTE_NUMBER
         if arp_diff == 0:
             return arp_nt
-        elif arp_diff > 0:
+        elif arp_diff > 0: # 上行arp
             ntx = self.last_note + 1
             ntx = nlib.search_scale_nt_just_above(root, tbl, ntx)
             if ntx >= arp_nt:
@@ -93,12 +93,12 @@ class PhraseLoop(Loop):
                 nty = ntx + 1
                 nty = nlib.search_scale_nt_just_above(root, tbl, nty)
                 if nty >= arp_nt:
-                    if nty-arp_nt >= arp_nt-ntx:
+                    if nty-arp_nt > arp_nt-ntx: # 等距離なら下を取る
                         nty = ntx
                     break
                 ntx = nty
             return nty
-        else:
+        else: # 下行arp
             ntx = self.last_note - 1
             ntx = nlib.search_scale_nt_just_below(root, tbl, ntx)
             if ntx <= arp_nt:
@@ -107,7 +107,7 @@ class PhraseLoop(Loop):
                 nty = ntx - 1
                 nty = nlib.search_scale_nt_just_below(root, tbl, nty)
                 if nty <= arp_nt:
-                    if arp_nt-nty >= ntx-arp_nt:
+                    if arp_nt-nty > ntx-arp_nt: # 等距離なら下を取る
                         nty = ntx
                     break
                 ntx = nty
@@ -126,7 +126,7 @@ class PhraseLoop(Loop):
                 found = True
                 break
             elif proper_nt > nt:
-                if nt-former_nt < proper_nt-nt:
+                if nt-former_nt <= proper_nt-nt: # 等距離なら下を取る
                     # which is closer, below proper or above proper
                     proper_nt = former_nt
                 found = True
@@ -134,7 +134,7 @@ class PhraseLoop(Loop):
             former_nt = proper_nt
         if not found:   # next octave
             proper_nt = tbl[0] + root + (oct_adjust+1)*12
-            if nt-former_nt < proper_nt-nt:
+            if nt-former_nt <= proper_nt-nt: # 等距離なら下を取る
                 # which is closer, below proper or above proper
                 proper_nt = former_nt
 
