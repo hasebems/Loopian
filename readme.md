@@ -31,6 +31,9 @@ loopian は、Live Coding などで使うために開発している、テキス
     - 1 part あたり、一つの phrase と一つの composition が個別の周期で loop する
 
 
+<img src="doc/part_spec.jpg" width="70%">
+
+
 起動と終了
 --------------
 
