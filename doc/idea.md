@@ -41,23 +41,27 @@
 - Reverb Depth CC#91
 - Volume CC#7
 
-### テキスト入力
+### コマンド入力
 
-- ユーザーは、Phrase入力（ [] で入力）と、Composition入力（{}で入力）の二つの入力ができる
-- Phrase入力の考え方
+- コマンドには以下の4種類がある
+    - Phrase Command（ [] で入力）
+    - Composition Command（{}で入力）
+    - Realtime Control Command (play/stop/fine/rit./left/right/sync)
+    - Setting Command (set [bpm/beat/oct/key/input/samenote])
+- Phrase Command の考え方
     - User は、ノート番号と音価、簡易な表情指示(Music Expression)を入力
     - exp.engine は、簡易な表情指示からベロシティ、微妙なタイミング、dulation、ペダル情報を自動生成
-- Composition入力と、自動和音変換
+- Composition Command と、自動和音変換
     - Composition で指定された和音に従って、Phrase 入力の音は自動変換される
     - Composition も、各パートごとに設定する
     - 全体に同じ Composition を適用したい場合、全パート入力モードにする
 - 各パートの Phrase も、Composition も、それぞれ独自の周期で loop する
-- Phrase入力 Music Expression 一覧
+- Phrase の Music Expression 一覧
     - ff,f,mf,mp,p,pp,ppp  （ベロシティ指定）
     - ped, noped （ペダル奏法）
     - artic: stacc,legato,marc （dulation指定）
     - p->f など音量の漸次的変化
-- Composition入力 Music Expression 一覧
+- Composition の Music Expression 一覧
     - para  （コード変換の指定）
 
 
