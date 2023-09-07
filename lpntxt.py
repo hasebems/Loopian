@@ -513,12 +513,12 @@ class TextParse:
 
 
     def _trans_dur(real_dur, exp):
-        MIN_GAP_TICK = 40
         if 'stacc' in exp:
             return real_dur/2
-        if real_dur > MIN_GAP_TICK:
-            return real_dur-MIN_GAP_TICK
-        else: return real_dur
+        #MIN_GAP_TICK = 40  # ここで40を引いたことにより Arp が効かなくなっていた
+        #if real_dur > MIN_GAP_TICK:
+        #    return real_dur-MIN_GAP_TICK
+        #else: return real_dur
 
 
     def _get_real_dur(base_dur, base_note, dur_info, rest_tick):
